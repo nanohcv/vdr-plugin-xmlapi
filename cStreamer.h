@@ -20,18 +20,21 @@
 
 class cStreamer {
 public:
-    cStreamer(cPluginConfig config, cPreset preset);
+    cStreamer(cPluginConfig config, cPreset preset, string chid);
     cStreamer(const cStreamer& orig);
     virtual ~cStreamer();
     
     cStreamer& operator =(const cStreamer& src);
     
-    void Start();
+    bool Start();
     void Stop();
     
+    ssize_t Read(char *buf, size_t max);
+    
 private:
-    cPreset preset;
     cPluginConfig config;
+    cPreset preset;
+    string chid;
     FILE *ffmpeg;
 
 };

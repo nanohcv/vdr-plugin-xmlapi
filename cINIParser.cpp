@@ -88,7 +88,7 @@ void cINIParser::parse(string iniFile) {
         }
         else {
             key = kvp[0];
-            for(int i=1; i<kvp.size()-1; i++){
+            for(unsigned int i=1; i<kvp.size()-1; i++){
                 value += kvp[i] + "=";
             }
             value += kvp[kvp.size()-1];

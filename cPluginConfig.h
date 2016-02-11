@@ -41,6 +41,7 @@ public:
     string GetPassword();
     string GetFFmpeg();
     string GetPresetsFile();
+    string GetStreamdevUrl();
     
 private:
     string configFile;
@@ -59,6 +60,7 @@ private:
     string password;
     string ffmpeg;
     string presetsFile;
+    string streamdevUrl;
     
     string generatePassword(unsigned int length);
     bool readFromConfFile(string configFile);

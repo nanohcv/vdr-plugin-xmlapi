@@ -37,6 +37,7 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName,
     this->password = this->generatePassword(12);
     this->ffmpeg = "ffmpeg";
     this->presetsFile = string(configDir) + "/presets.ini";
+    this->streamdevUrl = "http://127.0.0.1:3000/";
     this->readFromConfFile(configFile);
     
 }
@@ -70,6 +71,7 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     this->password = src.password;
     this->ffmpeg = src.ffmpeg;
     this->presetsFile = src.presetsFile;
+    this->streamdevUrl = src.streamdevUrl;
     
 }
 
@@ -93,6 +95,7 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->password = src.password;
         this->ffmpeg = src.ffmpeg;
         this->presetsFile = src.presetsFile;
+        this->streamdevUrl = src.streamdevUrl;
         if(src.sslKey != NULL) {
             delete this->sslKey;
             this->sslKey = new char[src.sslKeySize];
@@ -173,6 +176,10 @@ string cPluginConfig::GetPresetsFile() {
     return this->presetsFile;
 }
 
+string cPluginConfig::GetStreamdevUrl() {
+    return this->streamdevUrl;
+}
+
 string cPluginConfig::generatePassword(unsigned int length){
     const char alphanum[] = "0123456789"
                             "_-!@#$%^&*"
@@ -210,7 +217,8 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "UserName="<<this->userName<<endl<<
             "Password="<<this->password<<endl<<
             "FFMPEG="<<this->ffmpeg<<endl<<
-            "Presets="<<this->presetsFile<<endl;
+            "Presets="<<this->presetsFile<<endl<<
+            "StreamdevUrl="<<this->streamdevUrl<<endl;
         fc.close();
         return true;       
     }
@@ -260,7 +268,12 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             if(right != "") {
                 this->presetsFile = right;
             }
-        }    
+        }
+        else if (left == "StreamdevUrl") {
+            if(right != "") {
+                this->streamdevUrl = right;
+            }
+        }
     }
     fr.close();
     if (this->httpsOnly == true && this->useHttps == false)

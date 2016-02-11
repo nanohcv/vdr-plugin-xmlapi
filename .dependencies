@@ -3,7 +3,7 @@ cWebServer.o: cWebServer.cpp cWebServer.h cPluginConfig.h \
  cRequestHandler.h cPreset.h cPresets.h
 cPreset.o: cPreset.cpp cPreset.h
 cRequestHandler.o: cRequestHandler.cpp cRequestHandler.h cPluginConfig.h \
- cPreset.h cPresets.h
+ cPreset.h cPresets.h cStreamer.h
 cINIParser.o: cINIParser.cpp cINIParser.h
 cPresets.o: cPresets.cpp cPresets.h cPreset.h cINIParser.h
 cStreamer.o: cStreamer.cpp cStreamer.h cPluginConfig.h cPreset.h
