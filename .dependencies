@@ -1,0 +1,6 @@
+xmlapi.o: xmlapi.c cPluginConfig.h cWebServer.h
+cWebServer.o: cWebServer.cpp cWebServer.h cPluginConfig.h \
+ cRequestHandler.h
+cRequestHandler.o: cRequestHandler.cpp cRequestHandler.h cPluginConfig.h
+cStreamer.o: cStreamer.cpp cStreamer.h
+cPluginConfig.o: cPluginConfig.cpp cPluginConfig.h

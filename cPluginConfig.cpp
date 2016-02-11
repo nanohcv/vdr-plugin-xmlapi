@@ -1,0 +1,328 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/* 
+ * File:   cPluginConfig.cpp
+ * Author: karl
+ * 
+ * Created on 9. Februar 2016, 14:59
+ */
+
+#include "cPluginConfig.h"
+#include <cstring>
+#include <ctime>
+#include <cstdlib>
+#include <fstream>
+#include <sstream>
+
+cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName, 
+        const char *version) {
+    this->configFile = string(configDir) + "/" + string(pluginName) + ".conf";
+    
+    this->name = string(pluginName);
+    this->version = string(version);
+    this->configDir = string(configDir);
+    this->httpPort = 10080;
+    this->httpsPort = 10443;
+    this->useHttps = false;
+    this->httpsOnly = false;
+    this->sslKey = NULL;
+    this->sslKeySize = 0;
+    this->sslCert = NULL;
+    this->sslCertSize = 0;
+    this->userName = string(pluginName);
+    this->password = this->generatePassword(12);
+    this->ffmpeg = "ffmpeg";
+    this->presetsFile = string(configDir) + "/presets.ini";
+    this->readFromConfFile(configFile);
+    
+}
+
+cPluginConfig::cPluginConfig(const cPluginConfig& src) {
+    this->configFile = src.configFile;
+    this->name = src.name;
+    this->version = src.version;
+    this->configDir = src.configDir;
+    this->httpPort = src.httpPort;
+    this->httpsPort = src.httpsPort;
+    this->useHttps = src.useHttps;
+    this->httpsOnly = src.httpsOnly;
+    if(src.sslKey != NULL) {
+        this->sslKey = new char[src.sslKeySize];
+        memcpy(this->sslKey, src.sslKey, src.sslKeySize);
+        this->sslKeySize = src.sslKeySize;
+    } else {
+        this->sslKey = NULL;
+        this->sslKeySize = 0;
+    }
+    if(src.sslCert != NULL) {
+        this->sslCert = new char[src.sslCertSize];
+        memcpy(this->sslCert, src.sslCert, src.sslCertSize);
+        this->sslCertSize = src.sslCertSize;
+    } else {
+        this->sslCert = NULL;
+        this->sslCertSize = 0;
+    }
+    this->userName = src.userName;
+    this->password = src.password;
+    this->ffmpeg = src.ffmpeg;
+    this->presetsFile = src.presetsFile;
+    
+}
+
+cPluginConfig::~cPluginConfig() {
+    delete this->sslKey;
+    delete this->sslCert;
+}
+
+cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
+    if(this != &src)
+    {
+        this->configFile = src.configFile;
+        this->name = src.name;
+        this->version = src.version;
+        this->configDir = src.configDir;
+        this->httpPort = src.httpPort;
+        this->httpsPort = src.httpsPort;
+        this->useHttps = src.useHttps;
+        this->httpsOnly = src.httpsOnly;
+        this->userName = src.userName;
+        this->password = src.password;
+        this->ffmpeg = src.ffmpeg;
+        this->presetsFile = src.presetsFile;
+        if(src.sslKey != NULL) {
+            delete this->sslKey;
+            this->sslKey = new char[src.sslKeySize];
+            memcpy(this->sslKey, src.sslKey, src.sslKeySize);
+            this->sslKeySize = src.sslKeySize;
+        } else {
+            delete this->sslKey;
+            this->sslKey = NULL;
+            this->sslKeySize = 0;
+        }
+        if(src.sslCert != NULL) {
+            delete this->sslCert;
+            this->sslCert = new char[src.sslCertSize];
+            memcpy(this->sslCert, src.sslCert, src.sslCertSize);
+            this->sslCertSize = src.sslCertSize;
+        } else {
+            delete this->sslCert;
+            this->sslCert = NULL;
+            this->sslCertSize = 0;
+        }
+    }
+    return *this;
+}
+
+string cPluginConfig::GetConfigFile() {
+    return this->configFile;
+}
+
+string cPluginConfig::GetConfigDir() {
+    return this->configDir;
+}
+
+string cPluginConfig::GetVersion() {
+    return this->version;
+}
+
+string cPluginConfig::GetPluginName() {
+    return this->name;
+}
+
+int cPluginConfig::GetHttpPort() {
+    return this->httpPort;
+}
+
+int cPluginConfig::GetHttpsPort() {
+    return this->httpsPort;
+}
+
+bool cPluginConfig::GetUseHttps() {
+    return this->useHttps;
+}
+
+bool cPluginConfig::GetHttpsOnly() {
+    return this->httpsOnly;
+}
+
+char *cPluginConfig::GetSSLKey() {
+    return this->sslKey;
+}
+
+char *cPluginConfig::GetSSLCert() {
+    return this->sslCert;
+}
+
+string cPluginConfig::GetUserName() {
+    return this->userName;
+}
+
+string cPluginConfig::GetPassword() {
+    return this->password;
+}
+
+string cPluginConfig::GetFFmpeg() {
+    return this->ffmpeg;
+}
+
+string cPluginConfig::GetPresetsFile() {
+    return this->presetsFile;
+}
+
+string cPluginConfig::generatePassword(unsigned int length){
+    const char alphanum[] = "0123456789"
+                            "_-!@#$%^&*"
+                            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                            "abcdefghijklmnopqrstuvwxyz";
+    int a_len = sizeof(alphanum) -1;
+    time_t t;
+    time(&t);
+    srand((unsigned int)t);
+    string pw = "";
+    for(unsigned int i=0; i<length; i++) {
+        pw += alphanum[rand() % a_len];
+    }
+    
+    return pw;
+}
+
+bool cPluginConfig::readFromConfFile(string configFile) {
+    ifstream fr;
+    fr.open(configFile.c_str());
+    if(fr.fail())
+    {
+        ofstream fc;
+        fc.open(configFile.c_str());
+        if(!fc.good())
+        {
+            return false;
+        }
+        fc<<"HttpPort="<<this->httpPort<<endl<<
+            "HttpsPort="<<this->httpsPort<<endl<<
+            "UseHttps="<<this->useHttps<<endl<<
+            "HttpsOnly="<<this->httpsOnly<<endl<<
+            "SSLKeyFile="<<endl<<
+            "SSLCertFile="<<endl<<
+            "UserName="<<this->userName<<endl<<
+            "Password="<<this->password<<endl<<
+            "FFMPEG="<<this->ffmpeg<<endl<<
+            "Presets="<<this->presetsFile<<endl;
+        fc.close();
+        return true;       
+    }
+    
+    string line;
+    string keyfile;
+    string certfile;
+    while(getline(fr, line))
+    {
+        vector<string> sline;
+        sline = this->split(line, '=');
+        if(sline.size() != 2)
+            continue;
+        string left = sline[0];
+        string right = sline[1];
+        this->trim(left);
+        this->trim(right);
+        if (left == "HttpPort") {
+            this->httpPort = atoi(right.c_str());
+        }
+        else if (left == "HttpsPort") {
+            this->httpsPort = atoi(right.c_str());
+        }
+        else if (left == "UseHttps") {
+            this->useHttps = (bool)atoi(right.c_str());
+        }
+        else if (left == "HttpsOnly") {
+            this->httpsOnly = (bool)atoi(right.c_str());
+        }
+        else if (left == "SSLKeyFile") {
+            keyfile = right;
+        }
+        else if (left == "SSLCertFile") {
+            certfile = right;
+        }
+        else if (left == "UserName") {
+            this->userName = right;
+        }
+        else if (left == "Password") {
+            this->password = right;
+        }
+        else if (left == "FFMPEG") {
+            if(right != "")
+                this->ffmpeg = right;
+        }
+        else if (left == "Presets") {
+            if(right != "") {
+                this->presetsFile = right;
+            }
+        }    
+    }
+    fr.close();
+    if (this->httpsOnly == true && this->useHttps == false)
+        this->httpsOnly = false;
+    if(certfile == "" || keyfile == "")
+    {
+        this->useHttps = false;
+        this->httpsOnly = false;
+        return true;
+    }
+    ifstream kf;
+    kf.open(keyfile.c_str(), ifstream::in | ifstream::binary);
+    if(kf.fail())
+    {
+        this->useHttps = false;
+        this->httpsOnly = false;
+        return false;
+    }
+    kf.seekg(0, kf.end);
+    this->sslKeySize = kf.tellg();
+    kf.seekg(0, kf.beg);
+    this->sslKey = new char[this->sslKeySize];
+    kf.read(this->sslKey, this->sslKeySize);
+    kf.close();
+    
+    ifstream cf;
+    cf.open(certfile.c_str(), ifstream::in | ifstream::binary);
+    if(cf.fail())
+    {
+        this->useHttps = false;
+        this->httpsOnly = false;
+        return false;
+    }
+    cf.seekg(0, cf.end);
+    this->sslCertSize = cf.tellg();
+    cf.seekg(0, kf.beg);
+    this->sslCert = new char[this->sslCertSize];
+    cf.read(this->sslCert, this->sslCertSize);
+    cf.close();
+    return true;
+}
+
+vector<string> cPluginConfig::split(string str, char delimiter) {
+    vector<string> internal;
+    stringstream ss(str);
+    string tok;
+
+    while(getline(ss, tok, delimiter)) {
+        internal.push_back(tok);
+    }
+
+    return internal;
+}
+
+void cPluginConfig::trim(string& str)
+{
+    string::size_type pos = str.find_last_not_of(' ');
+    if(pos != string::npos) {
+        str.erase(pos + 1);
+        pos = str.find_first_not_of(' ');
+        if(pos != string::npos) str.erase(0, pos);
+    }
+    else str.erase(str.begin(), str.end());
+}
+
