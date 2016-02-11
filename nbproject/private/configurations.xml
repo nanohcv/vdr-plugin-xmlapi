@@ -8,8 +8,14 @@
           </df>
         </df>
       </df>
+      <in>cINIParser.cpp</in>
+      <in>cINIParser.h</in>
       <in>cPluginConfig.cpp</in>
       <in>cPluginConfig.h</in>
+      <in>cPreset.cpp</in>
+      <in>cPreset.h</in>
+      <in>cPresets.cpp</in>
+      <in>cPresets.h</in>
       <in>cRequestHandler.cpp</in>
       <in>cRequestHandler.h</in>
       <in>cStreamer.cpp</in>
@@ -18,12 +24,6 @@
       <in>cWebServer.h</in>
       <in>xmlapi.c</in>
     </df>
-    <itemPath>/home/karl/NetBeansProjects/iniParser/cINIParser.cpp</itemPath>
-    <itemPath>/home/karl/NetBeansProjects/iniParser/cINIParser.h</itemPath>
-    <itemPath>/home/karl/NetBeansProjects/iniParser/cPreset.cpp</itemPath>
-    <itemPath>/home/karl/NetBeansProjects/iniParser/cPreset.h</itemPath>
-    <itemPath>/home/karl/NetBeansProjects/iniParser/cPresets.cpp</itemPath>
-    <itemPath>/home/karl/NetBeansProjects/iniParser/cPresets.h</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>

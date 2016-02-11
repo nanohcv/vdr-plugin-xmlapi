@@ -13,12 +13,34 @@
 
 #include "cStreamer.h"
 
-cStreamer::cStreamer() {
+cStreamer::cStreamer(cPluginConfig config, cPreset preset)
+    : config(config), preset(preset)
+{
+    this->ffmpeg = NULL;
 }
 
-cStreamer::cStreamer(const cStreamer& orig) {
+cStreamer::cStreamer(const cStreamer& orig)
+    : config(orig.config), preset(orig.preset)
+{
+    this->ffmpeg = orig.ffmpeg;
 }
 
 cStreamer::~cStreamer() {
 }
 
+cStreamer& cStreamer::operator =(const cStreamer& src) {
+    if(this != &src) {
+        this->config = src.config;
+        this->preset = src.preset;
+        this->ffmpeg = src.ffmpeg;
+    }
+    return *this;
+}
+
+void cStreamer::Start() {
+    
+}
+
+void cStreamer::Stop() {
+    
+}

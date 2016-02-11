@@ -13,6 +13,8 @@
 #include <microhttpd.h>
 #include <unistd.h>
 #include "cPluginConfig.h"
+#include "cPreset.h"
+#include "cPresets.h"
 
 #ifndef CREQUESTHANDLER_H
 #define CREQUESTHANDLER_H
@@ -25,11 +27,15 @@ public:
 private:
     struct MHD_Connection *connection;
     cPluginConfig config;
+    cPresets presets;
+    
     int handleVersion();
-    int handleStream();
+    int handleStream(const char *url);
     
     static ssize_t stream_reader (void *cls, uint64_t pos, char *buf, size_t max);
     static void clear_stream(void *cls);
+    
+    bool startswith(const char *pre, const char *str);
 
 };
 

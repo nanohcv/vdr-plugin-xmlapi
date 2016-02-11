@@ -20,7 +20,7 @@
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection, 
                                     cPluginConfig config)
-    : config(config)
+    : config(config), presets(config.GetPresetsFile())
 {
     this->connection = connection;
 }
@@ -35,9 +35,9 @@ int cRequestHandler::HandleRequest(const char* method, const char* url) {
     {
         return this->handleVersion();
     }
-    else if (0 == strcmp(url, "/stream.ts"))
+    else if (this->startswith("/stream", url))
     {
-        return this->handleStream();
+        return this->handleStream(url);
     }
     return MHD_NO;
 }
@@ -63,9 +63,22 @@ int cRequestHandler::handleVersion() {
     return ret;
 }
 
-int cRequestHandler::handleStream() {
+int cRequestHandler::handleStream(const char *url) {
     struct MHD_Response *response;
     int ret;
+    const char* cstr_preset = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "preset");
+    if(cstr_preset == NULL)
+    {
+        esyslog("xmlapi: No preset given!");
+        return MHD_NO;
+    }
+    string ps(cstr_preset);
+    cPreset preset = this->presets[ps];
+    string expectedUrl = "/stream" + preset.Extension();
+    if(0 != strcmp(url, expectedUrl.c_str())) {
+        esyslog("xmlapi: Url %s doen't ends with stream%s", urlm expectedUrl.c_str());
+        return MHD_NO;
+    }
     const char* chid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "chid");
     if(chid == NULL)
     {
@@ -91,5 +104,11 @@ ssize_t cRequestHandler::stream_reader(void* cls, uint64_t pos, char* buf, size_
 
 void cRequestHandler::clear_stream(void* cls) {
 
+}
+
+bool cRequestHandler::startswith(const char* pre, const char* str) {
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
 

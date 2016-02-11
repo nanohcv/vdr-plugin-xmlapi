@@ -14,12 +14,25 @@
 #ifndef CSTREAMER_H
 #define CSTREAMER_H
 
+#include <cstdio>
+#include "cPluginConfig.h"
+#include "cPreset.h"
+
 class cStreamer {
 public:
-    cStreamer();
+    cStreamer(cPluginConfig config, cPreset preset);
     cStreamer(const cStreamer& orig);
     virtual ~cStreamer();
+    
+    cStreamer& operator =(const cStreamer& src);
+    
+    void Start();
+    void Stop();
+    
 private:
+    cPreset preset;
+    cPluginConfig config;
+    FILE *ffmpeg;
 
 };
 
