@@ -220,8 +220,11 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "Presets="<<this->presetsFile<<endl<<
             "StreamdevUrl="<<this->streamdevUrl<<endl;
         fc.close();
+        this->createDefaultPresetFile(this->presetsFile);
         return true;       
     }
+    
+    
     
     string line;
     string keyfile;
@@ -276,6 +279,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
         }
     }
     fr.close();
+    this->createDefaultPresetFile(this->presetsFile);
     if (this->httpsOnly == true && this->useHttps == false)
         this->httpsOnly = false;
     if(certfile == "" || keyfile == "")
@@ -339,3 +343,58 @@ void cPluginConfig::trim(string& str)
     else str.erase(str.begin(), str.end());
 }
 
+bool cPluginConfig::createDefaultPresetFile(string presetFile) {
+    ifstream prfile;
+    prfile.open(presetFile.c_str());
+    if(prfile.fail()) {
+        ofstream pcfile;
+        pcfile.open(presetFile.c_str());
+        if(!pcfile.good()) {
+            return false;
+        }
+        string preset_low = "[Low]\n"
+                            "Cmd=-analyzeduration 1M -threads 2 -i \"{infile}\""
+                                 " -threads 2 -f mpegts -vcodec libx264"
+                                 " -bufsize 1400k -maxrate 700k -crf 25 -g 50"
+                                 " -map 0:v -map a:0"
+                                 " -vf \"yadif=0:-1:1, scale=512:288\""
+                                 " -preset medium -tune film"
+                                 " -vprofile baseline -level 30"
+                                 " -acodec libmp3lame -ab 64k -ar 44100 -ac 1"
+                                 " -async 1 pipe:1\n"
+                            "MimeType=video/mpeg\n"
+                            "Ext=.ts\n";
+        
+        string preset_mid = "[Mid]\n"
+                            "Cmd=-analyzeduration 1M -threads 2 -i \"{infile}\""
+                                 " -threads 2 -f mpegts -vcodec libx264"
+                                 " -bufsize 2000k -maxrate 1000k -crf 22 -g 50"
+                                 " -map 0:v -map 0:a"
+                                 " -vf \"yadif=0:-1:1, scale=640:360\""
+                                 " -preset medium -tune film"
+                                 " -vprofile main -level 30"
+                                 " -acodec libmp3lame -ab 96k -ar 44100 -ac 2"
+                                 " -async 1 pipe:1\n"
+                            "MimeType=video/mpeg\n"
+                            "Ext=.ts\n";
+        
+        string preset_high = "[High]\n"
+                             "Cmd=-analyzeduration 1M -threads 2 -i \"{infile}\""
+                                 " -threads 2 -f mpegts -vcodec libx264"
+                                 " -bufsize 3200k -maxrate 1600k -crf 22 -g 50"
+                                 " -map 0:v -map 0:a"
+                                 " -vf \"yadif=0:-1:1, scale=720:405\""
+                                 " -preset medium -tune film"
+                                 " -vprofile main -level 30"
+                                 " -acodec libmp3lame -ab 96k -ar 44100 -ac 2"
+                                 " -async 1 pipe:1\n"
+                             "MimeType=video/mpeg\n"
+                             "Ext=.ts\n";
+        
+        pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low;
+        pcfile.close();
+        return true;
+    }
+    prfile.close();
+    return true;
+}
