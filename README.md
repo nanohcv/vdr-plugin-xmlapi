@@ -37,7 +37,7 @@ UseHttps Parameter is ignored*
  
 *If you only want to activate SSL-Daemon, set HttpsOnly to 1. Make sure that 
 UseHttps is also activated. Otherwise this parameter is ignored.*
-HttpsOnly=0
+- HttpsOnly=0
 
 *If UseHttps is set to 1, then you have to set the path to the SSL Key file 
 in the following line:*
@@ -77,9 +77,9 @@ parameter. Make sure that the url ends with a slash.*
 *To transcode a channel you have to open the url 
 http://server:port/stream{extenstion}?preset={preset}&chid={channelId}
 The ffmpeg parameter -i must be set to {infile} and the output file must be set
-to pipe:1
+to pipe:1*
 
-The presets.ini should look like this:*
+*The presets.ini should look like this:*
 - [preset name]
 - Cmd=your ffmepg parameter
 - MimeType=your Mime Type
