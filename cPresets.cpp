@@ -42,20 +42,22 @@ cPresets::~cPresets() {
 }
 
 cPreset cPresets::operator [](string key) {
-    
-    
     map<string,cPreset>::iterator it = this->find(key);
     if(it == this->end()) {
-        string cmd = "-analyzeduration 1M -threads 2 -i \"{infile}\" -threads 2"
+        return this->GetDefaultPreset();
+    }
+    return this->at(key);
+}
+
+cPreset cPresets::GetDefaultPreset() {
+    string cmd = "-analyzeduration 1M -threads 2 -i \"{infile}\" -threads 2"
               " -f mpegts -vcodec libx264 -bufsize 2000k"
               " -maxrate 1000k -crf 22 -g 50 -map 0:v -map a:0"
               " -vf \"yadif=0:-1:1, scale=640:360\" -preset medium -tune film"
               " -vprofile main -level 30 -acodec libmp3lame -ab 96k -ar 44100"
               " -ac 2 -async 1 pipe:1";
-        string mime = "video/mpeg";
-        string ext = ".ts";
-        cPreset preset(cmd,mime,ext);
-        return preset;
-    }
-    return this->at(key);
+    string mime = "video/mpeg";
+    string ext = ".ts";
+    cPreset preset(cmd, mime, ext);
+    return preset;
 }

@@ -49,6 +49,10 @@ string cPreset::FFmpegCmd(string ffmpeg, string input) {
     return ffmpeg;
 }
 
+string cPreset::GetCmd() {
+    return this->cmd;
+}
+
 string cPreset::MimeType() {
     return this->mimetype;
 }

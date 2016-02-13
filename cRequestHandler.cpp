@@ -40,6 +40,9 @@ int cRequestHandler::HandleRequest(const char* method, const char* url) {
     {
         return this->handleStream(url);
     }
+    else if (0 == strcmp(url, "/presets.ini")) {
+        return this->handlePresets();
+    }
     return MHD_NO;
 }
 
@@ -124,3 +127,35 @@ bool cRequestHandler::startswith(const char* pre, const char* str) {
     return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
 
+int cRequestHandler::handlePresets() {
+    string ini;
+    if(this->presets.size() != 0)
+    {
+        for(map<string,cPreset>::iterator it = presets.begin(); 
+                it != presets.end(); ++it) {
+            ini += "[" + it->first + "]\n";
+            ini += "Cmd=" + it->second.GetCmd() + "\n";
+            ini += "MimeType=" + it->second.MimeType() + "\n";
+            ini += "Ext=" + it->second.Extension() + "\n\n";
+        }
+    } else {
+        cPreset dp = presets.GetDefaultPreset();
+        ini += "[Default]\n";
+        ini += "Cmd=" + dp.GetCmd() + "\n";
+        ini += "MimeType=" + dp.MimeType() + "\n";
+        ini += "Ext=" + dp.Extension() + "\n\n";
+    }
+    char *page = (char *)malloc((ini.length() + 1) * sizeof(char));
+    strcpy(page, ini.c_str());
+    struct MHD_Response *response;
+    int ret;
+    
+    response = MHD_create_response_from_buffer (strlen (page), 
+                                               (void *) page, 
+                                               MHD_RESPMEM_MUST_FREE);
+    MHD_add_response_header (response, "Content-Type", "text/plain");
+    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
+    MHD_destroy_response (response);
+    return ret;
+    
+}

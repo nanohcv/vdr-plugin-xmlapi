@@ -26,6 +26,7 @@ public:
     cPresets(const cPresets& src);
     virtual ~cPresets();
     cPreset operator[] (string key);
+    cPreset GetDefaultPreset();
 private:
 
 };

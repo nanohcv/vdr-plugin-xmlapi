@@ -27,6 +27,7 @@ public:
     cPreset& operator = (const cPreset& src);
     
     string FFmpegCmd(string ffmpeg, string input);
+    string GetCmd();
     string MimeType();
     string Extension();
 private:
