@@ -32,11 +32,14 @@ private:
     int handleVersion();
     int handleStream(const char *url);
     int handlePresets();
+    int handleChannels();
+    string channelsToXml();
     
     static ssize_t stream_reader (void *cls, uint64_t pos, char *buf, size_t max);
     static void clear_stream(void *cls);
     
     bool startswith(const char *pre, const char *str);
+    void xmlEncode(string& data);
 
 };
 

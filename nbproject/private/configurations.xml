@@ -58,10 +58,10 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server -P'satip -d 1 -s 192.168.178.10|DVBS2-1|RecSvc'</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server -P 'satip -s 192.168.178.10|DVBS2-1|RecSvc'</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server -P 'satip -s 192.168.178.10|DVBS2-1|RecSvc'</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server</runcommand>
+        <runcommand>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server -P 'satip -s 192.168.178.10|DVBS2-1|RecSvc'</runcommand>
         <rundir>.</rundir>
         <buildfirst>false</buildfirst>
         <terminal-type>0</terminal-type>

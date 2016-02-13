@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <string>
 #include <vdr/tools.h>
+#include <vdr/channels.h>
 #include "cRequestHandler.h"
 #include "cStreamer.h"
 
@@ -32,7 +33,7 @@ cRequestHandler::~cRequestHandler() {
 int cRequestHandler::HandleRequest(const char* method, const char* url) {
     if(0 != strcmp(method, "GET"))
         return MHD_NO;
-    if(0 == strcmp(url, "/version.html"))
+    if(0 == strcmp(url, "/version.xml"))
     {
         return this->handleVersion();
     }
@@ -42,6 +43,9 @@ int cRequestHandler::HandleRequest(const char* method, const char* url) {
     }
     else if (0 == strcmp(url, "/presets.ini")) {
         return this->handlePresets();
+    }
+    else if (0 == strcmp(url, "/channels.xml")) {
+        return this->handleChannels();
     }
     return MHD_NO;
 }
@@ -57,7 +61,6 @@ int cRequestHandler::handleVersion() {
     int ret;
     char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
     strcpy(page, xml.c_str());
-    dsyslog("xmlapi: xml-length = %d", strlen(page) );
     response = MHD_create_response_from_buffer (strlen (page), 
                                                (void *) page, 
                                                MHD_RESPMEM_MUST_FREE);
@@ -158,4 +161,75 @@ int cRequestHandler::handlePresets() {
     MHD_destroy_response (response);
     return ret;
     
+}
+
+int cRequestHandler::handleChannels() {
+    string xml = this->channelsToXml();
+    struct MHD_Response *response;
+    int ret;
+    char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
+    strcpy(page, xml.c_str());
+    response = MHD_create_response_from_buffer (strlen (page), 
+                                               (void *) page, 
+                                               MHD_RESPMEM_MUST_FREE);
+    MHD_add_response_header (response, "Content-Type", "text/xml");
+    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
+    MHD_destroy_response (response);
+    return ret;
+}
+
+string cRequestHandler::channelsToXml() {
+    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
+    xml +=       "<groups>\n";
+    string group = "Unsorted";
+    bool firstgroup = true;
+    for(int i=0; i<Channels.Count(); i++) {
+        cChannel *channel = Channels.Get(i);
+        if(channel->GroupSep() && firstgroup) {
+            group = channel->Name();
+            xml += "    <group name=\"" + group + "\">\n";
+            firstgroup = false;
+            continue;
+        }
+        if(channel->GroupSep() && !firstgroup) {
+            xml += "    </group>\n";
+            group = channel->Name();
+            xml += "    <group name=\"" + group + "\">\n";
+            continue;
+        }
+        if(!channel->GroupSep() && i == 0) {
+            xml += "    <group name=\"" + group + "\">\n";
+            firstgroup = false;
+        }
+        xml += "        <channel id=\"" + 
+                string(channel->GetChannelID().ToString()) +
+                "\">\n";
+        string name = channel->Name();
+        string shortname = channel->ShortName();
+        this->xmlEncode(name);
+        this->xmlEncode(shortname);
+        xml += "            <name>" + name + "</name>\n";
+        xml += "            <shortname>" + shortname + "</shortname>\n";
+        xml += "            <logo>/logos/" + name + ".png</logo>\n";
+        xml += "        </channel>\n";
+    }
+    xml += "    </group>\n";
+    xml += "</groups>\n";
+    return xml;
+}
+
+void cRequestHandler::xmlEncode(string& data) {
+    std::string buffer;
+    buffer.reserve(data.size());
+    for(size_t pos = 0; pos != data.size(); ++pos) {
+        switch(data[pos]) {
+            case '&':  buffer.append("&amp;");       break;
+            case '\"': buffer.append("&quot;");      break;
+            case '\'': buffer.append("&apos;");      break;
+            case '<':  buffer.append("&lt;");        break;
+            case '>':  buffer.append("&gt;");        break;
+            default:   buffer.append(&data[pos], 1); break;
+        }
+    }
+    data.swap(buffer);
 }
