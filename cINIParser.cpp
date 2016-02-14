@@ -14,6 +14,7 @@
 #include "cINIParser.h"
 #include <fstream>
 #include <sstream>
+#include "helpers.h"
 
 cINIParser::cINIParser(string iniFile) {
     parse(iniFile);
@@ -33,28 +34,6 @@ vector<string> cINIParser::GetKeys() {
         keys.push_back(it->first);
     }
     return keys;
-}
-
-vector<string> cINIParser::split(string str, char delimiter) {
-    vector<string> internal;
-    stringstream ss(str);
-    string tok;
-
-    while(getline(ss, tok, delimiter)) {
-        internal.push_back(tok);
-    }
-
-    return internal;
-}
-
-void cINIParser::trim(string& str) {
-    string::size_type pos = str.find_last_not_of(' ');
-    if(pos != string::npos) {
-        str.erase(pos + 1);
-        pos = str.find_first_not_of(' ');
-        if(pos != string::npos) str.erase(0, pos);
-    }
-    else str.erase(str.begin(), str.end());
 }
 
 void cINIParser::parse(string iniFile) {

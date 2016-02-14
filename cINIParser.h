@@ -28,9 +28,6 @@ public:
     vector<string> GetKeys();
     
 private:
-    
-    vector<string> split(string str, char delimiter);
-    void trim(string& str);
     void parse(string iniFile);
 };
 

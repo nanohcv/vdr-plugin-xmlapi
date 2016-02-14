@@ -15,10 +15,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <ctime>
 #include <vdr/tools.h>
 #include <vdr/channels.h>
+#include <vdr/epg.h>
 #include "cRequestHandler.h"
 #include "cStreamer.h"
+#include "helpers.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection, 
                                     cPluginConfig config)
@@ -37,7 +40,7 @@ int cRequestHandler::HandleRequest(const char* method, const char* url) {
     {
         return this->handleVersion();
     }
-    else if (this->startswith("/stream", url))
+    else if (startswith("/stream", url))
     {
         return this->handleStream(url);
     }
@@ -46,6 +49,12 @@ int cRequestHandler::HandleRequest(const char* method, const char* url) {
     }
     else if (0 == strcmp(url, "/channels.xml")) {
         return this->handleChannels();
+    }
+    else if (0 == strcmp(url, "/epg.xml")) {
+        return this->handleEPG();
+    }
+    else {
+        return this->handle404Error();
     }
     return MHD_NO;
 }
@@ -76,21 +85,27 @@ int cRequestHandler::handleStream(const char *url) {
     const char* cstr_preset = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "preset");
     if(cstr_preset == NULL)
     {
-        esyslog("xmlapi: No preset given!");
-        return MHD_NO;
+        esyslog("xmlapi: stream -> No preset given!");
+        return this->handle404Error();
     }
     string ps(cstr_preset);
     cPreset preset = this->presets[ps];
     string expectedUrl = "/stream" + preset.Extension();
     if(0 != strcmp(url, expectedUrl.c_str())) {
         esyslog("xmlapi: Url %s doen't ends with stream%s", url, expectedUrl.c_str());
-        return MHD_NO;
+        return this->handle404Error();
     }
     const char* chid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "chid");
     if(chid == NULL)
     {
-        esyslog("xmlapi: No chid given!");
-        return MHD_NO;
+        esyslog("xmlapi: stream -> No chid given!");
+        return this->handle404Error();
+    }
+    
+    tChannelID id = tChannelID::FromString(chid);
+    if(!id.Valid()) {
+        esyslog("xmlapi: stream -> invalid chid given");
+        return this->handle404Error();
     }
     
     string channelId(chid);
@@ -122,12 +137,6 @@ void cRequestHandler::clear_stream(void* cls) {
     cStreamer *streamer = (cStreamer *)cls;
     streamer->Stop();
     delete streamer;
-}
-
-bool cRequestHandler::startswith(const char* pre, const char* str) {
-    size_t lenpre = strlen(pre),
-           lenstr = strlen(str);
-    return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
 
 int cRequestHandler::handlePresets() {
@@ -206,8 +215,8 @@ string cRequestHandler::channelsToXml() {
                 "\">\n";
         string name = channel->Name();
         string shortname = channel->ShortName();
-        this->xmlEncode(name);
-        this->xmlEncode(shortname);
+        xmlEncode(name);
+        xmlEncode(shortname);
         xml += "            <name>" + name + "</name>\n";
         xml += "            <shortname>" + shortname + "</shortname>\n";
         xml += "            <logo>/logos/" + name + ".png</logo>\n";
@@ -218,18 +227,119 @@ string cRequestHandler::channelsToXml() {
     return xml;
 }
 
-void cRequestHandler::xmlEncode(string& data) {
-    std::string buffer;
-    buffer.reserve(data.size());
-    for(size_t pos = 0; pos != data.size(); ++pos) {
-        switch(data[pos]) {
-            case '&':  buffer.append("&amp;");       break;
-            case '\"': buffer.append("&quot;");      break;
-            case '\'': buffer.append("&apos;");      break;
-            case '<':  buffer.append("&lt;");        break;
-            case '>':  buffer.append("&gt;");        break;
-            default:   buffer.append(&data[pos], 1); break;
+int cRequestHandler::handleEPG() {
+    struct MHD_Response *response;
+    int ret;
+    const char* chid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "chid");
+    if(chid == NULL) {
+        esyslog("xmlapi: epg.xml -> No chid given.");
+        return this->handle404Error();
+    }
+    bool now = false;
+    bool next = false;
+    bool attime = false;
+    time_t at_time = 0;
+    
+    const char *at = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "at");
+    if(at != NULL) {
+        if (0 == strcmp(at, "now")) {
+            now = true;
+        } else if (0 == strcmp(at, "next")) {
+            next = true;
+        } else {
+            at_time = atol(at);
+            attime = true;
         }
     }
-    data.swap(buffer);
+    
+    if(MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "next") != NULL) {
+        next = true;
+    }
+    
+    cSchedulesLock lock;
+    const cSchedules *schedules = cSchedules::Schedules(lock);
+    tChannelID cid = tChannelID::FromString(chid);
+    if(!cid.Valid()) {
+        esyslog("xmlapi: epg.xml -> invalid chid given");
+        return this->handle404Error();
+    }
+    const cSchedule *schedule = schedules->GetSchedule(cid);
+    const cList<cEvent> *events = schedule->Events();
+    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
+    xml +=       "<events>\n";
+    
+    for(int i=0; i<events->Count(); i++) {
+        cEvent *event = NULL;
+        if(now) {
+            event = const_cast<cEvent *>(schedule->GetPresentEvent());
+            i = events->Count();
+        } else if (next) {
+            event = const_cast<cEvent *>(schedule->GetFollowingEvent());
+            i = events->Count();
+        } else if (attime) {
+            event = const_cast<cEvent *>(schedule->GetEventAround(at_time));
+            i = events->Count();
+        } else {
+            event = events->Get(i);
+        }
+        if(event == NULL) {
+            continue;
+        }
+        const char *t = event->Title();
+        const char *s = event->ShortText();
+        const char *d = event->Description();
+
+        string title;
+        if(t != NULL)
+            title = string(event->Title());
+        string shorttext;
+        if(s != NULL)
+            shorttext = string(event->ShortText());
+        string descr;
+        if(d != NULL)
+            descr = string(event->Description());
+        xmlEncode(title);
+        xmlEncode(shorttext);
+        xmlEncode(descr);
+        xml += "  <event id=\"" + uint32ToString(event->EventID()) + "\">\n";
+        xml += "    <channelid>" + string(event->ChannelID().ToString()) + "</channelid>\n";
+        xml += "    <title>" + title + "</title>\n";
+        xml += "    <shorttext>" + shorttext + "</shorttext>\n";
+        xml += "    <description>" + descr + "</description>\n";
+        xml += "    <start>" + timeToString(event->StartTime()) + "</start>\n";
+        xml += "    <stop>" + timeToString(event->EndTime()) + "</stop>\n";
+        xml += "    <duration>" + intToString(event->Duration()) + "</duration>\n";
+        xml += "  </event>\n";
+    }
+    xml += "</events>\n";
+    char *page = (char *)malloc((xml.length()+1) * sizeof(char));
+    strcpy(page, xml.c_str());
+    response = MHD_create_response_from_buffer (strlen (page), 
+                                               (void *) page, 
+                                               MHD_RESPMEM_MUST_FREE);
+    MHD_add_response_header (response, "Content-Type", "text/xml");
+    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
+    MHD_destroy_response (response);
+    return ret;
+}
+
+int cRequestHandler::handle404Error() {
+    struct MHD_Response *response;
+    int ret;
+    const char *page = "<html>\n"
+                       "  <head>\n"
+                       "    <title>404 Not Found</title>\n"
+                       "  </head>\n"
+                       "  <body>\n"
+                       "    <h1>Not Found</h1>\n"
+                       "    <p>The requested URL was not found on this server.</p>\n"
+                       "  </body>\n"
+                       "</html>\n";
+    response = MHD_create_response_from_buffer (strlen (page), 
+                                               (void *) page, 
+                                               MHD_RESPMEM_PERSISTENT);
+    MHD_add_response_header (response, "Content-Type", "text/html");
+    ret = MHD_queue_response(this->connection, MHD_HTTP_NOT_FOUND, response);
+    MHD_destroy_response (response);
+    return ret;
 }
