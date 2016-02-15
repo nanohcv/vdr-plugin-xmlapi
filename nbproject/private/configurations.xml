@@ -16,6 +16,8 @@
       <in>cStreamer.h</in>
       <in>cWebServer.cpp</in>
       <in>cWebServer.h</in>
+      <in>helpers.cpp</in>
+      <in>helpers.h</in>
       <in>xmlapi.c</in>
     </df>
   </logicalFolder>
@@ -62,8 +64,9 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server -P'satip -d 1 -s 192.168.178.10|DVBS2-1|RecSvc'</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server -P 'satip -s 192.168.178.10|DVBS2-1|RecSvc'</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server -Pddci2</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server</runcommand>
+        <runcommand>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server -Pddci2</runcommand>
         <rundir>.</rundir>
         <buildfirst>false</buildfirst>
         <terminal-type>0</terminal-type>

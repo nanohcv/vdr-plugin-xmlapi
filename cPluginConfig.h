@@ -40,6 +40,7 @@ public:
     string GetUserName();
     string GetPassword();
     string GetFFmpeg();
+    int    GetFFmpegReadTimeout();
     string GetPresetsFile();
     string GetStreamdevUrl();
     
@@ -59,6 +60,7 @@ private:
     string userName;
     string password;
     string ffmpeg;
+    int ffmpegReadTimeout;
     string presetsFile;
     string streamdevUrl;
     

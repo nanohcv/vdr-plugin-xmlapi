@@ -36,6 +36,7 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName,
     this->userName = string(pluginName);
     this->password = this->generatePassword(12);
     this->ffmpeg = "ffmpeg";
+    this->ffmpegReadTimeout = 15;
     this->presetsFile = string(configDir) + "/presets.ini";
     this->streamdevUrl = "http://127.0.0.1:3000/";
     this->readFromConfFile(configFile);
@@ -70,6 +71,7 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     this->userName = src.userName;
     this->password = src.password;
     this->ffmpeg = src.ffmpeg;
+    this->ffmpegReadTimeout = src.ffmpegReadTimeout;
     this->presetsFile = src.presetsFile;
     this->streamdevUrl = src.streamdevUrl;
     
@@ -94,6 +96,7 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->userName = src.userName;
         this->password = src.password;
         this->ffmpeg = src.ffmpeg;
+        this->ffmpegReadTimeout = src.ffmpegReadTimeout;
         this->presetsFile = src.presetsFile;
         this->streamdevUrl = src.streamdevUrl;
         if(src.sslKey != NULL) {
@@ -172,6 +175,10 @@ string cPluginConfig::GetFFmpeg() {
     return this->ffmpeg;
 }
 
+int cPluginConfig::GetFFmpegReadTimeout() {
+    return this->ffmpegReadTimeout;
+}
+
 string cPluginConfig::GetPresetsFile() {
     return this->presetsFile;
 }
@@ -217,6 +224,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "UserName="<<this->userName<<endl<<
             "Password="<<this->password<<endl<<
             "FFMPEG="<<this->ffmpeg<<endl<<
+            "FFmpegReadTimeout="<<this->ffmpegReadTimeout<<endl<<
             "Presets="<<this->presetsFile<<endl<<
             "StreamdevUrl="<<this->streamdevUrl<<endl;
         fc.close();
@@ -266,6 +274,9 @@ bool cPluginConfig::readFromConfFile(string configFile) {
         else if (left == "FFMPEG") {
             if(right != "")
                 this->ffmpeg = right;
+        }
+        else if (left == "FFmpegReadTimeout") {
+            this->ffmpegReadTimeout = atoi(right.c_str());
         }
         else if (left == "Presets") {
             if(right != "") {
@@ -353,7 +364,8 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
             return false;
         }
         string preset_low = "[Low]\n"
-                            "Cmd=-analyzeduration 1M -threads 2 -i \"{infile}\""
+                            "Cmd=-analyzeduration 1M -threads 2"
+                                 " -i \"{infile}\""
                                  " -threads 2 -f mpegts -vcodec libx264"
                                  " -bufsize 1400k -maxrate 700k -crf 25 -g 50"
                                  " -map 0:v -map a:0"
@@ -366,7 +378,8 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                             "Ext=.ts\n";
         
         string preset_mid = "[Mid]\n"
-                            "Cmd=-analyzeduration 1M -threads 2 -i \"{infile}\""
+                            "Cmd=-analyzeduration 1M -threads 2"
+                                 " -i \"{infile}\""
                                  " -threads 2 -f mpegts -vcodec libx264"
                                  " -bufsize 2000k -maxrate 1000k -crf 22 -g 50"
                                  " -map 0:v -map 0:a"
@@ -379,7 +392,8 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                             "Ext=.ts\n";
         
         string preset_high = "[High]\n"
-                             "Cmd=-analyzeduration 1M -threads 2 -i \"{infile}\""
+                             "Cmd=-analyzeduration 1M -threads 2"
+                                 " -i \"{infile}\""
                                  " -threads 2 -f mpegts -vcodec libx264"
                                  " -bufsize 3200k -maxrate 1600k -crf 22 -g 50"
                                  " -map 0:v -map 0:a"

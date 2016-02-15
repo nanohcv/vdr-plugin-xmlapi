@@ -116,6 +116,12 @@ bool cPluginXmlapi::Initialize(void)
 bool cPluginXmlapi::Start(void)
 {
     cPluginConfig config(ConfigDirectory(Name()), Name(), VERSION);
+    dsyslog("xmlapi: Config-File=%s", config.GetConfigFile().c_str());
+    dsyslog("xmlapi: Preset.ini=%s", config.GetPresetsFile().c_str());
+    dsyslog("xmlapi: HTTP-Port=%d, HTTPs-Port=%d, Use HTTPs=%d, HTTPS only=%d", 
+                     config.GetHttpPort(), config.GetHttpsPort(), 
+                     config.GetUseHttps(), config.GetHttpsOnly());
+    dsyslog("xmlapi: User name=%s", config.GetUserName().c_str());
     if(srv == NULL)
     {
         srv = new cWebServer(config);

@@ -15,10 +15,11 @@
 #define CSTREAMER_H
 
 #include <cstdio>
+#include <vdr/thread.h>
 #include "cPluginConfig.h"
 #include "cPreset.h"
 
-class cStreamer {
+class cStreamer : public cThread {
 public:
     cStreamer(cPluginConfig config, cPreset preset, string chid);
     cStreamer(const cStreamer& orig);
@@ -26,17 +27,22 @@ public:
     
     cStreamer& operator =(const cStreamer& src);
     
-    bool Start();
-    void Stop();
+    bool StartFFmpeg();
+    void StopFFmpeg();
+    void ResetTimeoutTimer();
     
-    ssize_t Read(char *buf, size_t max);
+    ssize_t Read(char *buf, size_t max);  
     
 private:
     cPluginConfig config;
     cPreset preset;
     string chid;
     FILE *ffmpeg;
-
+    int ffmpeg_fd;
+    
+    volatile int secs;
+    
+    void Action();
 };
 
 #endif /* CSTREAMER_H */

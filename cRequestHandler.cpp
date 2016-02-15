@@ -40,7 +40,7 @@ int cRequestHandler::HandleRequest(const char* method, const char* url) {
     {
         return this->handleVersion();
     }
-    else if (startswith("/stream", url))
+    else if (startswith(url, "/stream"))
     {
         return this->handleStream(url);
     }
@@ -101,7 +101,7 @@ int cRequestHandler::handleStream(const char *url) {
         esyslog("xmlapi: stream -> No chid given!");
         return this->handle404Error();
     }
-    
+    dsyslog("xmlapi: request %s?chid=%s&preset=%s", url, chid, cstr_preset);
     tChannelID id = tChannelID::FromString(chid);
     if(!id.Valid()) {
         esyslog("xmlapi: stream -> invalid chid given");
@@ -111,12 +111,12 @@ int cRequestHandler::handleStream(const char *url) {
     string channelId(chid);
     
     cStreamer *streamer = new cStreamer(this->config, preset, channelId);
-    if(!streamer->Start())
+    if(!streamer->StartFFmpeg())
     {
         delete streamer;
         return MHD_NO;
     }
-    
+    dsyslog("xmlapi: Stream started");
     response = MHD_create_response_from_callback (MHD_SIZE_UNKNOWN,
                                                 8*1024,
                                                 &cRequestHandler::stream_reader,
@@ -135,8 +135,9 @@ ssize_t cRequestHandler::stream_reader(void* cls, uint64_t pos, char* buf, size_
 
 void cRequestHandler::clear_stream(void* cls) {
     cStreamer *streamer = (cStreamer *)cls;
-    streamer->Stop();
+    streamer->StopFFmpeg();
     delete streamer;
+    dsyslog("xmlapi: Stream stopped");
 }
 
 int cRequestHandler::handlePresets() {

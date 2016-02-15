@@ -3,17 +3,13 @@
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="." name="0">
       <in>cINIParser.cpp</in>
-      <in>cINIParser.h</in>
       <in>cPluginConfig.cpp</in>
       <in>cPreset.cpp</in>
-      <in>cPreset.h</in>
       <in>cPresets.cpp</in>
-      <in>cPresets.h</in>
       <in>cRequestHandler.cpp</in>
-      <in>cRequestHandler.h</in>
       <in>cStreamer.cpp</in>
-      <in>cStreamer.h</in>
       <in>cWebServer.cpp</in>
+      <in>helpers.cpp</in>
       <in>xmlapi.c</in>
     </df>
     <logicalFolder name="ExternalFiles"
@@ -64,34 +60,36 @@
         </preBuild>
       </makefileType>
       <item path="cINIParser.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cINIParser.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cPluginConfig.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cPreset.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cPreset.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cPresets.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cPresets.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cRequestHandler.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cRequestHandler.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cStreamer.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cStreamer.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cWebServer.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="helpers.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="helpers.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="xmlapi.c" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
