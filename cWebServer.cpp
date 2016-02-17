@@ -36,10 +36,11 @@ bool cWebServer::Start() {
     if(this->config.GetUseHttps())
     {
         this->https_daemon = MHD_start_daemon (MHD_USE_THREAD_PER_CONNECTION | MHD_USE_SSL,
-  	   		     this->config.GetHttpsPort(), &cWebServer::on_client_connect, NULL,
+  	   		     this->config.GetHttpsPort(), &cWebServer::on_client_connect, this,
                              &cWebServer::handle_connection, this,
                              MHD_OPTION_HTTPS_MEM_KEY, this->config.GetSSLKey(),
                              MHD_OPTION_HTTPS_MEM_CERT, this->config.GetSSLCert(),
+                             MHD_OPTION_NOTIFY_COMPLETED, &cWebServer::on_request_complete, this,
                              MHD_OPTION_END);
         if(NULL == this->https_daemon)
         {
@@ -52,8 +53,9 @@ bool cWebServer::Start() {
     {
         this->http_daemon = MHD_start_daemon (MHD_USE_THREAD_PER_CONNECTION,
                                this->config.GetHttpPort(),
-                               &cWebServer::on_client_connect, NULL, 
+                               &cWebServer::on_client_connect, this, 
                                &cWebServer::handle_connection, this,
+                               MHD_OPTION_NOTIFY_COMPLETED, &cWebServer::on_request_complete, this,
                                MHD_OPTION_END);
         if(NULL == this->http_daemon)
         {
@@ -150,5 +152,10 @@ int cWebServer::on_client_connect (void *cls,
     return MHD_YES;
 }
 
+void cWebServer::on_request_complete(void* cls, MHD_Connection* connection, 
+                                        void** con_cls,
+                                        MHD_RequestTerminationCode toe) {
+    dsyslog("xmlapi: Request complete");
+}
 
 

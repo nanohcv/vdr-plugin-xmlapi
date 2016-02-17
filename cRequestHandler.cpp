@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <string>
 #include <ctime>
+#include <sys/wait.h>
 #include <vdr/tools.h>
 #include <vdr/channels.h>
 #include <vdr/epg.h>
@@ -111,6 +112,8 @@ int cRequestHandler::handleStream(const char *url) {
     string channelId(chid);
     
     cStreamer *streamer = new cStreamer(this->config, preset, channelId);
+    int status = 0;
+    wait(&status);
     if(!streamer->StartFFmpeg())
     {
         delete streamer;

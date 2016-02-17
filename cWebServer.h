@@ -37,6 +37,10 @@ private:
     static int on_client_connect (void *cls,
                               const struct sockaddr *addr,
 			      socklen_t addrlen);
+    static void on_request_complete (void *cls, 
+                                    struct MHD_Connection * connection,
+				    void **con_cls,
+                                    enum MHD_RequestTerminationCode toe);
 
 };
 

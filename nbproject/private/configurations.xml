@@ -57,18 +57,18 @@
       </nativedebugger>
       <runprofile version="9">
         <runcommandpicklist>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server -P 'satip -s 192.168.178.10|DVBS2-1|RecSvc'</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server -Pddci2</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -Pxmlapi -Pstreamdev-server -Pddci2</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -Pdummydevice -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -Pdummydevice -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -d -l 3 -Pdummydevice -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -l 3 -P 'softhddevice -a hw:0,3 -d :0.0 -f -v va-api' -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -l 3 -Pdummydevice -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -l 3 -P 'softhddevice -v va-api-glx' -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -l 3 -P 'softhddevice -v va-api' -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -l 3 -Pdummydevice -Pddci2 -Pvnsiserver -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -l 3 -Pddci2 -Pvnsiserver -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" -D0 -l 3 -Pdummydevice -Pddci2 -Pxmlapi -Pstreamdev-server</runcommand>
+        <runcommand>"${OUTPUT_PATH}" -D0 -l 3 -Pddci2 -Pvnsiserver -Pxmlapi -Pstreamdev-server</runcommand>
         <rundir>.</rundir>
         <buildfirst>false</buildfirst>
         <terminal-type>0</terminal-type>
