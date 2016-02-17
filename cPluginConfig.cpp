@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+#include "helpers.h"
 
 cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName, 
         const char *version) {
@@ -36,7 +37,6 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName,
     this->userName = string(pluginName);
     this->password = this->generatePassword(12);
     this->ffmpeg = "ffmpeg";
-    this->ffmpegReadTimeout = 15;
     this->presetsFile = string(configDir) + "/presets.ini";
     this->streamdevUrl = "http://127.0.0.1:3000/";
     this->readFromConfFile(configFile);
@@ -71,7 +71,6 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     this->userName = src.userName;
     this->password = src.password;
     this->ffmpeg = src.ffmpeg;
-    this->ffmpegReadTimeout = src.ffmpegReadTimeout;
     this->presetsFile = src.presetsFile;
     this->streamdevUrl = src.streamdevUrl;
     
@@ -96,7 +95,6 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->userName = src.userName;
         this->password = src.password;
         this->ffmpeg = src.ffmpeg;
-        this->ffmpegReadTimeout = src.ffmpegReadTimeout;
         this->presetsFile = src.presetsFile;
         this->streamdevUrl = src.streamdevUrl;
         if(src.sslKey != NULL) {
@@ -175,10 +173,6 @@ string cPluginConfig::GetFFmpeg() {
     return this->ffmpeg;
 }
 
-int cPluginConfig::GetFFmpegReadTimeout() {
-    return this->ffmpegReadTimeout;
-}
-
 string cPluginConfig::GetPresetsFile() {
     return this->presetsFile;
 }
@@ -224,7 +218,6 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "UserName="<<this->userName<<endl<<
             "Password="<<this->password<<endl<<
             "FFMPEG="<<this->ffmpeg<<endl<<
-            "FFmpegReadTimeout="<<this->ffmpegReadTimeout<<endl<<
             "Presets="<<this->presetsFile<<endl<<
             "StreamdevUrl="<<this->streamdevUrl<<endl;
         fc.close();
@@ -240,13 +233,13 @@ bool cPluginConfig::readFromConfFile(string configFile) {
     while(getline(fr, line))
     {
         vector<string> sline;
-        sline = this->split(line, '=');
+        sline = split(line, '=');
         if(sline.size() != 2)
             continue;
         string left = sline[0];
         string right = sline[1];
-        this->trim(left);
-        this->trim(right);
+        trim(left);
+        trim(right);
         if (left == "HttpPort") {
             this->httpPort = atoi(right.c_str());
         }
@@ -274,9 +267,6 @@ bool cPluginConfig::readFromConfFile(string configFile) {
         else if (left == "FFMPEG") {
             if(right != "")
                 this->ffmpeg = right;
-        }
-        else if (left == "FFmpegReadTimeout") {
-            this->ffmpegReadTimeout = atoi(right.c_str());
         }
         else if (left == "Presets") {
             if(right != "") {
@@ -329,29 +319,6 @@ bool cPluginConfig::readFromConfFile(string configFile) {
     cf.read(this->sslCert, this->sslCertSize);
     cf.close();
     return true;
-}
-
-vector<string> cPluginConfig::split(string str, char delimiter) {
-    vector<string> internal;
-    stringstream ss(str);
-    string tok;
-
-    while(getline(ss, tok, delimiter)) {
-        internal.push_back(tok);
-    }
-
-    return internal;
-}
-
-void cPluginConfig::trim(string& str)
-{
-    string::size_type pos = str.find_last_not_of(' ');
-    if(pos != string::npos) {
-        str.erase(pos + 1);
-        pos = str.find_first_not_of(' ');
-        if(pos != string::npos) str.erase(0, pos);
-    }
-    else str.erase(str.begin(), str.end());
 }
 
 bool cPluginConfig::createDefaultPresetFile(string presetFile) {

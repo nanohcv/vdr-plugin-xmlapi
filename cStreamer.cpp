@@ -20,38 +20,19 @@ cStreamer::cStreamer(cPluginConfig config, cPreset preset, string chid)
     : config(config), preset(preset), chid(chid)
 {
     this->ffmpeg = NULL;
-    this->ffmpeg_fd = 0;
-    this->secs = 0;
-}
-
-cStreamer::cStreamer(const cStreamer& orig) 
-    : config(orig.config), preset(orig.preset), chid(orig.chid)
-{
-    this->ffmpeg = orig.ffmpeg;
-    this->ffmpeg_fd = orig.ffmpeg_fd;
-    this->secs = orig.secs;
+    this->ffmpeg_pipe = new cPipe();
 }
 
 cStreamer::~cStreamer() {
-}
-
-cStreamer& cStreamer::operator =(const cStreamer& src) {
-    if(this != &src) {
-        this->config = src.config;
-        this->preset = src.preset;
-        this->chid = src.chid;
-        this->ffmpeg = src.ffmpeg;
-        this->ffmpeg_fd = src.ffmpeg_fd;
-        this->secs = src.secs;
-    }
-    return *this;
+    delete this->ffmpeg_pipe;
 }
 
 bool cStreamer::StartFFmpeg() {
     string input = config.GetStreamdevUrl() + this->chid + ".ts";
     string cmd = preset.FFmpegCmd(config.GetFFmpeg(), input);
     if(this->ffmpeg == NULL) {
-        this->ffmpeg = popen(cmd.c_str(), "r");
+        this->ffmpeg_pipe->Open(cmd.c_str(), "r");
+        this->ffmpeg = *this->ffmpeg_pipe;
     }
     else {
         return false;
@@ -61,56 +42,30 @@ bool cStreamer::StartFFmpeg() {
         esyslog("xmlapi: Cant start ffmpeg");
         return false;
     }
-    this->ffmpeg_fd = fileno(this->ffmpeg);
-    this->Start();
     return true;
 }
 
 void cStreamer::StopFFmpeg() {
-    this->Cancel();
     if(this->ffmpeg != NULL) {
-        this->Lock();
-        pclose(this->ffmpeg);
+        this->ffmpeg_pipe->Close();
         this->ffmpeg = NULL;
-        this->Unlock();
-    }
-    
-}
-
-void cStreamer::ResetTimeoutTimer() {
-    this->secs = 0;
+    }  
 }
 
 ssize_t cStreamer::Read(char* buf, size_t max) {
     ssize_t n = 0;
     if(this->ffmpeg != NULL) {
-        this->Lock();
-        n = read(this->ffmpeg_fd, buf, max);
-        this->Unlock();
+        n = read(fileno(this->ffmpeg), buf, max);
     }
     else {
         return MHD_CONTENT_READER_END_WITH_ERROR;
     }
-    this->ResetTimeoutTimer();
-    if (0 == n)
-        return MHD_CONTENT_READER_END_OF_STREAM;
-    if (n < 0)
-        return MHD_CONTENT_READER_END_WITH_ERROR;
-    return n;
-}
-
-void cStreamer::Action() {
-    while(this->Running() && this->secs < this->config.GetFFmpegReadTimeout()) {
-        sleep(1);
-        this->secs++;
-    }
-    if(this->secs >= this->config.GetFFmpegReadTimeout())
-        dsyslog("xmlapi: FFmpeg read timeout");
     
-    if(this->ffmpeg != NULL) {
-        this->Lock();
-        pclose(this->ffmpeg);
-        this->ffmpeg = NULL;
-        this->Unlock();
+    if (0 == n) {
+        return MHD_CONTENT_READER_END_OF_STREAM;
     }
+    if (n < 0) {
+        return MHD_CONTENT_READER_END_WITH_ERROR;
+    }
+    return n;
 }

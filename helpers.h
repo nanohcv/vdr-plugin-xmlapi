@@ -34,8 +34,5 @@ string uint32ToString(unsigned int value);
 string timeToString(time_t t);
 string intToString(int value);
 
-pid_t popen2(const char *command, int *infp, int *outfp);
-
-
 #endif /* HELPERS_H */
 

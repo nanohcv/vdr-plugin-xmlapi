@@ -40,7 +40,6 @@ public:
     string GetUserName();
     string GetPassword();
     string GetFFmpeg();
-    int    GetFFmpegReadTimeout();
     string GetPresetsFile();
     string GetStreamdevUrl();
     
@@ -60,15 +59,12 @@ private:
     string userName;
     string password;
     string ffmpeg;
-    int ffmpegReadTimeout;
     string presetsFile;
     string streamdevUrl;
     
     string generatePassword(unsigned int length);
     bool readFromConfFile(string configFile);
     bool createDefaultPresetFile(string presetFile);
-    vector<string> split(string str, char delimiter);
-    void trim(string& str);
     
     
 };

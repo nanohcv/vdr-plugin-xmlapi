@@ -8,4 +8,4 @@ cINIParser.o: cINIParser.cpp cINIParser.h helpers.h
 helpers.o: helpers.cpp helpers.h
 cPresets.o: cPresets.cpp cPresets.h cPreset.h cINIParser.h
 cStreamer.o: cStreamer.cpp cStreamer.h cPluginConfig.h cPreset.h
-cPluginConfig.o: cPluginConfig.cpp cPluginConfig.h
+cPluginConfig.o: cPluginConfig.cpp cPluginConfig.h helpers.h

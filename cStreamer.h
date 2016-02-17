@@ -19,17 +19,13 @@
 #include "cPluginConfig.h"
 #include "cPreset.h"
 
-class cStreamer : public cThread {
+class cStreamer {
 public:
     cStreamer(cPluginConfig config, cPreset preset, string chid);
-    cStreamer(const cStreamer& orig);
     virtual ~cStreamer();
-    
-    cStreamer& operator =(const cStreamer& src);
     
     bool StartFFmpeg();
     void StopFFmpeg();
-    void ResetTimeoutTimer();
     
     ssize_t Read(char *buf, size_t max);  
     
@@ -38,11 +34,7 @@ private:
     cPreset preset;
     string chid;
     FILE *ffmpeg;
-    int ffmpeg_fd;
-    
-    volatile int secs;
-    
-    void Action();
+    cPipe *ffmpeg_pipe;
 };
 
 #endif /* CSTREAMER_H */
