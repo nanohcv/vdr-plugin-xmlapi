@@ -292,10 +292,6 @@ int cRequestHandler::handleEPG() {
         }
     }
     
-    if(MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "next") != NULL) {
-        next = true;
-    }
-    
     cSchedulesLock lock;
     const cSchedules *schedules = cSchedules::Schedules(lock);
     tChannelID cid = tChannelID::FromString(chid);
@@ -304,6 +300,9 @@ int cRequestHandler::handleEPG() {
         return this->handle404Error();
     }
     const cSchedule *schedule = schedules->GetSchedule(cid);
+    if(schedule == NULL) {
+        return this->handle404Error();
+    }
     const cList<cEvent> *events = schedule->Events();
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     xml +=       "<events>\n";
