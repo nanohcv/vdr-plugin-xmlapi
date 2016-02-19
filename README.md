@@ -81,6 +81,14 @@ path to your ffmpeg binray with the following parameter:
     FFMPEG=/path/to/your/ffmpeg
 
 
+By default only on transcoded stream can be started. If another client connect
+to the plugin and request a stream, the plugin wait until all other ffmpeg 
+processes, started by the plugin, are closed. You can change the by setting the
+following parameter: (I recommend this only if you have more than one tuner.)
+
+    WaitForFFmpeg=0
+
+
 The plugin use presets for transcoding. The presets can be configured in the 
 presets.ini which was created on first start in the plugin config folder of the 
 vdr plugin configuration folde. For information about the presets, read section
@@ -119,3 +127,74 @@ An short (not working) examle looks like this:
 
 For more information read the FFMPEG documentation. I recommend to copy a 
 default preset and adjust the settings.
+
+
+
+### 5. API
+
+The plugin provides a simple API based on xml files.
+All requests must be GET Requests
+
+#### 5.1 Plugin name and version
+
+    http(s)://<server-ip>:<port>/version.xml
+
+
+#### 5.2 Channels
+
+Get channels with groups, channel id, name, shortname and logos. The logos must
+be placed in the subfolder "logos" in the plugin config directory.
+For example: /var/lib/vdr/plugins/xmlapi/logos/arte.png
+The logo must have the excat name (also the case) like the channel. If the 
+channel contains a slash "/", the slash must be replaced with "-" in the logo 
+file name.
+
+    http(s)://<server-ip>:<port>/channels.xml
+
+Logos:
+
+    http(s)://<server-ip>:<port>/logos/<channelname>.png
+
+
+#### 5.3 Epg
+
+To get EPG-Data from a channel, you have to open this api:
+
+    http(s)://<server-ip>:<port>/epg.xml?chid=<channel-id>
+
+Parameter:
+
+- "chid" (mandory) -> a channel id from the channels.xml
+- "at" -> Values: now, next, [unix-timestamp]
+
+Example:
+
+    http(s)://<server-ip>:<port>/epg.xml?chid=C-61441-10014-11120&at=1455906892
+
+
+#### 5.4 Presets.ini
+
+You can access the presets.ini with the following command:
+
+    http(s)://<server-ip>:<port>/presets.ini
+
+
+#### 5.5 Transcoded Streams
+
+For streaming a channel you need a channel id and a preset (section from presets.ini).
+You also need the extension (Ext= from presets.ini) from your choosen preset.
+
+    http(s)://<server-ip>:<port>/stream{ext}?chid={channel-id}&preset={preset}
+
+Parameter:
+
+- "chid" (mandory) -> a channel id from the channels.xml
+- "preset" (mandory) -> a preset from the presets.ini ([Section])
+
+Example:
+
+    http(s)://<server-ip>:<port>/stream.ts?chid=C-61441-10014-11120&preset=Low
+
+
+
+ 
