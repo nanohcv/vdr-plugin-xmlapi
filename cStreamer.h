@@ -19,7 +19,8 @@
 #include "cPluginConfig.h"
 #include "cPreset.h"
 
-class cStreamer {
+
+class cStreamer : public cPipe {
 public:
     cStreamer(cPluginConfig config, cPreset preset, string chid);
     virtual ~cStreamer();
@@ -34,7 +35,6 @@ private:
     cPreset preset;
     string chid;
     FILE *ffmpeg;
-    cPipe *ffmpeg_pipe;
 };
 
 #endif /* CSTREAMER_H */

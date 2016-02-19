@@ -23,7 +23,7 @@ class cRequestHandler {
 public:
     cRequestHandler(struct MHD_Connection *connection, cPluginConfig config);
     virtual ~cRequestHandler();
-    int HandleRequest(const char *method, const char *url);
+    int HandleRequest(const char *url);
 private:
     struct MHD_Connection *connection;
     cPluginConfig config;
@@ -31,6 +31,7 @@ private:
     
     int handleVersion();
     int handleStream(const char *url);
+    int handleLogos(const char *url);
     int handlePresets();
     int handleChannels();
     string channelsToXml();

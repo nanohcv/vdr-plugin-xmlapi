@@ -20,19 +20,17 @@ cStreamer::cStreamer(cPluginConfig config, cPreset preset, string chid)
     : config(config), preset(preset), chid(chid)
 {
     this->ffmpeg = NULL;
-    this->ffmpeg_pipe = new cPipe();
 }
 
 cStreamer::~cStreamer() {
-    delete this->ffmpeg_pipe;
 }
 
 bool cStreamer::StartFFmpeg() {
     string input = config.GetStreamdevUrl() + this->chid + ".ts";
     string cmd = preset.FFmpegCmd(config.GetFFmpeg(), input);
     if(this->ffmpeg == NULL) {
-        this->ffmpeg_pipe->Open(cmd.c_str(), "r");
-        this->ffmpeg = *this->ffmpeg_pipe;
+        this->Open(cmd.c_str(), "r");
+        this->ffmpeg = this->operator FILE*();
     }
     else {
         return false;
@@ -42,12 +40,13 @@ bool cStreamer::StartFFmpeg() {
         esyslog("xmlapi: Cant start ffmpeg");
         return false;
     }
+    
     return true;
 }
 
 void cStreamer::StopFFmpeg() {
     if(this->ffmpeg != NULL) {
-        this->ffmpeg_pipe->Close();
+        this->Close();
         this->ffmpeg = NULL;
     }  
 }

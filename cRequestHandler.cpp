@@ -15,8 +15,15 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <vector>
+#include <algorithm>
 #include <ctime>
 #include <sys/wait.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <vdr/tools.h>
 #include <vdr/channels.h>
 #include <vdr/epg.h>
@@ -34,9 +41,7 @@ cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
 cRequestHandler::~cRequestHandler() {
 }
 
-int cRequestHandler::HandleRequest(const char* method, const char* url) {
-    if(0 != strcmp(method, "GET"))
-        return MHD_NO;
+int cRequestHandler::HandleRequest(const char* url) {
     if(0 == strcmp(url, "/version.xml"))
     {
         return this->handleVersion();
@@ -44,6 +49,9 @@ int cRequestHandler::HandleRequest(const char* method, const char* url) {
     else if (startswith(url, "/stream"))
     {
         return this->handleStream(url);
+    }
+    else if (startswith(url, "/logos/") && endswith(url, ".png")) {
+        return this->handleLogos(url);
     }
     else if (0 == strcmp(url, "/presets.ini")) {
         return this->handlePresets();
@@ -111,9 +119,12 @@ int cRequestHandler::handleStream(const char *url) {
     
     string channelId(chid);
     
-    cStreamer *streamer = new cStreamer(this->config, preset, channelId);
-    int status = 0;
-    wait(&status);
+    cStreamer *streamer = new cStreamer(this->config, preset, chid);
+    if(this->config.GetWaitForFFmpeg()) {
+        int status;
+        wait(&status);
+        sleep(1);
+    }
     if(!streamer->StartFFmpeg())
     {
         delete streamer;
@@ -141,6 +152,27 @@ void cRequestHandler::clear_stream(void* cls) {
     streamer->StopFFmpeg();
     delete streamer;
     dsyslog("xmlapi: Stream stopped");
+}
+
+int cRequestHandler::handleLogos(const char* url) {
+    int ret;
+    int fd;
+    struct stat sbuf;
+    struct MHD_Response *response;
+    string logofile = this->config.GetConfigDir() + url;
+    
+    if ( (-1 == (fd = open (logofile.c_str(), O_RDONLY))) ||
+       (0 != fstat (fd, &sbuf)) ) {
+        if (fd != -1)
+            close (fd);
+        return this->handle404Error();
+    }
+    response = MHD_create_response_from_fd(sbuf.st_size, fd);
+    MHD_add_response_header (response, "Content-Type", "image/png");
+    ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+    MHD_destroy_response (response);
+    
+    return ret;
 }
 
 int cRequestHandler::handlePresets() {
@@ -219,11 +251,15 @@ string cRequestHandler::channelsToXml() {
                 "\">\n";
         string name = channel->Name();
         string shortname = channel->ShortName();
+        string logo = name;
+        replace(logo.begin(), logo.end(), '/', '-');
+        logo = urlEncode(logo);
         xmlEncode(name);
         xmlEncode(shortname);
+        xmlEncode(logo);
         xml += "            <name>" + name + "</name>\n";
         xml += "            <shortname>" + shortname + "</shortname>\n";
-        xml += "            <logo>/logos/" + name + ".png</logo>\n";
+        xml += "            <logo>/logos/" + logo + ".png</logo>\n";
         xml += "        </channel>\n";
     }
     xml += "    </group>\n";

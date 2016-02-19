@@ -90,7 +90,7 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
     char *user = NULL;
     char *pass = NULL;
     bool fail;
-    
+
     if (0 != strcmp (method, MHD_HTTP_METHOD_GET))
         return MHD_NO;
     
@@ -125,14 +125,14 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
         }
         else
         {
-            ret = handler->HandleRequest(method, url);
+            ret = handler->HandleRequest(url);
             delete handler;
             return ret;
         }
     }    
     else
     {
-        ret = handler->HandleRequest(method, url);
+        ret = handler->HandleRequest(url);
         delete handler;
         return ret;
     }

@@ -10,9 +10,16 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cRequestHandler.cpp</file>
             <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cWebServer.h</file>
+            <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cStreamer.cpp</file>
+            <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cRequestHandler.h</file>
+            <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cPluginConfig.h</file>
+            <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cPluginConfig.cpp</file>
             <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cWebServer.cpp</file>
+            <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/helpers.cpp</file>
+            <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cStreamer.h</file>
+            <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cRequestHandler.cpp</file>
+            <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/helpers.h</file>
         </group>
     </open-files>
 </project-private>

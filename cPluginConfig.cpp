@@ -37,6 +37,7 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName,
     this->userName = string(pluginName);
     this->password = this->generatePassword(12);
     this->ffmpeg = "ffmpeg";
+    this->waitForFFmpeg = true;
     this->presetsFile = string(configDir) + "/presets.ini";
     this->streamdevUrl = "http://127.0.0.1:3000/";
     this->readFromConfFile(configFile);
@@ -71,6 +72,7 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     this->userName = src.userName;
     this->password = src.password;
     this->ffmpeg = src.ffmpeg;
+    this->waitForFFmpeg = src.waitForFFmpeg;
     this->presetsFile = src.presetsFile;
     this->streamdevUrl = src.streamdevUrl;
     
@@ -95,6 +97,7 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->userName = src.userName;
         this->password = src.password;
         this->ffmpeg = src.ffmpeg;
+        this->waitForFFmpeg = src.waitForFFmpeg;
         this->presetsFile = src.presetsFile;
         this->streamdevUrl = src.streamdevUrl;
         if(src.sslKey != NULL) {
@@ -173,6 +176,10 @@ string cPluginConfig::GetFFmpeg() {
     return this->ffmpeg;
 }
 
+bool cPluginConfig::GetWaitForFFmpeg() {
+    return this->waitForFFmpeg;
+}
+
 string cPluginConfig::GetPresetsFile() {
     return this->presetsFile;
 }
@@ -218,6 +225,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "UserName="<<this->userName<<endl<<
             "Password="<<this->password<<endl<<
             "FFMPEG="<<this->ffmpeg<<endl<<
+            "WaitForFFmpeg="<<this->waitForFFmpeg<<endl<<
             "Presets="<<this->presetsFile<<endl<<
             "StreamdevUrl="<<this->streamdevUrl<<endl;
         fc.close();
@@ -267,6 +275,9 @@ bool cPluginConfig::readFromConfFile(string configFile) {
         else if (left == "FFMPEG") {
             if(right != "")
                 this->ffmpeg = right;
+        }
+        else if (left == "WaitForFFmpeg") {
+            this->waitForFFmpeg = (bool)atoi(right.c_str());
         }
         else if (left == "Presets") {
             if(right != "") {

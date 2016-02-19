@@ -29,6 +29,8 @@ using namespace std;
 vector<string> split(string str, char delimiter);
 void trim(string& str);
 void xmlEncode(string& data);
+string urlEncode(string str);
+string urlDecode(string str);
 
 string uint32ToString(unsigned int value);
 string timeToString(time_t t);
