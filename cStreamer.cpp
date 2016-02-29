@@ -23,6 +23,7 @@ cStreamer::cStreamer(cPluginConfig config, cPreset preset, string chid)
 }
 
 cStreamer::~cStreamer() {
+    this->StopFFmpeg();
 }
 
 bool cStreamer::StartFFmpeg() {
