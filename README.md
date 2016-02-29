@@ -14,7 +14,32 @@ VDR Plugin for the VDR Windows Phone / Windows 10 Uwp App
 
 
 ### 2. Install
-*Comming soon...*
+If you installed vdr from source then follow the instructions from vdr wiki.
+https://www.linuxtv.org/vdrwiki/index.php/Plugin_Installation
+
+On Ubuntu (16.04):
+Install requirements:
+
+    sudo apt-get install vdr-dev vdr-plugin-streamdev-server libmicrohttpd10 libmicrohttpd-dev build-essential git
+
+Download, compile and install the xmlapi plugin:
+
+    cd ~
+    git clone https://github.com/nanohcv/vdr-plugin-xmlapi.git
+    cd vdr-plugin-xmlapi
+    make
+    sudo make install
+
+Start plugin:
+
+    printf "[xmlapi]\n" | sudo tee /etc/vdr/conf.avail/xmlapi.conf
+    sudo ln -s /etc/vdr/conf.avail/xmlapi.conf /etc/vdr/conf.d/50-xmlapi.conf
+    sudo systemctl restart vdr
+
+Config file(s) should be found here:
+
+    /var/lib/vdr/plugins/xmlapi/
+
 
 
 ### 3. Configuration Files
