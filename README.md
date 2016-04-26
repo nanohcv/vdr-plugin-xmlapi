@@ -9,6 +9,11 @@ VDR Plugin for the VDR Windows Phone / Windows 10 Uwp App
 #### 1.2 VDR-Plugins
 - streamdev-server
 
+    If encrypted channels are used, it is highly recommended to install streamdev
+    with the following patches
+
+    https://projects.vdr-developer.org/issues/2220
+
 #### 1.3 Others
 - FFmpeg
 
