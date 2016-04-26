@@ -57,8 +57,6 @@
       </nativedebugger>
       <runprofile version="9">
         <runcommandpicklist>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -Pdummydevice -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
-          <runcommandpicklistitem>"${OUTPUT_PATH}" -Pdummydevice -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -d -l 3 -Pdummydevice -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -l 3 -P 'softhddevice -a hw:0,3 -d :0.0 -f -v va-api' -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -l 3 -Pdummydevice -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
@@ -67,8 +65,10 @@
           <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -l 3 -Pdummydevice -Pddci2 -Pvnsiserver -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -l 3 -Pddci2 -Pvnsiserver -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" -D0 -l 3 -Pddci2 -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -P'satip -d 1 -s 192.168.178.10|DVBC-1|minisatip' -Pxmlapi -Pstreamdev-server</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" -D0 -l 3 -Pddci2 -Pxmlapi -Pstreamdev-server</runcommand>
+        <runcommand>"${OUTPUT_PATH}" -P'satip -d 1 -s 192.168.178.10|DVBC-1|minisatip' -Pxmlapi -Pstreamdev-server</runcommand>
         <rundir>.</rundir>
         <buildfirst>false</buildfirst>
         <terminal-type>0</terminal-type>
