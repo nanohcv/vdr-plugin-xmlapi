@@ -252,6 +252,7 @@ string cRequestHandler::channelsToXml() {
         string name = channel->Name();
         string shortname = channel->ShortName();
         string logo = name;
+        transform(logo.begin(), logo.end(), logo.begin(), ::tolower);
         replace(logo.begin(), logo.end(), '/', '-');
         logo = urlEncode(logo);
         xmlEncode(name);
