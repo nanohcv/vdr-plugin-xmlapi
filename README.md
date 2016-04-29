@@ -175,7 +175,7 @@ All requests must be GET Requests
 Get channels with groups, channel id, name, shortname and logos. The logos must
 be placed in the subfolder "logos" in the plugin config directory.
 For example: /var/lib/vdr/plugins/xmlapi/logos/arte.png
-The logo must have the excat name (also the case) like the channel. If the 
+The logo must have the exact name (in lower case) like the channel. If the 
 channel contains a slash "/", the slash must be replaced with "-" in the logo 
 file name.
 
