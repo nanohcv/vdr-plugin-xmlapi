@@ -113,7 +113,7 @@ path to your ffmpeg binray with the following parameter:
 
 By default only on transcoded stream can be started. If another client connect
 to the plugin and request a stream, the plugin wait until all other ffmpeg 
-processes, started by the plugin, are closed. You can change the by setting the
+processes, started by the plugin, are closed. You can change this by setting the
 following parameter: (I recommend this only if you have more than one tuner.)
 
     WaitForFFmpeg=0
