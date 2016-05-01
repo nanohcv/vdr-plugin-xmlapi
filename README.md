@@ -226,5 +226,15 @@ Example:
     http(s)://<server-ip>:<port>/stream.ts?chid=C-61441-10014-11120&preset=Low
 
 
+#### 5.6 Stream control
 
+To view the currently active streams or stop/remove a stream, you can use this API.
+
+View:
+
+    http(s)://<server-ip>:<port>/streamcontrol.xml
+
+Stop/remove a stream:
+
+    http(s)://<server-ip>:<port>/streamcontrol.xml?remove={streamid}
  
