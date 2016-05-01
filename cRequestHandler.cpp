@@ -152,6 +152,7 @@ int cRequestHandler::handleStream(const char *url) {
                                                 streamid,
                                                 &cRequestHandler::clear_stream);
     MHD_add_response_header (response, "Content-Type", preset.MimeType().c_str());
+    MHD_add_response_header (response, "Cache-Control", "no-cache");
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -179,10 +180,10 @@ void cRequestHandler::clear_stream(void* cls) {
 
 int cRequestHandler::handleStreamControl() {
     
-    const char* delid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "del");
-    if(delid != NULL) 
+    const char* removeid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "remove");
+    if(removeid != NULL) 
     {
-        int streamid = atoi(delid);
+        int streamid = atoi(removeid);
         StreamControl->RemoveStream(streamid);
     }
     string xml = StreamControl->GetStreamsXML();
@@ -194,6 +195,7 @@ int cRequestHandler::handleStreamControl() {
                                                (void *) page, 
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
+    MHD_add_response_header (response, "Cache-Control", "no-cache");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -405,6 +407,7 @@ int cRequestHandler::handleEPG() {
                                                (void *) page, 
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
+    MHD_add_response_header (response, "Cache-Control", "no-cache");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
