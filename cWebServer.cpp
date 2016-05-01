@@ -23,12 +23,18 @@
 #include <microhttpd.h>
 #include "cRequestHandler.h"
 
+#define EXTERN
+#include "streamControl.h"
+
 cWebServer::cWebServer(cPluginConfig config) : config(config) {
     this->http_daemon = NULL;
     this->https_daemon = NULL;
+    StreamControl = new cStreamControl();
 }
 
 cWebServer::~cWebServer() {
+    delete StreamControl;
+    StreamControl = NULL;
 }
 
 bool cWebServer::Start() {
@@ -99,7 +105,6 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
         *con_cls = connection;
         return MHD_YES;
     }
-    
     cRequestHandler *handler = new cRequestHandler(connection, srv->config);
     if(srv->config.GetUserName() != "" &&
             srv->config.GetPassword() != "")

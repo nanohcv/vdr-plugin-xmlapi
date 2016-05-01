@@ -12,6 +12,8 @@
  */
 #include <microhttpd.h>
 #include <unistd.h>
+#include <map>
+#include <string>
 #include "cPluginConfig.h"
 #include "cPreset.h"
 #include "cPresets.h"
@@ -31,6 +33,7 @@ private:
     
     int handleVersion();
     int handleStream(const char *url);
+    int handleStreamControl();
     int handleLogos(const char *url);
     int handlePresets();
     int handleChannels();
@@ -41,6 +44,8 @@ private:
     
     static ssize_t stream_reader (void *cls, uint64_t pos, char *buf, size_t max);
     static void clear_stream(void *cls);
+    
+    std::map<std::string, std::string> conInfo;
 
 };
 

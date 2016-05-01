@@ -12,12 +12,15 @@
       <in>cPresets.h</in>
       <in>cRequestHandler.cpp</in>
       <in>cRequestHandler.h</in>
-      <in>cStreamer.cpp</in>
-      <in>cStreamer.h</in>
+      <in>cStream.cpp</in>
+      <in>cStream.h</in>
+      <in>cStreamControl.cpp</in>
+      <in>cStreamControl.h</in>
       <in>cWebServer.cpp</in>
       <in>cWebServer.h</in>
       <in>helpers.cpp</in>
       <in>helpers.h</in>
+      <in>streamControl.h</in>
       <in>xmlapi.c</in>
     </df>
   </logicalFolder>

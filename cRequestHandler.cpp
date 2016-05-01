@@ -28,8 +28,9 @@
 #include <vdr/channels.h>
 #include <vdr/epg.h>
 #include "cRequestHandler.h"
-#include "cStreamer.h"
+#include "cStream.h"
 #include "helpers.h"
+#include "streamControl.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection, 
                                     cPluginConfig config)
@@ -42,12 +43,22 @@ cRequestHandler::~cRequestHandler() {
 }
 
 int cRequestHandler::HandleRequest(const char* url) {
+    const MHD_ConnectionInfo *connectionInfo = MHD_get_connection_info (connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
+    if (connectionInfo->client_addr->sa_family == AF_INET)
+    {
+        struct sockaddr_in *sin = (struct sockaddr_in *) connectionInfo->client_addr;
+        this->conInfo.insert(pair<string,string>("ClientIP", string(inet_ntoa(sin->sin_addr))));
+    }
+    this->conInfo.insert(pair<string,string>("User-Agent",string(MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "User-Agent"))));
+    
     if(0 == strcmp(url, "/version.xml"))
     {
         return this->handleVersion();
     }
     else if (startswith(url, "/stream"))
     {
+        if (0 == strcmp(url, "/streamcontrol.xml"))
+            return this->handleStreamControl();
         return this->handleStream(url);
     }
     else if (startswith(url, "/logos/") && endswith(url, ".png")) {
@@ -118,23 +129,27 @@ int cRequestHandler::handleStream(const char *url) {
     }
     
     string channelId(chid);
-    
-    cStreamer *streamer = new cStreamer(this->config, preset, chid);
+    string fullurl = this->config.GetStreamdevUrl() + channelId + ".ts";
+    string ffmpegcmd = preset.FFmpegCmd(this->config.GetFFmpeg(), fullurl);
+    cStream *stream = new cStream(ffmpegcmd, this->conInfo);
     if(this->config.GetWaitForFFmpeg()) {
-        int status;
-        wait(&status);
+        StreamControl->WaitingForStreamsByUserAgentAndIP(this->conInfo["ClientIP"], this->conInfo["User-Agent"]);
         sleep(1);
     }
-    if(!streamer->StartFFmpeg())
+    int *streamid = new int;
+    
+    *streamid = StreamControl->AddStream(stream);
+    if(!stream->StartFFmpeg())
     {
-        delete streamer;
+        StreamControl->RemoveStream(*streamid);
+        delete streamid;
         return MHD_NO;
     }
     dsyslog("xmlapi: Stream started");
     response = MHD_create_response_from_callback (MHD_SIZE_UNKNOWN,
                                                 8*1024,
                                                 &cRequestHandler::stream_reader,
-                                                streamer,
+                                                streamid,
                                                 &cRequestHandler::clear_stream);
     MHD_add_response_header (response, "Content-Type", preset.MimeType().c_str());
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
@@ -143,15 +158,47 @@ int cRequestHandler::handleStream(const char *url) {
 }
 
 ssize_t cRequestHandler::stream_reader(void* cls, uint64_t pos, char* buf, size_t max) {
-    cStreamer *streamer = (cStreamer *)cls;
-    return streamer->Read(buf, max);    
+    int *streamid = (int *)cls;
+    cStream *stream = StreamControl->GetStream(*streamid);
+    return stream->Read(buf, max);    
 }
 
 void cRequestHandler::clear_stream(void* cls) {
-    cStreamer *streamer = (cStreamer *)cls;
-    streamer->StopFFmpeg();
-    delete streamer;
+    int *streamid = (int *)cls;
+    StreamControl->Mutex.Lock();
+    cStream *stream = StreamControl->GetStream(*streamid);
+    if(stream != NULL)
+    {
+        stream->StopFFmpeg();
+        StreamControl->RemoveStream(*streamid);
+    }
+    StreamControl->Mutex.Unlock();
+    delete streamid;
     dsyslog("xmlapi: Stream stopped");
+}
+
+int cRequestHandler::handleStreamControl() {
+    
+    const char* delid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "del");
+    if(delid != NULL) 
+    {
+        int streamid = atoi(delid);
+        StreamControl->RemoveStream(streamid);
+    }
+    string xml = StreamControl->GetStreamsXML();
+    struct MHD_Response *response;
+    int ret;
+    char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
+    strcpy(page, xml.c_str());
+    response = MHD_create_response_from_buffer (strlen (page), 
+                                               (void *) page, 
+                                               MHD_RESPMEM_MUST_FREE);
+    MHD_add_response_header (response, "Content-Type", "text/xml");
+    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
+    MHD_destroy_response (response);
+    return ret;
+    
+        
 }
 
 int cRequestHandler::handleLogos(const char* url) {
