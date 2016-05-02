@@ -47,9 +47,18 @@ int cRequestHandler::HandleRequest(const char* url) {
     if (connectionInfo->client_addr->sa_family == AF_INET)
     {
         struct sockaddr_in *sin = (struct sockaddr_in *) connectionInfo->client_addr;
-        this->conInfo.insert(pair<string,string>("ClientIP", string(inet_ntoa(sin->sin_addr))));
+        char *ip = inet_ntoa(sin->sin_addr);
+        printf("ClientIP: %s\n", ip);
+        if(ip != NULL)
+        {
+            this->conInfo.insert(pair<string,string>("ClientIP", string(ip)));
+        }
     }
-    this->conInfo.insert(pair<string,string>("User-Agent",string(MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "User-Agent"))));
+    const char *useragent = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "User-Agent");
+    if(useragent != NULL)
+    {
+        this->conInfo.insert(pair<string,string>("User-Agent",string(useragent)));
+    }
     
     if(0 == strcmp(url, "/version.xml"))
     {

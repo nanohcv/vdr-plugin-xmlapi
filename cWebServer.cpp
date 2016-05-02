@@ -97,8 +97,11 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
     char *pass = NULL;
     bool fail;
 
-    if (0 != strcmp (method, MHD_HTTP_METHOD_GET))
+    if (0 != strcmp (method, MHD_HTTP_METHOD_GET)) {
+        printf("No get. Method = %s\n", method);
         return MHD_NO;
+    }
+        
     
     if (NULL == *con_cls)
     {

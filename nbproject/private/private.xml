@@ -12,6 +12,7 @@
         <group>
             <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cRequestHandler.cpp</file>
             <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/README.md</file>
+            <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/xmlapi.c</file>
         </group>
     </open-files>
 </project-private>
