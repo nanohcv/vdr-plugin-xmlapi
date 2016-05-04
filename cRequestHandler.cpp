@@ -43,12 +43,12 @@ cRequestHandler::~cRequestHandler() {
 }
 
 int cRequestHandler::HandleRequest(const char* url) {
+
     const MHD_ConnectionInfo *connectionInfo = MHD_get_connection_info (connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
     if (connectionInfo->client_addr->sa_family == AF_INET)
     {
         struct sockaddr_in *sin = (struct sockaddr_in *) connectionInfo->client_addr;
         char *ip = inet_ntoa(sin->sin_addr);
-        printf("ClientIP: %s\n", ip);
         if(ip != NULL)
         {
             this->conInfo.insert(pair<string,string>("ClientIP", string(ip)));
@@ -58,6 +58,11 @@ int cRequestHandler::HandleRequest(const char* url) {
     if(useragent != NULL)
     {
         this->conInfo.insert(pair<string,string>("User-Agent",string(useragent)));
+    }
+    const char *host = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Host");
+    if(host != NULL)
+    {
+        this->conInfo.insert(pair<string,string>("Host", string(host)));
     }
     
     if(0 == strcmp(url, "/version.xml"))
@@ -282,6 +287,21 @@ int cRequestHandler::handleChannels() {
 }
 
 string cRequestHandler::channelsToXml() {
+    string logourl = "";
+    string host = this->conInfo["Host"];
+    if(host != "")
+    {
+        vector<string> hostparts = split(host, ':');
+        int port = atoi(hostparts[1].c_str());
+        if(port == this->config.GetHttpsPort())
+        {
+            logourl += "https://" + host;
+        }
+        else
+        {
+            logourl += "http://" + host;
+        }
+    }
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     xml +=       "<groups>\n";
     string group = "Unsorted";
@@ -318,7 +338,7 @@ string cRequestHandler::channelsToXml() {
         xmlEncode(logo);
         xml += "            <name>" + name + "</name>\n";
         xml += "            <shortname>" + shortname + "</shortname>\n";
-        xml += "            <logo>/logos/" + logo + ".png</logo>\n";
+        xml += "            <logo>" + logourl + "/logos/" + logo + ".png</logo>\n";
         xml += "        </channel>\n";
     }
     xml += "    </group>\n";
