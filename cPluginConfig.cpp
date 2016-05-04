@@ -17,6 +17,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+#include <vdr/tools.h>
 #include "helpers.h"
 
 cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName, 
@@ -306,6 +307,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
     {
         this->useHttps = false;
         this->httpsOnly = false;
+        esyslog("xmlapi: Can't open SSL-Key file.");
         return false;
     }
     kf.seekg(0, kf.end);
@@ -321,6 +323,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
     {
         this->useHttps = false;
         this->httpsOnly = false;
+        esyslog("xmlapi: Can't open SSL-Cert file.");
         return false;
     }
     cf.seekg(0, cf.end);
