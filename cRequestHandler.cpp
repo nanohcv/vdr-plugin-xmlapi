@@ -369,63 +369,64 @@ int cRequestHandler::handleEPG() {
         }
     }
     
-    cSchedulesLock lock;
-    const cSchedules *schedules = cSchedules::Schedules(lock);
+    
     tChannelID cid = tChannelID::FromString(chid);
     if(!cid.Valid()) {
         esyslog("xmlapi: epg.xml -> invalid chid given");
         return this->handle404Error();
     }
-    const cSchedule *schedule = schedules->GetSchedule(cid);
-    if(schedule == NULL) {
-        return this->handle404Error();
-    }
-    const cList<cEvent> *events = schedule->Events();
+    
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     xml +=       "<events>\n";
     
-    for(int i=0; i<events->Count(); i++) {
-        cEvent *event = NULL;
-        if(now) {
-            event = const_cast<cEvent *>(schedule->GetPresentEvent());
-            i = events->Count();
-        } else if (next) {
-            event = const_cast<cEvent *>(schedule->GetFollowingEvent());
-            i = events->Count();
-        } else if (attime) {
-            event = const_cast<cEvent *>(schedule->GetEventAround(at_time));
-            i = events->Count();
-        } else {
-            event = events->Get(i);
-        }
-        if(event == NULL) {
-            continue;
-        }
-        const char *t = event->Title();
-        const char *s = event->ShortText();
-        const char *d = event->Description();
+    cSchedulesLock lock;
+    const cSchedules *schedules = cSchedules::Schedules(lock);
+    const cSchedule *schedule = schedules->GetSchedule(cid);
+    if(schedule != NULL) {
+        const cList<cEvent> *events = schedule->Events();
+        for(int i=0; i<events->Count(); i++) {
+            cEvent *event = NULL;
+            if(now) {
+                event = const_cast<cEvent *>(schedule->GetPresentEvent());
+                i = events->Count();
+            } else if (next) {
+                event = const_cast<cEvent *>(schedule->GetFollowingEvent());
+                i = events->Count();
+            } else if (attime) {
+                event = const_cast<cEvent *>(schedule->GetEventAround(at_time));
+                i = events->Count();
+            } else {
+                event = events->Get(i);
+            }
+            if(event == NULL) {
+                continue;
+            }
+            const char *t = event->Title();
+            const char *s = event->ShortText();
+            const char *d = event->Description();
 
-        string title;
-        if(t != NULL)
-            title = string(event->Title());
-        string shorttext;
-        if(s != NULL)
-            shorttext = string(event->ShortText());
-        string descr;
-        if(d != NULL)
-            descr = string(event->Description());
-        xmlEncode(title);
-        xmlEncode(shorttext);
-        xmlEncode(descr);
-        xml += "  <event id=\"" + uint32ToString(event->EventID()) + "\">\n";
-        xml += "    <channelid>" + string(event->ChannelID().ToString()) + "</channelid>\n";
-        xml += "    <title>" + title + "</title>\n";
-        xml += "    <shorttext>" + shorttext + "</shorttext>\n";
-        xml += "    <description>" + descr + "</description>\n";
-        xml += "    <start>" + timeToString(event->StartTime()) + "</start>\n";
-        xml += "    <stop>" + timeToString(event->EndTime()) + "</stop>\n";
-        xml += "    <duration>" + intToString(event->Duration()) + "</duration>\n";
-        xml += "  </event>\n";
+            string title;
+            if(t != NULL)
+                title = string(event->Title());
+            string shorttext;
+            if(s != NULL)
+                shorttext = string(event->ShortText());
+            string descr;
+            if(d != NULL)
+                descr = string(event->Description());
+            xmlEncode(title);
+            xmlEncode(shorttext);
+            xmlEncode(descr);
+            xml += "  <event id=\"" + uint32ToString(event->EventID()) + "\">\n";
+            xml += "    <channelid>" + string(event->ChannelID().ToString()) + "</channelid>\n";
+            xml += "    <title>" + title + "</title>\n";
+            xml += "    <shorttext>" + shorttext + "</shorttext>\n";
+            xml += "    <description>" + descr + "</description>\n";
+            xml += "    <start>" + timeToString(event->StartTime()) + "</start>\n";
+            xml += "    <stop>" + timeToString(event->EndTime()) + "</stop>\n";
+            xml += "    <duration>" + intToString(event->Duration()) + "</duration>\n";
+            xml += "  </event>\n";
+        }
     }
     xml += "</events>\n";
     char *page = (char *)malloc((xml.length()+1) * sizeof(char));
