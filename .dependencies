@@ -1,14 +1,16 @@
-xmlapi.o: xmlapi.c cPluginConfig.h cWebServer.h
+xmlapi.o: xmlapi.c cPluginConfig.h cWebServer.h cDaemonParameter.h
 cWebServer.o: cWebServer.cpp cWebServer.h cPluginConfig.h \
- cRequestHandler.h cPreset.h cPresets.h streamControl.h cStreamControl.h \
- cStream.h
+ cDaemonParameter.h cRequestHandler.h cPreset.h cPresets.h \
+ streamControl.h cStreamControl.h cStream.h
 cPreset.o: cPreset.cpp cPreset.h
 cStreamControl.o: cStreamControl.cpp cStreamControl.h cStream.h cPreset.h
-cRequestHandler.o: cRequestHandler.cpp cRequestHandler.h cPluginConfig.h \
- cPreset.h cPresets.h cStream.h helpers.h streamControl.h \
- cStreamControl.h
+cRequestHandler.o: cRequestHandler.cpp cRequestHandler.h \
+ cDaemonParameter.h cPluginConfig.h cPreset.h cPresets.h cStream.h \
+ helpers.h streamControl.h cStreamControl.h
 cStream.o: cStream.cpp cStream.h cPreset.h
 cINIParser.o: cINIParser.cpp cINIParser.h helpers.h
 helpers.o: helpers.cpp helpers.h
 cPresets.o: cPresets.cpp cPresets.h cPreset.h cINIParser.h
 cPluginConfig.o: cPluginConfig.cpp cPluginConfig.h helpers.h
+cDaemonParameter.o: cDaemonParameter.cpp cDaemonParameter.h \
+ cPluginConfig.h

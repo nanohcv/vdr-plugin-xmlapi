@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <map>
 #include <string>
+#include "cDaemonParameter.h"
 #include "cPluginConfig.h"
 #include "cPreset.h"
 #include "cPresets.h"
@@ -23,11 +24,12 @@
 
 class cRequestHandler {
 public:
-    cRequestHandler(struct MHD_Connection *connection, cPluginConfig config);
+    cRequestHandler(struct MHD_Connection *connection, cDaemonParameter *daemonParameter);
     virtual ~cRequestHandler();
     int HandleRequest(const char *url);
 private:
     struct MHD_Connection *connection;
+    cDaemonParameter *daemonParameter;
     cPluginConfig config;
     cPresets presets;
     

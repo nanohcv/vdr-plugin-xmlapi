@@ -33,10 +33,10 @@
 #include "streamControl.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection, 
-                                    cPluginConfig config)
-    : config(config), presets(config.GetPresetsFile())
-{
-    this->connection = connection;
+                                    cDaemonParameter *daemonParameter)
+    : connection(connection), daemonParameter(daemonParameter), 
+        config(daemonParameter->GetPluginConfig()), 
+        presets(daemonParameter->GetPluginConfig().GetPresetsFile()) {    
 }
 
 cRequestHandler::~cRequestHandler() {
@@ -291,9 +291,7 @@ string cRequestHandler::channelsToXml() {
     string host = this->conInfo["Host"];
     if(host != "")
     {
-        vector<string> hostparts = split(host, ':');
-        int port = atoi(hostparts[1].c_str());
-        if(port == this->config.GetHttpsPort())
+        if(this->daemonParameter->GetDaemonPort() == this->config.GetHttpsPort())
         {
             logourl += "https://" + host;
         }

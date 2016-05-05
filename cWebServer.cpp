@@ -29,10 +29,14 @@
 cWebServer::cWebServer(cPluginConfig config) : config(config) {
     this->http_daemon = NULL;
     this->https_daemon = NULL;
+    this->httpDaemonParameter = new cDaemonParameter(this->config, this->config.GetHttpPort());
+    this->httpsDaemonParameter = new cDaemonParameter(this->config, this->config.GetHttpsPort());
     StreamControl = new cStreamControl();
 }
 
 cWebServer::~cWebServer() {
+    delete this->httpDaemonParameter;
+    delete this->httpsDaemonParameter;
     delete StreamControl;
     StreamControl = NULL;
 }
@@ -43,7 +47,7 @@ bool cWebServer::Start() {
     {
         this->https_daemon = MHD_start_daemon (MHD_USE_THREAD_PER_CONNECTION | MHD_USE_SSL,
   	   		     this->config.GetHttpsPort(), &cWebServer::on_client_connect, this,
-                             &cWebServer::handle_connection, this,
+                             &cWebServer::handle_connection, this->httpsDaemonParameter,
                              MHD_OPTION_HTTPS_MEM_KEY, this->config.GetSSLKey(),
                              MHD_OPTION_HTTPS_MEM_CERT, this->config.GetSSLCert(),
                              MHD_OPTION_NOTIFY_COMPLETED, &cWebServer::on_request_complete, this,
@@ -60,7 +64,7 @@ bool cWebServer::Start() {
         this->http_daemon = MHD_start_daemon (MHD_USE_THREAD_PER_CONNECTION,
                                this->config.GetHttpPort(),
                                &cWebServer::on_client_connect, this, 
-                               &cWebServer::handle_connection, this,
+                               &cWebServer::handle_connection, this->httpDaemonParameter,
                                MHD_OPTION_NOTIFY_COMPLETED, &cWebServer::on_request_complete, this,
                                MHD_OPTION_END);
         if(NULL == this->http_daemon)
@@ -90,7 +94,7 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
           const char *upload_data,
           size_t *upload_data_size, void **con_cls) {
     
-    cWebServer *srv = (cWebServer *)cls;
+    cDaemonParameter *parameter = (cDaemonParameter *)cls;
     struct MHD_Response *response;
     int ret;;
     char *user = NULL;
@@ -108,14 +112,14 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
         *con_cls = connection;
         return MHD_YES;
     }
-    cRequestHandler *handler = new cRequestHandler(connection, srv->config);
-    if(srv->config.GetUserName() != "" &&
-            srv->config.GetPassword() != "")
+    cRequestHandler *handler = new cRequestHandler(connection, parameter);
+    if(parameter->GetPluginConfig().GetUserName() != "" &&
+            parameter->GetPluginConfig().GetPassword() != "")
     {
         user = MHD_basic_auth_get_username_password (connection, &pass);
         fail = ( (user == NULL) ||
-               (0 != strcmp (user, srv->config.GetUserName().c_str())) ||
-               (0 != strcmp (pass, srv->config.GetPassword().c_str())));
+               (0 != strcmp (user, parameter->GetPluginConfig().GetUserName().c_str())) ||
+               (0 != strcmp (pass, parameter->GetPluginConfig().GetPassword().c_str())));
         if (user != NULL) free (user);
         if (pass != NULL) free (pass);
         if(fail)

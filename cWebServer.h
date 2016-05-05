@@ -17,6 +17,7 @@
 #include <microhttpd.h>
 #include <sys/socket.h>
 #include "cPluginConfig.h"
+#include "cDaemonParameter.h"
 
 class cWebServer {
 public:
@@ -29,6 +30,8 @@ private:
     cPluginConfig config;
     struct MHD_Daemon *http_daemon;
     struct MHD_Daemon *https_daemon;
+    cDaemonParameter *httpDaemonParameter;
+    cDaemonParameter *httpsDaemonParameter;
     
     static int handle_connection (void *cls, struct MHD_Connection *connection,
           const char *url,
