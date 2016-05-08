@@ -25,7 +25,7 @@ https://www.linuxtv.org/vdrwiki/index.php/Plugin_Installation
 On Ubuntu (16.04):
 Install requirements:
 
-    sudo apt-get install vdr-dev vdr-plugin-streamdev-server libmicrohttpd10 libmicrohttpd-dev build-essential git
+    sudo apt-get install vdr-dev vdr-plugin-streamdev-server libmicrohttpd10 libmicrohttpd-dev build-essential git ffmpeg
 
 Download, compile and install the xmlapi plugin:
 
