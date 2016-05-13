@@ -5,6 +5,7 @@
  */
 
 #include <cstring>
+#include <algorithm>
 #include <sstream>
 #include "helpers.h"
 
@@ -107,4 +108,12 @@ string intToString(int value) {
     ostringstream temp;
     temp<<value;
     return temp.str();
+}
+
+bool searchInString(string str, string search) {
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    std::transform(search.begin(), search.end(), search.begin(), ::tolower);
+    if(str.find(search) != string::npos)
+        return true;
+    return false;
 }

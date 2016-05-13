@@ -12,7 +12,6 @@
         <group>
             <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cRequestHandler.cpp</file>
             <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/cRequestHandler.h</file>
-            <file>file:/usr/local/src/vdr/PLUGINS/src/xmlapi/helpers.h</file>
         </group>
     </open-files>
 </project-private>

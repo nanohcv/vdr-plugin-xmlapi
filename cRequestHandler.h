@@ -45,6 +45,8 @@ private:
     int handleDeletedRecordings();
     string recordingsToXml(bool deleted = false);
     int handleEPG();
+    string eventsToXml(const char *chid, const char *at);
+    string searchEventsToXml(const char* chid, string search, string options);
     
     int handle404Error();
     
