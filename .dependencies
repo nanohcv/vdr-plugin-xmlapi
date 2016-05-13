@@ -2,7 +2,7 @@ xmlapi.o: xmlapi.c cPluginConfig.h cWebServer.h cDaemonParameter.h
 cWebServer.o: cWebServer.cpp cWebServer.h cPluginConfig.h \
  cDaemonParameter.h cRequestHandler.h cPreset.h cPresets.h \
  streamControl.h cStreamControl.h cStream.h
-cPreset.o: cPreset.cpp cPreset.h
+cPreset.o: cPreset.cpp cPreset.h helpers.h
 cStreamControl.o: cStreamControl.cpp cStreamControl.h cStream.h cPreset.h
 cRequestHandler.o: cRequestHandler.cpp cRequestHandler.h \
  cDaemonParameter.h cPluginConfig.h cPreset.h cPresets.h cStream.h \

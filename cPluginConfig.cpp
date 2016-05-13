@@ -345,7 +345,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
             return false;
         }
         string preset_low = "[Low]\n"
-                            "Cmd=-analyzeduration 1M -threads 2"
+                            "Cmd=-analyzeduration 1M -threads 2 {start}"
                                  " -i \"{infile}\""
                                  " -threads 2 -f mpegts -vcodec libx264"
                                  " -bufsize 1400k -maxrate 700k -crf 25 -g 50"
@@ -359,7 +359,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                             "Ext=.ts\n";
         
         string preset_mid = "[Mid]\n"
-                            "Cmd=-analyzeduration 1M -threads 2"
+                            "Cmd=-analyzeduration 1M -threads 2 {start}"
                                  " -i \"{infile}\""
                                  " -threads 2 -f mpegts -vcodec libx264"
                                  " -bufsize 2000k -maxrate 1000k -crf 22 -g 50"
@@ -373,7 +373,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                             "Ext=.ts\n";
         
         string preset_high = "[High]\n"
-                             "Cmd=-analyzeduration 1M -threads 2"
+                             "Cmd=-analyzeduration 1M -threads 2 {start}"
                                  " -i \"{infile}\""
                                  " -threads 2 -f mpegts -vcodec libx264"
                                  " -bufsize 3200k -maxrate 1600k -crf 22 -g 50"

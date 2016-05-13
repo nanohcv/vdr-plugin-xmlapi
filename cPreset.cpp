@@ -12,6 +12,7 @@
  */
 
 #include "cPreset.h"
+#include "helpers.h"
 
 cPreset::cPreset(string cmd, string mimetype, string extension) {
     this->cmd = cmd;
@@ -37,14 +38,23 @@ cPreset& cPreset::operator =(const cPreset& src) {
     return *this;
 }
 
-string cPreset::FFmpegCmd(string ffmpeg, string input) {
+string cPreset::FFmpegCmd(string ffmpeg, string input, int start) {
     string rstring = "{infile}";
     size_t start_pos = cmd.find(rstring);
     if(start_pos != std::string::npos)
     {
         cmd.replace(start_pos, rstring.length(), input);
     }
-    
+    rstring = "{start}";
+    start_pos = cmd.find(rstring);
+    if(start_pos != std::string::npos)
+    {
+        string s = "";
+        if(start > 0) {
+            s = " -ss " + intToString(start);
+        }
+        cmd.replace(start_pos, rstring.length(), s);
+    }
     ffmpeg += " " + cmd;
     return ffmpeg;
 }

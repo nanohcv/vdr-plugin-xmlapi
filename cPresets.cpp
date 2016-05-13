@@ -50,7 +50,7 @@ cPreset cPresets::operator [](string key) {
 }
 
 cPreset cPresets::GetDefaultPreset() {
-    string cmd = "-analyzeduration 1M -threads 2 -i \"{infile}\" -threads 2"
+    string cmd = "-analyzeduration 1M -threads 2 {start} -i \"{infile}\" -threads 2"
               " -f mpegts -vcodec libx264 -bufsize 2000k"
               " -maxrate 1000k -crf 22 -g 50 -map 0:v -map a:0"
               " -vf \"yadif=0:-1:1, scale=640:360\" -preset medium -tune film"

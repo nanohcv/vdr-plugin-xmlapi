@@ -35,11 +35,15 @@ private:
     
     int handleVersion();
     int handleStream(const char *url);
+    int handleRecStream(const char *url);
     int handleStreamControl();
     int handleLogos(const char *url);
     int handlePresets();
     int handleChannels();
     string channelsToXml();
+    int handleRecordings();
+    int handleDeletedRecordings();
+    string recordingsToXml(bool deleted = false);
     int handleEPG();
     
     int handle404Error();
