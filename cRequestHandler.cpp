@@ -753,19 +753,19 @@ string cRequestHandler::searchEventsToXml(const char* chid, string search, strin
                         if(!searchInString(descr, search))
                             continue;
                     }
-                    else if(options == "TS") {
+                    else if(options == "TS" || options == "ST") {
                         if( (!searchInString(title, search)) && (!searchInString(shorttext, search)) )
                             continue;
                     }
-                    else if(options == "TD") {
+                    else if(options == "TD" || options == "DT") {
                         if( (!searchInString(title, search)) && (!searchInString(descr, search)) )
                             continue;
                     }
-                    else if(options == "SD") {
+                    else if(options == "SD" || options == "DS") {
                         if( (!searchInString(shorttext, search)) && (!searchInString(descr, search)) )
                             continue;
                     }
-                    else if(options == "TSD") {
+                    else if(options == "TSD" || options == "TDS" || options == "SDT" || options == "STD" || options == "DTS" || options == "DST") {
                         if( (!searchInString(title, search)) && (!searchInString(shorttext, search)) && (!searchInString(descr, search)) )
                             continue;
                     }
