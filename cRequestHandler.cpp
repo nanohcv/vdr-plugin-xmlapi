@@ -442,15 +442,6 @@ int cRequestHandler::handleRecordings() {
                 xml += "    <delete>false</delete>\n";
             }
         }
-        else if(0 == strcmp(action, "remove")) {
-            if(rec->Remove())
-            {
-                xml += "    <remove>true</remove>\n";
-            }
-            else {
-                xml += "    <remove>false</remove>\n";
-            }
-        }
         else {
             xml += "    <unknown>" + string(action) + "</unknown>\n";
         }
