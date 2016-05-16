@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <map>
 #include <string>
+#include <vdr/timers.h>
 #include "cDaemonParameter.h"
 #include "cPluginConfig.h"
 #include "cPreset.h"
@@ -44,6 +45,17 @@ private:
     int handleRecordings();
     int handleDeletedRecordings();
     string recordingsToXml(bool deleted = false);
+    int handleTimers();
+    string timersToXml();
+    cTimer * GetTimer(const char *tid);
+    const cEvent * GetEvent(tChannelID channelid, tEventID eid);
+    bool deleteTimer(const char *tid);
+    bool onOffTimer(const char *tid);
+    bool addTimer(const char *channelid, const char *eventid);
+    bool addTimer(const char *channelid, const char *name, const char *aux,
+                    const char *cstr_flags, const char *cstr_weekdays,
+                    const char *cstr_day, const char *cstr_start, const char *cstr_stop,
+                    const char *cstr_priority, const char *cstr_lifetime);
     int handleEPG();
     string eventsToXml(const char *chid, const char *at);
     string searchEventsToXml(const char* chid, string search, string options);
