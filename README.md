@@ -188,6 +188,11 @@ Logos:
 
 #### 5.3 Epg
 
+To get whole EPG-Date just open the following url (Warning: this takes a long time)
+
+    http(s)://<server-ip>:<port>/epg.xml
+
+
 To get EPG-Data from a channel, you have to open this api:
 
     http(s)://<server-ip>:<port>/epg.xml?chid=<channel-id>
@@ -202,14 +207,94 @@ Example:
     http(s)://<server-ip>:<port>/epg.xml?chid=C-61441-10014-11120&at=1455906892
 
 
-#### 5.4 Presets.ini
+You can search the EPG with the following Parameters:
+
+- "search" -> the search string (The case doesn't matter)
+- "options" -> A combination of "T", "S" and "D". T = search in Title, S = Search in Short text, "D" = Search in description
+
+Example (Search for "Tatort" in Title and Description):
+
+    http(s)://<server-ip>:<port>/epg.xml?search=Tatort&options=TD
+
+To search only in the EPG of a channel you can add the channel id like this:
+
+    http(s)://<server-ip>:<port>/epg.xml?search=Tatort&options=TD&chid=C-61441-10014-11120
+
+
+
+#### 5.4 Recordings
+
+You can get a list of all recordings with the following command:
+
+    http(s)://<server-ip>:<port>/recordings.xml
+
+To delete a recording you can use the following parameters
+
+- "action" must be "delete"
+- "filename" = the filename (url encoded) of the recording provided by the recordings.xml
+
+Example:
+
+    http(s)://<server-ip>:<port>/recordings.xml?filename=%2Fsrv%2FVideos%2FAufnahmen%2FTest2%2F2016-05-14.18.20.2-0.rec&action=delete
+
+If a recording is deleted, it is not removed from hard disk. Deleted recordings can be found in the delete recording list.
+
+    http(s)://<server-ip>:<port>/deletedrecordings.xml
+
+To undelete or remove a recording you can use the following parameters
+
+- "action" = "undelete or "remove"
+- "filename" =  the filename (url encoded) of the recording provided by the deletedrecordings.xml
+
+Example:
+
+    http(s)://<server-ip>:<port>/recordings.xml?filename=%2Fsrv%2FVideos%2FAufnahmen%2FTest2%2F2016-05-14.18.20.2-0.del&action=remove
+
+
+#### 5.5 Timers
+
+To get all timers you can use the following api:
+
+    http(s)://<server-ip>:<port>/timers.xml
+
+To add a timer from a event, you can use the following parameters (all mandory):
+
+- "action" -> must be "add"
+    - "chid" -> a channel id
+    - "eventid" -> a eventid from the channel events
+
+Example:
+
+    http(s)://<server-ip>:<port>/timers.xml?action=add&chid=C-1-1051-11100&eventid=20000
+
+To add a new manual timer, you can use the following parameters (all mandory):
+
+- "action" -> must be "add"
+    - "chid" -> a channel id
+    - "name" -> the timer name
+    - "aux" -> a description
+    - "flags" -> flags (see vdr description) 1 = active, 5 = active and use vps
+    - "weekdays" -> The week days
+    - "day" -> unix timestamp from a day at 0 a clock
+    - "start" -> start time (eg. 1130 for 11:30)
+    - "stop" -> stop time (eg. 1300 for 13:00)
+    - "priority" -> priority
+    - "lifetime" -> lifetime (99 for no lifetime)
+
+Example:
+
+    http(s)://<server-ip>:<port>/timers.xml?action=add&chid=C-1-1079-10351&name=Test&aux=Beschreibung&flags=1&weekdays=0&day=1463436000&start=1230&stop=1300&priority=50&lifetime=99
+
+
+
+#### 5.6 Presets.ini
 
 You can access the presets.ini with the following command:
 
     http(s)://<server-ip>:<port>/presets.ini
 
 
-#### 5.5 Transcoded Streams
+#### 5.7 Transcoded Streams
 
 For streaming a channel you need a channel id and a preset (section from presets.ini).
 You also need the extension (Ext= from presets.ini) from your choosen preset.
@@ -226,7 +311,23 @@ Example:
     http(s)://<server-ip>:<port>/stream.ts?chid=C-61441-10014-11120&preset=Low
 
 
-#### 5.6 Stream control
+You can also stream a recording:
+
+    http(s)://<server-ip>:<port>/recstream{ext}?filename={filename from recordings.xml}&preset={preset}&start={jump to position in seconds}
+
+Parameter:
+
+- "filename" (mandory) -> the filename (url encoded) from the recordings.xml api
+- "preset" (mandory) -> a preset from the presets.ini ([Section])
+- "start" -> Jump to position (in seconds)
+
+Example:
+    
+    http(s)://<server-ip>:<port>/recstream.ts?filename=%2Fsrv%2FVideos%2FAufnahmen%2FTest2%2F2016-05-14.18.20.2-0.rec&preset=Mid&start=300
+
+
+
+#### 5.8 Stream control
 
 To view the currently active streams or stop/remove a stream, you can use this API.
 
