@@ -344,6 +344,15 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
         if(!pcfile.good()) {
             return false;
         }
+        
+        string preset_audio = "[Audio]\n"
+                              "Cmd=-analyzeduration 1M -threads 2 {start}"
+                                 " -i \"{infile}\""
+                                 " -f mpegts -vn -acodec libmp3lame"
+                                 " -ab 128k -ar 44100 -ac 2 -y -threads 2 pipe:1\n"
+                              "MimeType=audio/mpeg\n"
+                              "Ext=.ts\n";
+        
         string preset_low = "[Low]\n"
                             "Cmd=-analyzeduration 1M -threads 2 {start}"
                                  " -i \"{infile}\""
@@ -386,7 +395,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                              "MimeType=video/mpeg\n"
                              "Ext=.ts\n";
         
-        pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low;
+        pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low<<endl<<preset_audio;
         pcfile.close();
         return true;
     }
