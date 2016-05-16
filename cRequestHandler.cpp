@@ -402,6 +402,13 @@ string cRequestHandler::channelsToXml() {
         xml += "        <channel id=\"" + 
                 string(channel->GetChannelID().ToString()) +
                 "\">\n";
+        if(channel->Vpid() == 0 || channel->Vpid() == 1) {
+            xml += "        <isradio>true</isradio>\n";
+        }
+        else
+        {
+            xml += "        <isradio>false</isradio>\n";
+        }
         string name = channel->Name();
         string shortname = channel->ShortName();
         string logo = name;
