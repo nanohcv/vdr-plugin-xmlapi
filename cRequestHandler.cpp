@@ -546,7 +546,7 @@ string cRequestHandler::recordingsToXml(bool deleted) {
             string filesize = intToString(rec->FileSizeMB());
             string deleted = timeToString(rec->Deleted());
             string ichannelid = string(info->ChannelID().ToString());
-            string ichannelname = string(info->ChannelName());
+            string ichannelname = string(info->ChannelName() ? info->ChannelName() : "");
             string ititle = string(info->Title() ? info->Title() : "");
             string ishorttext = string(info->ShortText() ? info->ShortText() : "");
             string idescription = string(info->Description() ? info->Description() : "");
