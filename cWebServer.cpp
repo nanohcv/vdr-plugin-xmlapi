@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cWebServer.c
  * Author: karl
- * 
+ *
  * Created on 5. Februar 2016, 09:29
  */
 
@@ -42,7 +42,7 @@ cWebServer::~cWebServer() {
 }
 
 bool cWebServer::Start() {
-    
+
     if(this->config.GetUseHttps())
     {
         this->https_daemon = MHD_start_daemon (MHD_USE_THREAD_PER_CONNECTION | MHD_USE_SSL,
@@ -63,7 +63,7 @@ bool cWebServer::Start() {
     {
         this->http_daemon = MHD_start_daemon (MHD_USE_THREAD_PER_CONNECTION,
                                this->config.GetHttpPort(),
-                               &cWebServer::on_client_connect, this, 
+                               &cWebServer::on_client_connect, this,
                                &cWebServer::handle_connection, this->httpDaemonParameter,
                                MHD_OPTION_NOTIFY_COMPLETED, &cWebServer::on_request_complete, this,
                                MHD_OPTION_END);
@@ -93,7 +93,7 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
           const char *method, const char *version,
           const char *upload_data,
           size_t *upload_data_size, void **con_cls) {
-    
+
     cDaemonParameter *parameter = (cDaemonParameter *)cls;
     struct MHD_Response *response;
     int ret;;
@@ -105,8 +105,8 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
         printf("No get. Method = %s\n", method);
         return MHD_NO;
     }
-        
-    
+
+
     if (NULL == *con_cls)
     {
         *con_cls = connection;
@@ -126,7 +126,7 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
         {
             const char *page = "<html><body>Wrong credentials.</body></html>";
             response =
-                MHD_create_response_from_buffer (strlen (page), (void *) page, 
+                MHD_create_response_from_buffer (strlen (page), (void *) page,
                                                MHD_RESPMEM_PERSISTENT);
             ret = MHD_queue_basic_auth_fail_response (connection,
                                                       "XMLAPI",
@@ -141,7 +141,7 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
             delete handler;
             return ret;
         }
-    }    
+    }
     else
     {
         ret = handler->HandleRequest(url);
@@ -160,11 +160,11 @@ int cWebServer::on_client_connect (void *cls,
         struct sockaddr_in *sin = (struct sockaddr_in *) addr;
         isyslog("xmlapi: Client %s connecting...", inet_ntoa(sin->sin_addr));
     }
-    
+
     return MHD_YES;
 }
 
-void cWebServer::on_request_complete(void* cls, MHD_Connection* connection, 
+void cWebServer::on_request_complete(void* cls, MHD_Connection* connection,
                                         void** con_cls,
                                         MHD_RequestTerminationCode toe) {
     dsyslog("xmlapi: Request complete");

@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cWebServer.h
  * Author: karl
  *
@@ -23,7 +23,7 @@ class cWebServer {
 public:
     cWebServer(cPluginConfig config);
     virtual ~cWebServer();
-    
+
     bool Start(void);
     void Stop(void);
 private:
@@ -32,18 +32,18 @@ private:
     struct MHD_Daemon *https_daemon;
     cDaemonParameter *httpDaemonParameter;
     cDaemonParameter *httpsDaemonParameter;
-    
+
     static int handle_connection (void *cls, struct MHD_Connection *connection,
           const char *url,
           const char *method, const char *version,
           const char *upload_data,
           size_t *upload_data_size, void **con_cls);
-    
+
     static int on_client_connect (void *cls,
                               const struct sockaddr *addr,
 			      socklen_t addrlen);
-    
-    static void on_request_complete (void *cls, 
+
+    static void on_request_complete (void *cls,
                                     struct MHD_Connection * connection,
 				    void **con_cls,
                                     enum MHD_RequestTerminationCode toe);

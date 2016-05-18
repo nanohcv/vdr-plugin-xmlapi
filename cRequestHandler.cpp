@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cRequestHandler.cpp
  * Author: karl
- * 
+ *
  * Created on 7. Februar 2016, 12:10
  */
 
@@ -35,11 +35,11 @@
 #include "helpers.h"
 #include "streamControl.h"
 
-cRequestHandler::cRequestHandler(struct MHD_Connection *connection, 
+cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
                                     cDaemonParameter *daemonParameter)
-    : connection(connection), daemonParameter(daemonParameter), 
-        config(daemonParameter->GetPluginConfig()), 
-        presets(daemonParameter->GetPluginConfig().GetPresetsFile()) {    
+    : connection(connection), daemonParameter(daemonParameter),
+        config(daemonParameter->GetPluginConfig()),
+        presets(daemonParameter->GetPluginConfig().GetPresetsFile()) {
 }
 
 cRequestHandler::~cRequestHandler() {
@@ -67,7 +67,7 @@ int cRequestHandler::HandleRequest(const char* url) {
     {
         this->conInfo.insert(pair<string,string>("Host", string(host)));
     }
-    
+
     if(0 == strcmp(url, "/version.xml"))
     {
         return this->handleVersion();
@@ -114,13 +114,13 @@ int cRequestHandler::handleVersion() {
                  "    <name>" + this->config.GetPluginName() + "</name>\n"
                  "    <version>" + this->config.GetVersion() + "</version>\n"
                  "</plugin>\n";
-    
+
     struct MHD_Response *response;
     int ret;
     char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
     strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page), 
-                                               (void *) page, 
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
@@ -156,7 +156,7 @@ int cRequestHandler::handleStream(const char *url) {
         esyslog("xmlapi: stream -> invalid chid given");
         return this->handle404Error();
     }
-    
+
     string channelId(chid);
     string fullurl = this->config.GetStreamdevUrl() + channelId + ".ts";
     string ffmpegcmd = preset.FFmpegCmd(this->config.GetFFmpeg(), fullurl);
@@ -167,7 +167,7 @@ int cRequestHandler::handleStream(const char *url) {
         sleep(1);
     }
     int *streamid = new int;
-    
+
     *streamid = StreamControl->AddStream(stream);
     if(!stream->StartFFmpeg())
     {
@@ -223,7 +223,7 @@ int cRequestHandler::handleRecStream(const char* url) {
     string input = "concat:$(ls -1 " + recfiles + " | perl -0pe 's/\\n/|/g;s/\\|$//g')";
     string ffmpegcmd = preset.FFmpegCmd(this->config.GetFFmpeg(), input, starttime);
     dsyslog("xmlapi: FFmpeg Cmd=%s\n", ffmpegcmd.c_str());
-    
+
     struct MHD_Response *response;
     int ret;
     cStream *stream = new cStream(ffmpegcmd, this->conInfo);
@@ -232,7 +232,7 @@ int cRequestHandler::handleRecStream(const char* url) {
         sleep(1);
     }
     int *streamid = new int;
-    
+
     *streamid = StreamControl->AddStream(stream);
     if(!stream->StartFFmpeg())
     {
@@ -251,13 +251,13 @@ int cRequestHandler::handleRecStream(const char* url) {
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
-    
+
 }
 
 ssize_t cRequestHandler::stream_reader(void* cls, uint64_t pos, char* buf, size_t max) {
     int *streamid = (int *)cls;
     cStream *stream = StreamControl->GetStream(*streamid);
-    return stream->Read(buf, max);    
+    return stream->Read(buf, max);
 }
 
 void cRequestHandler::clear_stream(void* cls) {
@@ -275,9 +275,9 @@ void cRequestHandler::clear_stream(void* cls) {
 }
 
 int cRequestHandler::handleStreamControl() {
-    
+
     const char* removeid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "remove");
-    if(removeid != NULL) 
+    if(removeid != NULL)
     {
         int streamid = atoi(removeid);
         StreamControl->RemoveStream(streamid);
@@ -287,16 +287,16 @@ int cRequestHandler::handleStreamControl() {
     int ret;
     char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
     strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page), 
-                                               (void *) page, 
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
     MHD_add_response_header (response, "Cache-Control", "no-cache");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
-    
-        
+
+
 }
 
 int cRequestHandler::handleLogos(const char* url) {
@@ -305,7 +305,7 @@ int cRequestHandler::handleLogos(const char* url) {
     struct stat sbuf;
     struct MHD_Response *response;
     string logofile = this->config.GetConfigDir() + url;
-    
+
     if ( (-1 == (fd = open (logofile.c_str(), O_RDONLY))) ||
        (0 != fstat (fd, &sbuf)) ) {
         if (fd != -1)
@@ -316,7 +316,7 @@ int cRequestHandler::handleLogos(const char* url) {
     MHD_add_response_header (response, "Content-Type", "image/png");
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
-    
+
     return ret;
 }
 
@@ -324,7 +324,7 @@ int cRequestHandler::handlePresets() {
     string ini;
     if(this->presets.size() != 0)
     {
-        for(map<string,cPreset>::iterator it = presets.begin(); 
+        for(map<string,cPreset>::iterator it = presets.begin();
                 it != presets.end(); ++it) {
             ini += "[" + it->first + "]\n";
             ini += "Cmd=" + it->second.GetCmd() + "\n";
@@ -342,15 +342,15 @@ int cRequestHandler::handlePresets() {
     strcpy(page, ini.c_str());
     struct MHD_Response *response;
     int ret;
-    
-    response = MHD_create_response_from_buffer (strlen (page), 
-                                               (void *) page, 
+
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/plain");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
-    
+
 }
 
 int cRequestHandler::handleChannels() {
@@ -359,8 +359,8 @@ int cRequestHandler::handleChannels() {
     int ret;
     char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
     strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page), 
-                                               (void *) page, 
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
@@ -404,7 +404,7 @@ string cRequestHandler::channelsToXml() {
             xml += "    <group name=\"" + group + "\">\n";
             firstgroup = false;
         }
-        xml += "        <channel id=\"" + 
+        xml += "        <channel id=\"" +
                 string(channel->GetChannelID().ToString()) +
                 "\">\n";
         if(channel->Vpid() == 0 || channel->Vpid() == 1) {
@@ -434,11 +434,11 @@ string cRequestHandler::channelsToXml() {
 }
 
 int cRequestHandler::handleRecordings() {
-    
+
     const char *recfile = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "filename");
     const char *action = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "action");
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    
+
     if(recfile != NULL && action != NULL) {
         xml += "<actions>\n";
         cRecording *rec = Recordings.GetByName(recfile);
@@ -467,8 +467,8 @@ int cRequestHandler::handleRecordings() {
     int ret;
     char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
     strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page), 
-                                               (void *) page, 
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
@@ -477,11 +477,11 @@ int cRequestHandler::handleRecordings() {
 }
 
 int cRequestHandler::handleDeletedRecordings() {
-    
+
     const char *recfile = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "filename");
     const char *action = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "action");
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    
+
     if(recfile != NULL && action != NULL) {
         xml += "<actions>\n";
         cRecording *rec = DeletedRecordings.GetByName(recfile);
@@ -495,7 +495,7 @@ int cRequestHandler::handleDeletedRecordings() {
             }
             else {
                 xml += "    <undelete>false</undelete>\n";
-            }     
+            }
         }
         else if(0 == strcmp(action, "remove")) {
             if(rec->Remove())
@@ -519,8 +519,8 @@ int cRequestHandler::handleDeletedRecordings() {
     int ret;
     char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
     strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page), 
-                                               (void *) page, 
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
@@ -573,7 +573,7 @@ string cRequestHandler::recordingsToXml(bool deleted) {
             xml += "            <shorttext>" + ishorttext + "</shorttext>\n";
             xml += "            <description>" + idescription + "</description>\n";
             xml += "        </infos>\n";
-            xml += "    </recording>\n";         
+            xml += "    </recording>\n";
         }
     }
     xml += "</recordings>\n";
@@ -631,8 +631,8 @@ int cRequestHandler::handleTimers() {
                     cstr_flags != NULL && cstr_weekdays != NULL &&
                     cstr_day != NULL && cstr_start != NULL && cstr_stop != NULL &&
                     cstr_priority != NULL && cstr_lifetime != NULL && eventid == NULL) {
-                bool added = this->addTimer(channelid, name, aux, cstr_flags, 
-                        cstr_weekdays, cstr_day, cstr_start, cstr_stop, 
+                bool added = this->addTimer(channelid, name, aux, cstr_flags,
+                        cstr_weekdays, cstr_day, cstr_start, cstr_stop,
                         cstr_priority, cstr_lifetime);
                 xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
                 if(added)
@@ -657,8 +657,8 @@ int cRequestHandler::handleTimers() {
     int ret;
     char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
     strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page), 
-                                               (void *) page, 
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
@@ -669,7 +669,7 @@ int cRequestHandler::handleTimers() {
 string cRequestHandler::timersToXml() {
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     xml +=       "<timers>\n";
-    
+
     for(int i=0; i<Timers.Count(); i++) {
         cTimer *timer = Timers.Get(i);
         ostringstream builder;
@@ -692,7 +692,7 @@ string cRequestHandler::timersToXml() {
         xmlEncode(chname);
         xmlEncode(name);
         xmlEncode(aux);
-        
+
         xml += "    <timer id=\"" + id + "\">\n";
         xml += "        <channelid>" + chid + "</channelid>\n";
         xml += "        <channelname>" + chname + "</channelname>\n";
@@ -707,7 +707,7 @@ string cRequestHandler::timersToXml() {
         xml += "        <lifetime>" + lifetime + "</lifetime>\n";
         xml += "    </timer>\n";
     }
-    
+
     xml += "</timers>\n";
     return xml;
 }
@@ -730,13 +730,13 @@ cTimer *cRequestHandler::GetTimer(const char* tid) {
         time_t day = atol(parts[2].c_str());
         int start = atoi(parts[3].c_str());
         int stop = atoi(parts[4].c_str());
-        if(timer->Channel()->GetChannelID() == cid && 
+        if(timer->Channel()->GetChannelID() == cid &&
            timer->WeekDays() == wdays &&
            timer->Day() == day &&
            timer->Start() == start &&
            timer->Stop() == stop) {
             return timer;
-        }  
+        }
     }
     return NULL;
 }
@@ -785,7 +785,7 @@ bool cRequestHandler::addTimer(const char *channelid, const char* eventid) {
     return true;
 }
 
-bool cRequestHandler::addTimer(const char* channelid, const char* name, 
+bool cRequestHandler::addTimer(const char* channelid, const char* name,
         const char* aux, const char* cstr_flags, const char* cstr_weekdays,
         const char* cstr_day, const char* cstr_start, const char* cstr_stop,
         const char* cstr_priority, const char* cstr_lifetime) {
@@ -827,7 +827,7 @@ int cRequestHandler::handleEPG() {
     const char* at = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "at");
     const char* cstr_search = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "search");
     const char* cstr_options = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "options");
-    
+
     if(chid != NULL && cstr_search == NULL)
     {
         xml = this->eventsToXml(chid, at);
@@ -843,8 +843,8 @@ int cRequestHandler::handleEPG() {
     }
     char *page = (char *)malloc((xml.length()+1) * sizeof(char));
     strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page), 
-                                               (void *) page, 
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
     MHD_add_response_header (response, "Cache-Control", "no-cache");
@@ -874,7 +874,7 @@ string cRequestHandler::eventsToXml(const char* chid, const char *at) {
                     attime = true;
                 }
             }
-            
+
             cSchedulesLock lock;
             const cSchedules *schedules = cSchedules::Schedules(lock);
             const cSchedule *schedule = schedules->GetSchedule(cid);
@@ -927,18 +927,18 @@ string cRequestHandler::eventsToXml(const char* chid, const char *at) {
         }
         else {
             dsyslog("xmlapi: epg.xml -> invalid channel id");
-        }          
+        }
     }
     xml += "</events>\n";
     return xml;
-    
+
 }
 
 string cRequestHandler::searchEventsToXml(const char* chid, string search, string options) {
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     xml +=       "<events>\n";
-    
-    
+
+
     if(chid != NULL)
     {
         tChannelID cid = tChannelID::FromString(chid);
@@ -980,7 +980,7 @@ string cRequestHandler::searchEventsToXml(const char* chid, string search, strin
                 string descr;
                 if(d != NULL)
                     descr = string(event->Description());
-                
+
                 if(search != "") {
                     if(options == "" || options == "T")
                     {
@@ -1027,8 +1027,8 @@ string cRequestHandler::searchEventsToXml(const char* chid, string search, strin
             }
         }
     }
-    
-    
+
+
     xml += "</events>\n";
     return xml;
 }
@@ -1045,8 +1045,8 @@ int cRequestHandler::handle404Error() {
                        "    <p>The requested URL was not found on this server.</p>\n"
                        "  </body>\n"
                        "</html>\n";
-    response = MHD_create_response_from_buffer (strlen (page), 
-                                               (void *) page, 
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
                                                MHD_RESPMEM_PERSISTENT);
     MHD_add_response_header (response, "Content-Type", "text/html");
     ret = MHD_queue_response(this->connection, MHD_HTTP_NOT_FOUND, response);

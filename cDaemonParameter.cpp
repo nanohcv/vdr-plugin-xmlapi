@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cDaemonParameter.cpp
  * Author: karl
- * 
+ *
  * Created on 5. Mai 2016, 07:15
  */
 
@@ -17,7 +17,7 @@ cDaemonParameter::cDaemonParameter(cPluginConfig config, int port)
     : pluginConfig(config), daemonPort(port) {
 }
 
-cDaemonParameter::cDaemonParameter(const cDaemonParameter& src) 
+cDaemonParameter::cDaemonParameter(const cDaemonParameter& src)
     : pluginConfig(src.pluginConfig), daemonPort(src.daemonPort) {
 }
 

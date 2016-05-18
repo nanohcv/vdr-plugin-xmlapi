@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cINIParser.cpp
  * Author: karl
- * 
+ *
  * Created on 10. Februar 2016, 07:12
  */
 
@@ -20,7 +20,7 @@ cINIParser::cINIParser(string iniFile) {
     parse(iniFile);
 }
 
-cINIParser::cINIParser(const cINIParser& src) 
+cINIParser::cINIParser(const cINIParser& src)
     : map(src)
 {
 }
@@ -71,7 +71,7 @@ void cINIParser::parse(string iniFile) {
                 value += kvp[i] + "=";
             }
             value += kvp[kvp.size()-1];
-        }      
+        }
         trim(key);
         trim(value);
         if(section != "")

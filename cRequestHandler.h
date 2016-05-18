@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cRequestHandler.h
  * Author: karl
  *
@@ -33,7 +33,7 @@ private:
     cDaemonParameter *daemonParameter;
     cPluginConfig config;
     cPresets presets;
-    
+
     int handleVersion();
     int handleStream(const char *url);
     int handleRecStream(const char *url);
@@ -59,12 +59,12 @@ private:
     int handleEPG();
     string eventsToXml(const char *chid, const char *at);
     string searchEventsToXml(const char* chid, string search, string options);
-    
+
     int handle404Error();
-    
+
     static ssize_t stream_reader (void *cls, uint64_t pos, char *buf, size_t max);
     static void clear_stream(void *cls);
-    
+
     std::map<std::string, std::string> conInfo;
 
 };

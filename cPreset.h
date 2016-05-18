@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cPreset.h
  * Author: karl
  *
@@ -23,9 +23,9 @@ public:
     cPreset(string cmd, string mimetype, string extension);
     cPreset(const cPreset& src);
     virtual ~cPreset();
-    
+
     cPreset& operator = (const cPreset& src);
-    
+
     string FFmpegCmd(string ffmpeg, string input, int start = 0);
     string GetCmd();
     string MimeType();
@@ -34,8 +34,8 @@ private:
     string cmd;
     string mimetype;
     string extension;
-    
-    
+
+
 
 };
 

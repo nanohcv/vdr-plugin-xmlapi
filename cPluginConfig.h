@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cPluginConfig.h
  * Author: karl
  *
@@ -24,9 +24,9 @@ public:
     cPluginConfig(const char *configDir, const char *pluginName, const char *version);
     cPluginConfig(const cPluginConfig& src);
     virtual ~cPluginConfig();
-    
+
     cPluginConfig& operator = (const cPluginConfig& src);
-    
+
     string GetConfigFile();
     string GetPluginName();
     string GetVersion();
@@ -43,7 +43,7 @@ public:
     bool GetWaitForFFmpeg();
     string GetPresetsFile();
     string GetStreamdevUrl();
-    
+
 private:
     string configFile;
     string version;
@@ -63,12 +63,12 @@ private:
     bool waitForFFmpeg;
     string presetsFile;
     string streamdevUrl;
-    
+
     string generatePassword(unsigned int length);
     bool readFromConfFile(string configFile);
     bool createDefaultPresetFile(string presetFile);
-    
-    
+
+
 };
 
 #endif /* CPLUGINCONFIG_H */

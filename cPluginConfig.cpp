@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cPluginConfig.cpp
  * Author: karl
- * 
+ *
  * Created on 9. Februar 2016, 14:59
  */
 
@@ -20,10 +20,10 @@
 #include <vdr/tools.h>
 #include "helpers.h"
 
-cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName, 
+cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName,
         const char *version) {
     this->configFile = string(configDir) + "/" + string(pluginName) + ".conf";
-    
+
     this->name = string(pluginName);
     this->version = string(version);
     this->configDir = string(configDir);
@@ -42,7 +42,7 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName,
     this->presetsFile = string(configDir) + "/presets.ini";
     this->streamdevUrl = "http://127.0.0.1:3000/";
     this->readFromConfFile(configFile);
-    
+
 }
 
 cPluginConfig::cPluginConfig(const cPluginConfig& src) {
@@ -76,7 +76,7 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     this->waitForFFmpeg = src.waitForFFmpeg;
     this->presetsFile = src.presetsFile;
     this->streamdevUrl = src.streamdevUrl;
-    
+
 }
 
 cPluginConfig::~cPluginConfig() {
@@ -202,7 +202,7 @@ string cPluginConfig::generatePassword(unsigned int length){
     for(unsigned int i=0; i<length; i++) {
         pw += alphanum[rand() % a_len];
     }
-    
+
     return pw;
 }
 
@@ -231,11 +231,11 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "StreamdevUrl="<<this->streamdevUrl<<endl;
         fc.close();
         this->createDefaultPresetFile(this->presetsFile);
-        return true;       
+        return true;
     }
-    
-    
-    
+
+
+
     string line;
     string keyfile;
     string certfile;
@@ -316,7 +316,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
     this->sslKey = new char[this->sslKeySize];
     kf.read(this->sslKey, this->sslKeySize);
     kf.close();
-    
+
     ifstream cf;
     cf.open(certfile.c_str(), ifstream::in | ifstream::binary);
     if(cf.fail())
@@ -344,7 +344,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
         if(!pcfile.good()) {
             return false;
         }
-        
+
         string preset_audio = "[Audio]\n"
                               "Cmd=-analyzeduration 1M -threads 2 {start}"
                                  " -i \"{infile}\""
@@ -352,7 +352,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                                  " -ab 128k -ar 44100 -ac 2 -y -threads 2 pipe:1\n"
                               "MimeType=audio/mpeg\n"
                               "Ext=.ts\n";
-        
+
         string preset_low = "[Low]\n"
                             "Cmd=-analyzeduration 1M -threads 2 {start}"
                                  " -i \"{infile}\""
@@ -366,7 +366,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                                  " -async 1 pipe:1\n"
                             "MimeType=video/mpeg\n"
                             "Ext=.ts\n";
-        
+
         string preset_mid = "[Mid]\n"
                             "Cmd=-analyzeduration 1M -threads 2 {start}"
                                  " -i \"{infile}\""
@@ -380,7 +380,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                                  " -async 1 pipe:1\n"
                             "MimeType=video/mpeg\n"
                             "Ext=.ts\n";
-        
+
         string preset_high = "[High]\n"
                              "Cmd=-analyzeduration 1M -threads 2 {start}"
                                  " -i \"{infile}\""
@@ -394,7 +394,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                                  " -async 1 pipe:1\n"
                              "MimeType=video/mpeg\n"
                              "Ext=.ts\n";
-        
+
         pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low<<endl<<preset_audio;
         pcfile.close();
         return true;

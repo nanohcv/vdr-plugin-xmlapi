@@ -61,8 +61,8 @@ string urlEncode(string str) {
         if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') new_str += c;
         else {
             sprintf(bufHex,"%X",c);
-            if(ic < 16) 
-                new_str += "%0"; 
+            if(ic < 16)
+                new_str += "%0";
             else
                 new_str += "%";
             new_str += bufHex;

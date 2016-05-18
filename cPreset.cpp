@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cPreset.cpp
  * Author: karl
- * 
+ *
  * Created on 10. Februar 2016, 14:31
  */
 
