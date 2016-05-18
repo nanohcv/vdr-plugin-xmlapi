@@ -1,3 +1,0 @@
-g++ -g -O3 -Wall -Werror=overloaded-virtual -Wno-parentheses -fPIC -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -c -DPLUGIN_NAME_I18N='"xmlapi"'  -o xmlapi.o xmlapi.c
-g++ -g -O3 -Wall -Werror=overloaded-virtual -Wno-parentheses -fPIC -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE  -shared xmlapi.o -o libvdr-xmlapi.so
-xgettext -C -cTRANSLATORS --no-wrap --no-location -k -ktr -ktrNOOP --package-name=vdr-xmlapi --package-version=0.0.1 --msgid-bugs-address='<see README>' -o po/xmlapi.pot `ls xmlapi.c`
