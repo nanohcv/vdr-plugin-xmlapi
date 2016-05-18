@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cPresets.cpp
  * Author: karl
- * 
+ *
  * Created on 11. Februar 2016, 14:03
  */
 
@@ -32,7 +32,7 @@ cPresets::cPresets(string iniFile) {
             this->insert(pair<string, cPreset>(profileName, preset));
         }
     }
-    
+
 }
 
 cPresets::cPresets(const cPresets& src) {

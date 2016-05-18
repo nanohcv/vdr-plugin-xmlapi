@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cINIParser.h
  * Author: karl
  *
@@ -22,11 +22,11 @@ using namespace std;
 
 class cINIParser : public map< string, map<string, string> > {
 public:
-    cINIParser(string iniFile); 
+    cINIParser(string iniFile);
     cINIParser(const cINIParser& src);
     virtual ~cINIParser();
     vector<string> GetKeys();
-    
+
 private:
     void parse(string iniFile);
 };

@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cDaemonParameter.h
  * Author: karl
  *
@@ -21,12 +21,12 @@ public:
     cDaemonParameter(cPluginConfig config, int port);
     cDaemonParameter(const cDaemonParameter& src);
     virtual ~cDaemonParameter();
-    
+
     cDaemonParameter& operator = (const cDaemonParameter& src);
-    
+
     cPluginConfig GetPluginConfig();
     int GetDaemonPort();
-    
+
 private:
     cPluginConfig pluginConfig;
     int daemonPort;

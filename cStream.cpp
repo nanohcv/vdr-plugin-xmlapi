@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cStream.cpp
  * Author: karl
- * 
+ *
  * Created on 1. Mai 2016, 07:38
  */
 
@@ -65,12 +65,12 @@ bool cStream::StartFFmpeg() {
     else {
         return false;
     }
-    
+
     if(this->f == NULL) {
         esyslog("xmlapi: Cant start ffmpeg");
         return false;
     }
-    
+
     return true;
 }
 
@@ -89,7 +89,7 @@ ssize_t cStream::Read(char* buf, size_t max) {
     else {
         return MHD_CONTENT_READER_END_WITH_ERROR;
     }
-    
+
     if (0 == n) {
         return MHD_CONTENT_READER_END_OF_STREAM;
     }

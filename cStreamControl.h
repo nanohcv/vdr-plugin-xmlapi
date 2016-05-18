@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cStreamControl.h
  * Author: karl
  *
@@ -26,24 +26,24 @@ public:
     cStreamControl();
     cStreamControl(const cStreamControl& orig);
     virtual ~cStreamControl();
-    
+
     int AddStream(cStream *stream);
     cStream* GetStream(int streamid);
-    
+
     void RemoveStream(int streamid);
     int RemoveStreamsByIP(string ip);
     int RemoveStreamsByUserAgent(string useragent);
     int RemoveStreamsByUserAgentAndIP(string ip, string useragent);
-    
+
     void WaitingForStream(int streamid);
     void WaitingForStreamsByIP(string ip);
     void WaitingForStreamsByUserAgent(string useragent);
     void WaitingForStreamsByUserAgentAndIP(string ip, string useragent);
-    
+
     string GetStreamsXML();
-    
+
     cMutex Mutex;
-    
+
 private:
     map<int, cStream*> streams;
 

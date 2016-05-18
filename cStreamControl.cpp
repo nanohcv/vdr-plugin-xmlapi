@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cStreamControl.cpp
  * Author: karl
- * 
+ *
  * Created on 1. Mai 2016, 07:36
  */
 #include <sstream>

@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   cStream.h
  * Author: karl
  *
@@ -30,24 +30,24 @@ public:
     cStream(string ffmpegCmd, map<string, string> conInfo);
     cStream(const cStream& src);
     virtual ~cStream();
-    
+
     cStream& operator = (const cStream& src);
-    
+
     bool StartFFmpeg();
     void StopFFmpeg();
     ssize_t Read(char *buf, size_t max);
-    
+
     string GetClientIP();
     string GetUserAgent();
     pid_t GetPid();
 
-    
+
 private:
     pid_t pid;
     FILE *f;
     string cmd;
     map<string, string> connectionInfo;
-    
+
     bool Open(const char *Command, const char *Mode);
     int Close(void);
 };
