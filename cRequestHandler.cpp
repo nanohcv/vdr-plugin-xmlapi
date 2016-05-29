@@ -45,8 +45,11 @@ cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
 cRequestHandler::~cRequestHandler() {
 }
 
-int cRequestHandler::HandleRequest(const char* url) {
+void cRequestHandler::SetUser(cUser user) {
+    this->user = user;
+}
 
+int cRequestHandler::HandleRequest(const char* url) {
     const MHD_ConnectionInfo *connectionInfo = MHD_get_connection_info (connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
     if (connectionInfo->client_addr->sa_family == AF_INET)
     {

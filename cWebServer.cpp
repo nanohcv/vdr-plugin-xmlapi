@@ -22,6 +22,7 @@
 #include <vdr/tools.h>
 #include <microhttpd.h>
 #include "cRequestHandler.h"
+#include "cUser.h"
 
 #define EXTERN
 #include "streamControl.h"
@@ -113,13 +114,12 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
         return MHD_YES;
     }
     cRequestHandler *handler = new cRequestHandler(connection, parameter);
-    if(parameter->GetPluginConfig().GetUserName() != "" &&
-            parameter->GetPluginConfig().GetPassword() != "")
+    if(!parameter->GetPluginConfig().GetUsers().empty())
     {
         user = MHD_basic_auth_get_username_password (connection, &pass);
-        fail = ( (user == NULL) ||
-               (0 != strcmp (user, parameter->GetPluginConfig().GetUserName().c_str())) ||
-               (0 != strcmp (pass, parameter->GetPluginConfig().GetPassword().c_str())));
+        fail = ( (user == NULL) || !parameter->GetPluginConfig().GetUsers().MatchUser(user, pass));
+        if(!fail)
+            handler->SetUser(parameter->GetPluginConfig().GetUsers().GetUser(user));
         if (user != NULL) free (user);
         if (pass != NULL) free (pass);
         if(fail)

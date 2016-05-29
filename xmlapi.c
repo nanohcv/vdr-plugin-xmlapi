@@ -13,7 +13,7 @@
 #include "cPluginConfig.h"
 #include "cWebServer.h"
 
-static const char *VERSION        = "1.3.0";
+static const char *VERSION        = "1.3.1";
 static const char *DESCRIPTION    = "Enter description for 'xmlapi' plugin";
 /*
 static const char *MAINMENUENTRY  = "Xmlapi";
@@ -121,7 +121,6 @@ bool cPluginXmlapi::Start(void)
     dsyslog("xmlapi: HTTP-Port=%d, HTTPs-Port=%d, Use HTTPs=%d, HTTPS only=%d",
                      config.GetHttpPort(), config.GetHttpsPort(),
                      config.GetUseHttps(), config.GetHttpsOnly());
-    dsyslog("xmlapi: User name=%s", config.GetUserName().c_str());
     if(srv == NULL)
     {
         srv = new cWebServer(config);

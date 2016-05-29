@@ -35,13 +35,14 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName,
     this->sslKeySize = 0;
     this->sslCert = NULL;
     this->sslCertSize = 0;
-    this->userName = string(pluginName);
-    this->password = this->generatePassword(12);
+    this->usersFile = string(configDir) + "/users.ini";
     this->ffmpeg = "ffmpeg";
     this->waitForFFmpeg = true;
     this->presetsFile = string(configDir) + "/presets.ini";
     this->streamdevUrl = "http://127.0.0.1:3000/";
     this->readFromConfFile(configFile);
+    this->createDefaultUserFile(this->usersFile);
+    this->users.ReadFromINI(this->usersFile);
 
 }
 
@@ -70,8 +71,8 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
         this->sslCert = NULL;
         this->sslCertSize = 0;
     }
-    this->userName = src.userName;
-    this->password = src.password;
+    this->usersFile = src.usersFile;
+    this->users = src.users;
     this->ffmpeg = src.ffmpeg;
     this->waitForFFmpeg = src.waitForFFmpeg;
     this->presetsFile = src.presetsFile;
@@ -95,8 +96,8 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->httpsPort = src.httpsPort;
         this->useHttps = src.useHttps;
         this->httpsOnly = src.httpsOnly;
-        this->userName = src.userName;
-        this->password = src.password;
+        this->users = src.users;
+        this->usersFile = src.usersFile;
         this->ffmpeg = src.ffmpeg;
         this->waitForFFmpeg = src.waitForFFmpeg;
         this->presetsFile = src.presetsFile;
@@ -165,12 +166,12 @@ char *cPluginConfig::GetSSLCert() {
     return this->sslCert;
 }
 
-string cPluginConfig::GetUserName() {
-    return this->userName;
+string cPluginConfig::GetUsersFile() {
+    return this->usersFile;
 }
 
-string cPluginConfig::GetPassword() {
-    return this->password;
+cUsers cPluginConfig::GetUsers() {
+    return this->users;
 }
 
 string cPluginConfig::GetFFmpeg() {
@@ -223,8 +224,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "HttpsOnly="<<this->httpsOnly<<endl<<
             "SSLKeyFile="<<endl<<
             "SSLCertFile="<<endl<<
-            "UserName="<<this->userName<<endl<<
-            "Password="<<this->password<<endl<<
+            "Users="<<this->usersFile<<endl<<
             "FFMPEG="<<this->ffmpeg<<endl<<
             "WaitForFFmpeg="<<this->waitForFFmpeg<<endl<<
             "Presets="<<this->presetsFile<<endl<<
@@ -267,11 +267,10 @@ bool cPluginConfig::readFromConfFile(string configFile) {
         else if (left == "SSLCertFile") {
             certfile = right;
         }
-        else if (left == "UserName") {
-            this->userName = right;
-        }
-        else if (left == "Password") {
-            this->password = right;
+        else if (left == "Users") {
+            if(right != "") {
+                this->usersFile = right;
+            }
         }
         else if (left == "FFMPEG") {
             if(right != "")
@@ -400,5 +399,25 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
         return true;
     }
     prfile.close();
+    return true;
+}
+
+bool cPluginConfig::createDefaultUserFile(string usersFile) {
+    ifstream ufile;
+    ufile.open(usersFile.c_str());
+    if(ufile.fail()) {
+        ofstream urfile;
+        urfile.open(usersFile.c_str());
+        if(!urfile.good()) {
+            return false;
+        }
+        string adminusers = "[AdminUsers]\n"
+                            "xmlapi=" + this->generatePassword(10) + "\n";
+        string users = "[Users]\n";
+        urfile<<adminusers<<endl<<users<<endl;
+        urfile.close();
+        return true;
+    }
+    ufile.close();
     return true;
 }

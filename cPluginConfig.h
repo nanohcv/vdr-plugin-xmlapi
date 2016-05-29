@@ -16,6 +16,7 @@
 
 #include <string>
 #include <vector>
+#include "cUsers.h"
 
 using namespace std;
 
@@ -37,8 +38,8 @@ public:
     bool GetHttpsOnly();
     char *GetSSLKey();
     char *GetSSLCert();
-    string GetUserName();
-    string GetPassword();
+    string GetUsersFile();
+    cUsers GetUsers();
     string GetFFmpeg();
     bool GetWaitForFFmpeg();
     string GetPresetsFile();
@@ -57,8 +58,8 @@ private:
     size_t sslKeySize;
     char *sslCert;
     size_t sslCertSize;
-    string userName;
-    string password;
+    string usersFile;
+    cUsers users;
     string ffmpeg;
     bool waitForFFmpeg;
     string presetsFile;
@@ -67,6 +68,7 @@ private:
     string generatePassword(unsigned int length);
     bool readFromConfFile(string configFile);
     bool createDefaultPresetFile(string presetFile);
+    bool createDefaultUserFile(string usersFile);
 
 
 };

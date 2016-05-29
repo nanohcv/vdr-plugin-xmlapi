@@ -13,6 +13,10 @@
       <in>cStream.h</in>
       <in>cStreamControl.cpp</in>
       <in>cStreamControl.h</in>
+      <in>cUser.cpp</in>
+      <in>cUser.h</in>
+      <in>cUsers.cpp</in>
+      <in>cUsers.h</in>
       <in>cWebServer.cpp</in>
       <in>helpers.cpp</in>
       <in>streamControl.h</in>
@@ -96,6 +100,14 @@
       <item path="cStreamControl.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="cStreamControl.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="cUser.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="cUser.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="cUsers.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="cUsers.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="cWebServer.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
