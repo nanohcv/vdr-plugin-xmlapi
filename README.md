@@ -87,22 +87,9 @@ in the following line:
 
     SSLCertFile=/path/to/your/server.pem
 
+To change the path to users.ini, change the following line:
 
-You can change the user name in this line:
-
-    UserName=xmlapi
-
-
-You can change the default random password in this line:
-
-    Password=z_odRd*Q1L%Z
-
-
-To disable Basic-Authentication set user name and password to nothing. 
-It should look like this:
-
-    UserName=
-    Password=
+    Users=/var/lib/vdr/plugins/xmlapi/users.ini
 
 
 If FFMpeg can't be found in the global search PATH then you can set the 
@@ -133,7 +120,20 @@ parameter. Make sure that the url ends with a slash.
     StreamdevUrl=http://127.0.0.1:3000/
 
 
-### 4. Presets - presets.ini
+#### 3.1 Users - users.ini
+Users can be configured in the users.ini file.
+The file has two sections. The first section is called "AdminUsers" and the second called "Users".
+AdminUsers can control streams, Users not.
+The file should look like this. Make sure that no spaces between username, "=" and password are added.
+
+    [AdminUsers]
+    xmlapi=abcd1234
+
+    [Users]
+    guest=4321dcba
+  
+
+#### 3.2 Presets - presets.ini
 To transcode a channel you have to open the url 
 http://server:port/stream{extenstion}?preset={preset}&chid={channelId}
 The ffmpeg parameter -i must be set to {infile} and the output file must be set
@@ -160,17 +160,17 @@ default preset and adjust the settings.
 
 
 
-### 5. API
+### 4. API
 
 The plugin provides a simple API based on xml files.
 All requests must be GET Requests
 
-#### 5.1 Plugin name and version
+#### 4.1 Plugin name and version
 
     http(s)://<server-ip>:<port>/version.xml
 
 
-#### 5.2 Channels
+#### 4.2 Channels
 
 Get channels with groups, channel id, name, shortname and logos. The logos must
 be placed in the subfolder "logos" in the plugin config directory.
@@ -186,7 +186,7 @@ Logos:
     http(s)://<server-ip>:<port>/logos/<channelname>.png
 
 
-#### 5.3 Epg
+#### 4.3 Epg
 
 To get whole EPG-Date just open the following url (Warning: this takes a long time)
 
@@ -222,7 +222,7 @@ To search only in the EPG of a channel you can add the channel id like this:
 
 
 
-#### 5.4 Recordings
+#### 4.4 Recordings
 
 You can get a list of all recordings with the following command:
 
@@ -251,7 +251,7 @@ Example:
     http(s)://<server-ip>:<port>/recordings.xml?filename=%2Fsrv%2FVideos%2FAufnahmen%2FTest2%2F2016-05-14.18.20.2-0.del&action=remove
 
 
-#### 5.5 Timers
+#### 4.5 Timers
 
 To get all timers you can use the following api:
 
@@ -287,14 +287,14 @@ Example:
 
 
 
-#### 5.6 Presets.ini
+#### 4.6 Presets.ini
 
 You can access the presets.ini with the following command:
 
     http(s)://<server-ip>:<port>/presets.ini
 
 
-#### 5.7 Transcoded Streams
+#### 4.7 Transcoded Streams
 
 For streaming a channel you need a channel id and a preset (section from presets.ini).
 You also need the extension (Ext= from presets.ini) from your choosen preset.
@@ -327,7 +327,7 @@ Example:
 
 
 
-#### 5.8 Stream control
+#### 4.8 Stream control
 
 To view the currently active streams or stop/remove a stream, you can use this API.
 
