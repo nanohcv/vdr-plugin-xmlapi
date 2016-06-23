@@ -20,12 +20,12 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <vdr/tools.h>
-#include "cPreset.h"
+#include "cBaseStream.h"
 
 
 using namespace std;
 
-class cStream {
+class cStream : public cBaseStream {
 public:
     cStream(string ffmpegCmd, map<string, string> conInfo);
     cStream(const cStream& src);
@@ -36,20 +36,8 @@ public:
     bool StartFFmpeg();
     void StopFFmpeg();
     ssize_t Read(char *buf, size_t max);
-
-    string GetClientIP();
-    string GetUserAgent();
-    pid_t GetPid();
-
-
 private:
-    pid_t pid;
-    FILE *f;
-    string cmd;
-    map<string, string> connectionInfo;
-
-    bool Open(const char *Command, const char *Mode);
-    int Close(void);
+    
 };
 
 #endif /* CSTREAM_H */
