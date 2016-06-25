@@ -23,29 +23,40 @@ cStreamControl::cStreamControl(const cStreamControl& orig) {
 }
 
 cStreamControl::~cStreamControl() {
-    for(map<int, cStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
+    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
         delete it->second;
     }
     this->streams.clear();
 }
 
-int cStreamControl::AddStream(cStream* stream) {
+int cStreamControl::AddStream(cBaseStream* stream) {
     int nextid = 1;
-    for(map<int, cStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
+    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
         if(it->first == nextid)
             nextid++;
         else
             break;
     }
-    this->streams.insert(pair<int, cStream*>(nextid, stream));
+    this->streams.insert(pair<int, cBaseStream*>(nextid, stream));
     return nextid;
 }
 
-cStream* cStreamControl::GetStream(int streamid) {
-    map<int, cStream*>::iterator it = this->streams.find(streamid);
+cBaseStream* cStreamControl::GetStream(int streamid) {
+    map<int, cBaseStream*>::iterator it = this->streams.find(streamid);
     if(it == this->streams.end())
         return NULL;
     return it->second;
+}
+
+cHlsStream* cStreamControl::GetHlsStream(string streamName) {
+    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
+        if(it->second->IsHlsStream()) {
+            cHlsStream *hlsStream = (cHlsStream*)it->second;
+            if(hlsStream->StreamName() == streamName)
+                return hlsStream;
+        }
+    }
+    return NULL;
 }
 
 void cStreamControl::RemoveStream(int streamid) {
@@ -53,13 +64,24 @@ void cStreamControl::RemoveStream(int streamid) {
     delete this->streams[streamid];
     this->streams.erase(streamid);
     this->Mutex.Unlock();
+}
 
+void cStreamControl::RemoveDeadHlsStreams() {
+    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
+        if(it->second->IsHlsStream()) {
+            cHlsStream *hlsStream =(cHlsStream*)it->second;
+            if(!hlsStream->Active()) {
+                delete hlsStream;
+                this->streams.erase(it);
+            }
+        }
+    }
 }
 
 int cStreamControl::RemoveStreamsByIP(string ip) {
     int streams_affected = 0;
     this->Mutex.Lock();
-    for(map<int, cStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
+    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
         if(it->second->GetClientIP() == ip) {
             delete it->second;
             this->streams.erase(it->first);
@@ -73,7 +95,7 @@ int cStreamControl::RemoveStreamsByIP(string ip) {
 int cStreamControl::RemoveStreamsByUserAgent(string useragent) {
     int streams_affected = 0;
     this->Mutex.Lock();
-    for(map<int, cStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
+    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
         if(it->second->GetUserAgent() == useragent) {
             delete it->second;
             this->streams.erase(it->first);
@@ -87,7 +109,7 @@ int cStreamControl::RemoveStreamsByUserAgent(string useragent) {
 int cStreamControl::RemoveStreamsByUserAgentAndIP(string ip, string useragent) {
     int streams_affected = 0;
     this->Mutex.Lock();
-    for(map<int, cStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
+    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
         if(it->second->GetClientIP() == ip && it->second->GetUserAgent() == useragent) {
             delete it->second;
             this->streams.erase(it->first);
@@ -105,7 +127,7 @@ void cStreamControl::WaitingForStream(int streamid) {
 
 void cStreamControl::WaitingForStreamsByIP(string ip) {
     int status;
-    for(map<int, cStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
+    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
         if(it->second->GetClientIP() == ip) {
             waitpid(it->second->GetPid(), &status, 0);
         }
@@ -114,7 +136,7 @@ void cStreamControl::WaitingForStreamsByIP(string ip) {
 
 void cStreamControl::WaitingForStreamsByUserAgent(string useragent) {
     int status;
-    for(map<int, cStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
+    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
         if(it->second->GetUserAgent() == useragent) {
             waitpid(it->second->GetPid(), &status, 0);
         }
@@ -123,7 +145,7 @@ void cStreamControl::WaitingForStreamsByUserAgent(string useragent) {
 
 void cStreamControl::WaitingForStreamsByUserAgentAndIP(string ip, string useragent) {
     int status;
-    for(map<int, cStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
+    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
         if(it->second->GetClientIP() == ip && it->second->GetUserAgent() == useragent) {
             waitpid(it->second->GetPid(), &status, 0);
         }
@@ -133,7 +155,7 @@ void cStreamControl::WaitingForStreamsByUserAgentAndIP(string ip, string userage
 string cStreamControl::GetStreamsXML() {
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     xml += "<streams>\n";
-    for(map<int, cStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
+    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
         xml += "    <stream id=\"";
         ostringstream temp;
         temp<<it->first;

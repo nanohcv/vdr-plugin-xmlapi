@@ -19,6 +19,8 @@
 #include "cPluginConfig.h"
 #include "cPreset.h"
 #include "cPresets.h"
+#include "cHlsPreset.h"
+#include "cHlsPresets.h"
 #include "cUser.h"
 
 #ifndef CREQUESTHANDLER_H
@@ -35,12 +37,14 @@ private:
     cDaemonParameter *daemonParameter;
     cPluginConfig config;
     cPresets presets;
+    cHlsPresets hlsPresets;
     cUser user;
     
 
     int handleVersion();
     int handleStream(const char *url);
     int handleRecStream(const char *url);
+    int handleHlsStream(const char *url);
     int handleStreamControl();
     int handleLogos(const char *url);
     int handlePresets();

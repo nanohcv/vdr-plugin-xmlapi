@@ -112,7 +112,7 @@ install-i18n: $(I18Nmsgs)
 ### Targets:
 
 $(SOFILE): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) -lmicrohttpd -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) -lmicrohttpd -lavformat -lavcodec -lavutil -o $@
 
 install-lib: $(SOFILE)
 	install -D $^ $(DESTDIR)$(LIBDIR)/$^.$(APIVERSION)

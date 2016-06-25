@@ -43,6 +43,7 @@ public:
     string GetFFmpeg();
     bool GetWaitForFFmpeg();
     string GetPresetsFile();
+    string GetHlsPresetsFile();
     string GetStreamdevUrl();
 
 private:
@@ -63,11 +64,13 @@ private:
     string ffmpeg;
     bool waitForFFmpeg;
     string presetsFile;
+    string hlsPresetsFile;
     string streamdevUrl;
 
     string generatePassword(unsigned int length);
     bool readFromConfFile(string configFile);
     bool createDefaultPresetFile(string presetFile);
+    bool createDefaultHlsPresetFile(string hlsPresetFile);
     bool createDefaultUserFile(string usersFile);
 
 

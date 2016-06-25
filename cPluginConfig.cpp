@@ -39,6 +39,7 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName,
     this->ffmpeg = "ffmpeg";
     this->waitForFFmpeg = true;
     this->presetsFile = string(configDir) + "/presets.ini";
+    this->hlsPresetsFile = string(configDir) + "/hls_presets.ini";
     this->streamdevUrl = "http://127.0.0.1:3000/";
     this->readFromConfFile(configFile);
     this->createDefaultUserFile(this->usersFile);
@@ -76,6 +77,7 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     this->ffmpeg = src.ffmpeg;
     this->waitForFFmpeg = src.waitForFFmpeg;
     this->presetsFile = src.presetsFile;
+    this->hlsPresetsFile = src.hlsPresetsFile;
     this->streamdevUrl = src.streamdevUrl;
 
 }
@@ -101,6 +103,7 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->ffmpeg = src.ffmpeg;
         this->waitForFFmpeg = src.waitForFFmpeg;
         this->presetsFile = src.presetsFile;
+        this->hlsPresetsFile = src.hlsPresetsFile;
         this->streamdevUrl = src.streamdevUrl;
         if(src.sslKey != NULL) {
             delete this->sslKey;
@@ -186,6 +189,10 @@ string cPluginConfig::GetPresetsFile() {
     return this->presetsFile;
 }
 
+string cPluginConfig::GetHlsPresetsFile() {
+    return this->hlsPresetsFile;
+}
+
 string cPluginConfig::GetStreamdevUrl() {
     return this->streamdevUrl;
 }
@@ -228,9 +235,11 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "FFMPEG="<<this->ffmpeg<<endl<<
             "WaitForFFmpeg="<<this->waitForFFmpeg<<endl<<
             "Presets="<<this->presetsFile<<endl<<
+            "HlsPresets="<<this->hlsPresetsFile<<endl<<
             "StreamdevUrl="<<this->streamdevUrl<<endl;
         fc.close();
         this->createDefaultPresetFile(this->presetsFile);
+        this->createDefaultHlsPresetFile(this->hlsPresetsFile);
         return true;
     }
 
@@ -284,6 +293,11 @@ bool cPluginConfig::readFromConfFile(string configFile) {
                 this->presetsFile = right;
             }
         }
+        else if (left == "HlsPresets") {
+            if(right != "") {
+                this->hlsPresetsFile = right;
+            }
+        }
         else if (left == "StreamdevUrl") {
             if(right != "") {
                 this->streamdevUrl = right;
@@ -292,6 +306,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
     }
     fr.close();
     this->createDefaultPresetFile(this->presetsFile);
+    this->createDefaultHlsPresetFile(this->hlsPresetsFile);
     if (this->httpsOnly == true && this->useHttps == false)
         this->httpsOnly = false;
     if(certfile == "" || keyfile == "")
@@ -345,17 +360,17 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
         }
 
         string preset_audio = "[Audio]\n"
-                              "Cmd=-analyzeduration 1M -threads 2 {start}"
+                              "Cmd=-analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -f mpegts -vn -acodec libmp3lame"
-                                 " -ab 128k -ar 44100 -ac 2 -y -threads 2 pipe:1\n"
+                                 " -ab 128k -ar 44100 -ac 2 -y pipe:1\n"
                               "MimeType=audio/mpeg\n"
                               "Ext=.ts\n";
 
         string preset_low = "[Low]\n"
-                            "Cmd=-analyzeduration 1M -threads 2 {start}"
+                            "Cmd=-analyzeduration 1M {start}"
                                  " -i \"{infile}\""
-                                 " -threads 2 -f mpegts -vcodec libx264"
+                                 " -f mpegts -vcodec libx264"
                                  " -bufsize 1400k -maxrate 700k -crf 25 -g 50"
                                  " -map 0:v -map a:0"
                                  " -vf \"yadif=0:-1:1, scale=512:288\""
@@ -367,11 +382,11 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                             "Ext=.ts\n";
 
         string preset_mid = "[Mid]\n"
-                            "Cmd=-analyzeduration 1M -threads 2 {start}"
+                            "Cmd=-analyzeduration 1M {start}"
                                  " -i \"{infile}\""
-                                 " -threads 2 -f mpegts -vcodec libx264"
-                                 " -bufsize 2000k -maxrate 1000k -crf 22 -g 50"
-                                 " -map 0:v -map 0:a"
+                                 " -f mpegts -vcodec libx264"
+                                 " -bufsize 2000k -maxrate 1200k -crf 22 -g 50"
+                                 " -map 0:v -map a:0"
                                  " -vf \"yadif=0:-1:1, scale=640:360\""
                                  " -preset medium -tune film"
                                  " -vprofile main -level 30"
@@ -381,18 +396,98 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                             "Ext=.ts\n";
 
         string preset_high = "[High]\n"
-                             "Cmd=-analyzeduration 1M -threads 2 {start}"
+                             "Cmd=-analyzeduration 1M {start}"
                                  " -i \"{infile}\""
-                                 " -threads 2 -f mpegts -vcodec libx264"
-                                 " -bufsize 3200k -maxrate 1600k -crf 22 -g 50"
-                                 " -map 0:v -map 0:a"
-                                 " -vf \"yadif=0:-1:1, scale=720:405\""
+                                 " -f mpegts -vcodec libx264"
+                                 " -bufsize 3200k -maxrate 1800k -crf 22 -g 50"
+                                 " -map 0:v -map a:0"
+                                 " -vf \"yadif=0:-1:1, scale=800:450\""
                                  " -preset medium -tune film"
                                  " -vprofile main -level 30"
                                  " -acodec libmp3lame -ab 96k -ar 44100 -ac 2"
                                  " -async 1 pipe:1\n"
                              "MimeType=video/mpeg\n"
                              "Ext=.ts\n";
+
+        pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low<<endl<<preset_audio;
+        pcfile.close();
+        return true;
+    }
+    prfile.close();
+    return true;
+}
+
+bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
+    ifstream prfile;
+    prfile.open(hlsPresetFile.c_str());
+    if(prfile.fail()) {
+        ofstream pcfile;
+        pcfile.open(hlsPresetFile.c_str());
+        if(!pcfile.good()) {
+            return false;
+        }
+
+        string preset_audio = "[Audio]\n"
+                              "Cmd=-analyzeduration 1M {start}"
+                                 " -i \"{infile}\""
+                                 " -f mpegts -vn -acodec libmp3lame"
+                                 " -ab 128k -ar 44100 -ac 2 -y pipe:1\n"
+                              "SegmentDuration=2\n"
+                              "SegmentBuffer=5242880\n"
+                              "NumberOfSegments=3\n"
+                              "M3U8WaitTimeout=10\n"
+                              "StreamTimeout=5\n";
+
+        string preset_low = "[Low]\n"
+                            "Cmd=-analyzeduration 1M {start}"
+                                 " -i \"{infile}\""
+                                 " -f mpegts -vcodec libx264"
+                                 " -bufsize 1400k -maxrate 700k -crf 25 -g 50"
+                                 " -map 0:v -map a:0"
+                                 " -vf \"yadif=0:-1:1, scale=512:288\""
+                                 " -preset medium -tune film"
+                                 " -vprofile baseline -level 30"
+                                 " -acodec libmp3lame -ab 64k -ar 44100 -ac 1"
+                                 " -async 1 pipe:1\n"
+                            "SegmentDuration=2\n"
+                            "SegmentBuffer=5242880\n"
+                            "NumberOfSegments=3\n"
+                            "M3U8WaitTimeout=10\n"
+                            "StreamTimeout=5\n";
+
+        string preset_mid = "[Mid]\n"
+                            "Cmd=-analyzeduration 1M {start}"
+                                 " -i \"{infile}\""
+                                 " -f mpegts -vcodec libx264"
+                                 " -bufsize 2000k -maxrate 1200k -crf 22 -g 50"
+                                 " -map 0:v -map a:0"
+                                 " -vf \"yadif=0:-1:1, scale=640:360\""
+                                 " -preset medium -tune film"
+                                 " -vprofile main -level 30"
+                                 " -acodec libmp3lame -ab 96k -ar 44100 -ac 2"
+                                 " -async 1 pipe:1\n"
+                            "SegmentDuration=2\n"
+                            "SegmentBuffer=5242880\n"
+                            "NumberOfSegments=3\n"
+                            "M3U8WaitTimeout=10\n"
+                            "StreamTimeout=5\n";
+
+        string preset_high = "[High]\n"
+                             "Cmd=-analyzeduration 1M {start}"
+                                 " -i \"{infile}\""
+                                 " -f mpegts -vcodec libx264"
+                                 " -bufsize 3200k -maxrate 1800k -crf 22 -g 50"
+                                 " -map 0:v -map a:0"
+                                 " -vf \"yadif=0:-1:1, scale=800:450\""
+                                 " -preset medium -tune film"
+                                 " -vprofile main -level 30"
+                                 " -acodec libmp3lame -ab 96k -ar 44100 -ac 2"
+                                 " -async 1 pipe:1\n"
+                             "SegmentDuration=2\n"
+                             "SegmentBuffer=5242880\n"
+                             "NumberOfSegments=3\n"
+                             "M3U8WaitTimeout=10\n"
+                             "StreamTimeout=5\n";
 
         pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low<<endl<<preset_audio;
         pcfile.close();

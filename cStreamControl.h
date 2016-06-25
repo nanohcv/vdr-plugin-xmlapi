@@ -17,7 +17,8 @@
 #include <string>
 #include <map>
 #include <vdr/thread.h>
-#include "cStream.h"
+#include "cBaseStream.h"
+#include "cHlsStream.h"
 
 using namespace std;
 
@@ -27,10 +28,12 @@ public:
     cStreamControl(const cStreamControl& orig);
     virtual ~cStreamControl();
 
-    int AddStream(cStream *stream);
-    cStream* GetStream(int streamid);
+    int AddStream(cBaseStream *stream);
+    cBaseStream* GetStream(int streamid);
+    cHlsStream* GetHlsStream(string streamName);
 
     void RemoveStream(int streamid);
+    void RemoveDeadHlsStreams();
     int RemoveStreamsByIP(string ip);
     int RemoveStreamsByUserAgent(string useragent);
     int RemoveStreamsByUserAgentAndIP(string ip, string useragent);
@@ -45,7 +48,7 @@ public:
     cMutex Mutex;
 
 private:
-    map<int, cStream*> streams;
+    map<int, cBaseStream*> streams;
 
 };
 

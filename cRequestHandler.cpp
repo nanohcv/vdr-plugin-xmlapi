@@ -34,12 +34,14 @@
 #include "cStream.h"
 #include "helpers.h"
 #include "streamControl.h"
+#include "cHlsStreamParameter.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
                                     cDaemonParameter *daemonParameter)
     : connection(connection), daemonParameter(daemonParameter),
         config(daemonParameter->GetPluginConfig()),
-        presets(daemonParameter->GetPluginConfig().GetPresetsFile()) {
+        presets(daemonParameter->GetPluginConfig().GetPresetsFile()),
+        hlsPresets(daemonParameter->GetPluginConfig().GetHlsPresetsFile()) {
 }
 
 cRequestHandler::~cRequestHandler() {
@@ -83,6 +85,9 @@ int cRequestHandler::HandleRequest(const char* url) {
     }
     else if (startswith(url, "/recstream")) {
         return this->handleRecStream(url);
+    }
+    else if (startswith(url, "/hls/")) {
+        return this->handleHlsStream(url);
     }
     else if (startswith(url, "/logos/") && endswith(url, ".png")) {
         return this->handleLogos(url);
@@ -259,14 +264,14 @@ int cRequestHandler::handleRecStream(const char* url) {
 
 ssize_t cRequestHandler::stream_reader(void* cls, uint64_t pos, char* buf, size_t max) {
     int *streamid = (int *)cls;
-    cStream *stream = StreamControl->GetStream(*streamid);
+    cStream *stream = (cStream*)StreamControl->GetStream(*streamid);
     return stream->Read(buf, max);
 }
 
 void cRequestHandler::clear_stream(void* cls) {
     int *streamid = (int *)cls;
     StreamControl->Mutex.Lock();
-    cStream *stream = StreamControl->GetStream(*streamid);
+    cStream *stream = (cStream*)StreamControl->GetStream(*streamid);
     if(stream != NULL)
     {
         stream->StopFFmpeg();
@@ -275,6 +280,94 @@ void cRequestHandler::clear_stream(void* cls) {
     StreamControl->Mutex.Unlock();
     delete streamid;
     dsyslog("xmlapi: Stream stopped");
+}
+
+int cRequestHandler::handleHlsStream(const char* url) {
+    struct MHD_Response *response;
+    int ret;
+    if(strlen(url) == 5)
+        return this->handle404Error();
+    string file = string(url).substr(5);
+    if(file == "stream.m3u8") {
+        StreamControl->RemoveDeadHlsStreams();
+        const char* cstr_preset = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "preset");
+        if(cstr_preset == NULL)
+        {
+            esyslog("xmlapi: hls stream -> No preset given!");
+            return this->handle404Error();
+        }
+        const char* chid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "chid");
+        if(chid == NULL)
+        {
+            esyslog("xmlapi: stream -> No chid given!");
+            return this->handle404Error();
+        }
+        dsyslog("xmlapi: request %s?chid=%s&preset=%s", url, chid, cstr_preset);
+        tChannelID id = tChannelID::FromString(chid);
+        if(!id.Valid()) {
+            esyslog("xmlapi: stream -> invalid chid given");
+            return this->handle404Error();
+        }
+        string streamName = string(chid) + string(cstr_preset);
+        cHlsStream *stream = StreamControl->GetHlsStream(streamName);
+        if(stream == NULL) {
+            string baseurl = "/hls/";
+            cHlsPreset preset = this->hlsPresets[cstr_preset];
+            string presetName = cstr_preset;
+            string streamdevUrl = this->config.GetStreamdevUrl() + string(chid) + ".ts";
+            string ffmpegCmd = preset.FFmpegCmd(this->config.GetFFmpeg(), streamdevUrl);
+            cHlsStreamParameter streamParameter(ffmpegCmd, string(chid), presetName, baseurl, preset);
+            stream = new cHlsStream(streamParameter, this->conInfo);
+            stream->SetStreamId(StreamControl->AddStream(stream));
+            stream->StartStream();
+            string m3u8 = stream->M3U8();
+            char *page = (char *)malloc((m3u8.length() + 1) *sizeof(char));
+            strcpy(page, m3u8.c_str());
+            response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
+                                               MHD_RESPMEM_MUST_FREE);
+            // text/plain
+            // application/x-mpegURL
+            MHD_add_response_header (response, "Content-Type", "application/x-mpegURL");
+            MHD_add_response_header (response, "Cache-Control", "no-cache");
+            ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+            MHD_destroy_response (response);
+            return ret;
+        }
+        else {
+            string m3u8 = stream->M3U8();
+            char *page = (char *)malloc((m3u8.length() + 1) *sizeof(char));
+            strcpy(page, m3u8.c_str());
+            response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
+                                               MHD_RESPMEM_MUST_FREE);
+            MHD_add_response_header (response, "Content-Type", "application/x-mpegURL");
+            MHD_add_response_header (response, "Cache-Control", "no-cache");
+            ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+            MHD_destroy_response (response);
+            return ret;
+        }
+        
+    }
+    else if (endswith(file.c_str(), ".ts")) {
+        vector<string> parts = split(file, '-');
+        if(parts.size() != 2)
+            return this->handle404Error();
+        int streamid = atoi(parts[0].c_str());
+        cHlsStream *stream = (cHlsStream*)StreamControl->GetStream(streamid);
+        if(stream != NULL) {
+            segmentBuffer *buf = stream->Segments(file);
+            response = MHD_create_response_from_buffer (buf->size,
+                                               (void *) buf->buffer,
+                                               MHD_RESPMEM_PERSISTENT);
+            MHD_add_response_header (response, "Content-Type", "video/mp2t");
+            MHD_add_response_header (response, "Cache-Control", "no-cache");
+            ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+            MHD_destroy_response (response);
+            return ret;
+        } 
+    }
+    return this->handle404Error();
 }
 
 int cRequestHandler::handleStreamControl() {

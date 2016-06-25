@@ -13,7 +13,7 @@
 #include "cPluginConfig.h"
 #include "cWebServer.h"
 
-static const char *VERSION        = "1.3.1";
+static const char *VERSION        = "1.3.2";
 static const char *DESCRIPTION    = "Enter description for 'xmlapi' plugin";
 /*
 static const char *MAINMENUENTRY  = "Xmlapi";
