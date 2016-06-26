@@ -5,6 +5,13 @@ VDR Plugin for the VDR Windows Phone / Windows 10 Uwp App
 #### 1.1 Libraries
 - libmicrohttpd (Ubuntu: sudo apt-get install libmicrohttpd10)
 - libmicrohttpd headers (Ubuntu: sudo apt-get install libmicrohttpd-dev)
+- libavformat (Ubuntu: sudo apt-get install libavformat-ffmpeg56)
+- libavformat headers (Ubuntu: sudo apt-get install libavformat-dev)
+- libavcodec (Ubuntu: sudo apt-get install libavcodec-extra)
+- libavcodec headers (Ubuntu: sudo apt-get install libavcodec-dev)
+- libavutil (Ubuntu: sudo apt-get install libavutil-ffmpeg54)
+- libavutil headers (Ubuntu: sudo apt-get install libavutil-dev)
+
 
 #### 1.2 VDR-Plugins
 - streamdev-server
@@ -25,7 +32,7 @@ https://www.linuxtv.org/vdrwiki/index.php/Plugin_Installation
 On Ubuntu (16.04):
 Install requirements:
 
-    sudo apt-get install vdr-dev vdr-plugin-streamdev-server libmicrohttpd10 libmicrohttpd-dev build-essential git ffmpeg
+    sudo apt-get install vdr-dev vdr-plugin-streamdev-server libmicrohttpd10 libmicrohttpd-dev libavformat-ffmpeg56 libavformat-dev libavcodec-extra libavcodec-dev libavutil-ffmpeg54 libavutil-dev build-essential git ffmpeg
 
 Download, compile and install the xmlapi plugin:
 
