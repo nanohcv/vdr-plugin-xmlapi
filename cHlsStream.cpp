@@ -56,7 +56,7 @@ string cHlsStream::M3U8() {
     
     if(this->m3u8 == "") {
         this->m3u8mutex.Lock();
-        this->m3u8condVar.TimedWait(this->m3u8mutex, this->parameter.M3U8WaitTimeout()*1000);
+        this->m3u8condVar.Wait(this->m3u8mutex);
         this->m3u8mutex.Unlock();
         firstAccess = false;
     }

@@ -326,6 +326,17 @@ Example:
     http(s)://<server-ip>:<port>/recstream.ts?filename=%2Fsrv%2FVideos%2FAufnahmen%2FTest2%2F2016-05-14.18.20.2-0.rec&preset=Mid&start=300
 
 
+It is also possible to stream via HLS protocol (HTTP Live Stream). Parameters are the same as above.
+
+Example for channel stream:
+    
+    http(s)://<server-ip>:<port>/hls/stream.m3u8?chid=S19.2E-1-1019-10301&preset=Mid
+
+Example for recording stream:
+
+    http(s)://<server-ip>:<port>/hls/stream.m3u8?filename=%2Fsrv%2FVideos%2FAufnahmen%2FTest2%2F2016-05-14.18.20.2-0.rec&preset=Mid&start=300
+
+
 
 #### 4.8 Stream control
 

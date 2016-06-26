@@ -297,26 +297,56 @@ int cRequestHandler::handleHlsStream(const char* url) {
             return this->handle404Error();
         }
         const char* chid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "chid");
-        if(chid == NULL)
+        const char* recfile = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "filename");
+        if(chid == NULL && recfile == NULL)
         {
-            esyslog("xmlapi: stream -> No chid given!");
+            esyslog("xmlapi: stream -> No chid or filename given!");
             return this->handle404Error();
         }
-        dsyslog("xmlapi: request %s?chid=%s&preset=%s", url, chid, cstr_preset);
-        tChannelID id = tChannelID::FromString(chid);
-        if(!id.Valid()) {
-            esyslog("xmlapi: stream -> invalid chid given");
+        if(chid != NULL && recfile != NULL) {
+            esyslog("xmlapi: stream -> Chid and filename given. Only one is allowed!");
             return this->handle404Error();
         }
-        string streamName = string(chid) + string(cstr_preset);
+        string streamName = "";
+        string recinput = "";
+        if(chid) {
+            tChannelID id = tChannelID::FromString(chid);
+            if(!id.Valid()) {
+                esyslog("xmlapi: stream -> invalid chid given");
+                return this->handle404Error();
+            }
+            streamName = string(chid) + string(cstr_preset);
+        }
+        if(recfile) {
+            cRecording *rec = Recordings.GetByName(recfile);
+            if(rec == NULL) {
+                dsyslog("xmlapi: No recording found with file name '%s'", recfile);
+                return this->handle404Error();
+            }
+            streamName = string(recfile) + string(cstr_preset);
+            string recfiles = string(rec->FileName()) + "/*.ts";
+            recinput = "concat:$(ls -1 " + recfiles + " | perl -0pe 's/\\n/|/g;s/\\|$//g')";
+        }
+
         cHlsStream *stream = StreamControl->GetHlsStream(streamName);
         if(stream == NULL) {
             string baseurl = "/hls/";
             cHlsPreset preset = this->hlsPresets[cstr_preset];
             string presetName = cstr_preset;
-            string streamdevUrl = this->config.GetStreamdevUrl() + string(chid) + ".ts";
-            string ffmpegCmd = preset.FFmpegCmd(this->config.GetFFmpeg(), streamdevUrl);
-            cHlsStreamParameter streamParameter(ffmpegCmd, string(chid), presetName, baseurl, preset);
+            string ffmpegCmd = "";
+            if(chid) {
+                string streamdevUrl = this->config.GetStreamdevUrl() + string(chid) + ".ts";
+                ffmpegCmd = preset.FFmpegCmd(this->config.GetFFmpeg(), streamdevUrl);
+            }
+            else {
+                const char* cstr_start = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "start");
+                int starttime = 0;
+                if(cstr_start != NULL) {
+                    starttime = atoi(cstr_start);
+                }
+                ffmpegCmd = preset.FFmpegCmd(this->config.GetFFmpeg(), recinput, starttime);
+            }
+            cHlsStreamParameter streamParameter(ffmpegCmd, string(chid ? chid : recfile), presetName, baseurl, preset);
             stream = new cHlsStream(streamParameter, this->conInfo);
             stream->SetStreamId(StreamControl->AddStream(stream));
             stream->StartStream();
@@ -326,8 +356,6 @@ int cRequestHandler::handleHlsStream(const char* url) {
             response = MHD_create_response_from_buffer (strlen (page),
                                                (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
-            // text/plain
-            // application/x-mpegURL
             MHD_add_response_header (response, "Content-Type", "application/x-mpegURL");
             MHD_add_response_header (response, "Cache-Control", "no-cache");
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
