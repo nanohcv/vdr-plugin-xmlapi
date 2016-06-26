@@ -26,6 +26,10 @@ cHlsStream::cHlsStream(const cHlsStream& src)
 
 cHlsStream::~cHlsStream() {
     this->StopStream();
+    for(map<string, segmentBuffer>::iterator it = this->segments.begin(); it != this->segments.end(); it++) {
+        delete it->second.buffer;
+    }
+    this->segments.clear();
 }
 
 bool cHlsStream::StartStream() {
@@ -44,7 +48,7 @@ bool cHlsStream::StartStream() {
 }
 
 void cHlsStream::StopStream() {
-    this->Cancel();
+    this->Cancel(3);
     this->Close();
 }
 
@@ -303,6 +307,8 @@ void cHlsStream::Action() {
         this->segments.erase(remove_filename);
         this->Unlock();
     }
+    
+
     
     this->StopStream();
 }
