@@ -264,8 +264,11 @@ int cRequestHandler::handleRecStream(const char* url) {
 
 ssize_t cRequestHandler::stream_reader(void* cls, uint64_t pos, char* buf, size_t max) {
     int *streamid = (int *)cls;
+    StreamControl->Mutex.Lock();
     cStream *stream = (cStream*)StreamControl->GetStream(*streamid);
-    return stream->Read(buf, max);
+    ssize_t size = stream->Read(buf, max);
+    StreamControl->Mutex.Unlock();
+    return size;
 }
 
 void cRequestHandler::clear_stream(void* cls) {
@@ -289,7 +292,6 @@ int cRequestHandler::handleHlsStream(const char* url) {
         return this->handle404Error();
     string file = string(url).substr(5);
     if(file == "stream.m3u8") {
-        StreamControl->RemoveDeadHlsStreams();
         const char* cstr_preset = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "preset");
         if(cstr_preset == NULL)
         {
@@ -363,7 +365,9 @@ int cRequestHandler::handleHlsStream(const char* url) {
             return ret;
         }
         else {
+            StreamControl->Mutex.Lock();
             string m3u8 = stream->M3U8();
+            StreamControl->Mutex.Unlock();
             char *page = (char *)malloc((m3u8.length() + 1) *sizeof(char));
             strcpy(page, m3u8.c_str());
             response = MHD_create_response_from_buffer (strlen (page),
@@ -384,6 +388,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
         int streamid = atoi(parts[0].c_str());
         cHlsStream *stream = (cHlsStream*)StreamControl->GetStream(streamid);
         if(stream != NULL) {
+            StreamControl->Mutex.Lock();
             segmentBuffer *buf = stream->Segments(file);
             response = MHD_create_response_from_buffer (buf->size,
                                                (void *) buf->buffer,
@@ -392,6 +397,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
             MHD_add_response_header (response, "Cache-Control", "no-cache");
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
+            StreamControl->Mutex.Unlock();
             return ret;
         } 
     }

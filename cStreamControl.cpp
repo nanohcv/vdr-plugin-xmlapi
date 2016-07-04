@@ -66,18 +66,6 @@ void cStreamControl::RemoveStream(int streamid) {
     this->Mutex.Unlock();
 }
 
-void cStreamControl::RemoveDeadHlsStreams() {
-    for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
-        if(it->second->IsHlsStream()) {
-            cHlsStream *hlsStream =(cHlsStream*)it->second;
-            if(!hlsStream->Active()) {
-                delete hlsStream;
-                this->streams.erase(it);
-            }
-        }
-    }
-}
-
 int cStreamControl::RemoveStreamsByIP(string ip) {
     int streams_affected = 0;
     this->Mutex.Lock();

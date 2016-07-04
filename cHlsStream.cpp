@@ -25,7 +25,10 @@ cHlsStream::cHlsStream(const cHlsStream& src)
 }
 
 cHlsStream::~cHlsStream() {
-    this->StopStream();
+    if(this->Active()) {
+        this->Cancel(-1);
+    }
+    this->Close();
     for(map<string, segmentBuffer>::iterator it = this->segments.begin(); it != this->segments.end(); it++) {
         delete it->second.buffer;
     }
@@ -45,11 +48,6 @@ bool cHlsStream::StartStream() {
         return false;
     }
     return this->Start();
-}
-
-void cHlsStream::StopStream() {
-    this->Cancel(3);
-    this->Close();
 }
 
 string cHlsStream::M3U8() {
@@ -307,10 +305,10 @@ void cHlsStream::Action() {
         this->segments.erase(remove_filename);
         this->Unlock();
     }
-    
-
-    
-    this->StopStream();
+    this->Close();
+    if(this->streamid != 0) {
+        StreamControl->RemoveStream(this->streamid);
+    }
 }
 
 int cHlsStream::writeM3U8(const unsigned int first_segment, const unsigned int last_segment, const int end) {

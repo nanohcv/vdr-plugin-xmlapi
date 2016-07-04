@@ -16,6 +16,7 @@
 
 #include <string>
 #include <map>
+#include <queue>
 #include <vdr/thread.h>
 #include "cBaseStream.h"
 #include "cHlsStream.h"
@@ -33,7 +34,6 @@ public:
     cHlsStream* GetHlsStream(string streamName);
 
     void RemoveStream(int streamid);
-    void RemoveDeadHlsStreams();
     int RemoveStreamsByIP(string ip);
     int RemoveStreamsByUserAgent(string useragent);
     int RemoveStreamsByUserAgentAndIP(string ip, string useragent);

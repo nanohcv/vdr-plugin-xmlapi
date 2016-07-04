@@ -42,7 +42,6 @@ public:
     virtual ~cHlsStream();
     
     bool StartStream();
-    void StopStream();
     
     string M3U8();
     segmentBuffer *Segments(string segment);
