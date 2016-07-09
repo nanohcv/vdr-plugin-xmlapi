@@ -451,22 +451,49 @@ int cRequestHandler::handleLogos(const char* url) {
 }
 
 int cRequestHandler::handlePresets() {
+    
+    const char* hls = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "hls");
+    
     string ini;
-    if(this->presets.size() != 0)
-    {
-        for(map<string,cPreset>::iterator it = presets.begin();
-                it != presets.end(); ++it) {
-            ini += "[" + it->first + "]\n";
-            ini += "Cmd=" + it->second.GetCmd() + "\n";
-            ini += "MimeType=" + it->second.MimeType() + "\n";
-            ini += "Ext=" + it->second.Extension() + "\n\n";
+    
+    if(hls == NULL) {
+        if(this->presets.size() != 0)
+        {
+            for(map<string,cPreset>::iterator it = presets.begin();
+                    it != presets.end(); ++it) {
+                ini += "[" + it->first + "]\n";
+                ini += "Cmd=" + it->second.GetCmd() + "\n";
+                ini += "MimeType=" + it->second.MimeType() + "\n";
+                ini += "Ext=" + it->second.Extension() + "\n\n";
+            }
+        } else {
+            cPreset dp = presets.GetDefaultPreset();
+            ini += "[Default]\n";
+            ini += "Cmd=" + dp.GetCmd() + "\n";
+            ini += "MimeType=" + dp.MimeType() + "\n";
+            ini += "Ext=" + dp.Extension() + "\n\n";
         }
     } else {
-        cPreset dp = presets.GetDefaultPreset();
-        ini += "[Default]\n";
-        ini += "Cmd=" + dp.GetCmd() + "\n";
-        ini += "MimeType=" + dp.MimeType() + "\n";
-        ini += "Ext=" + dp.Extension() + "\n\n";
+        if(this->hlsPresets.size() != 0) {
+            for(map<string,cHlsPreset>::iterator it = hlsPresets.begin(); it != hlsPresets.end(); ++it) {
+                ini += "[" + it->first + "]\n";
+                ini += "Cmd=" + it->second.Cmd() + "\n";
+                ini += "SegmentDuration=" + intToString(it->second.SegmentDuration()) + "\n";
+                ini += "SegmentBuffer=" + intToString(it->second.SegmentBuffer()) + "\n";
+                ini += "NumberOfSegments=" + intToString(it->second.NumSegments()) + "\n";
+                ini += "M3U8WaitTimeout=" + intToString(it->second.M3U8WaitTimeout()) + "\n";
+                ini += "StreamTimeout=" + intToString(it->second.StreamTimeout()) + "\n\n";
+            }
+        } else {
+            cHlsPreset p = hlsPresets.GetDefaultPreset();
+            ini += "[Default]\n";
+            ini += "Cmd=" + p.Cmd() + "\n";
+            ini += "SegmentDuration=" + intToString(p.SegmentDuration()) + "\n";
+            ini += "SegmentBuffer=" + intToString(p.SegmentBuffer()) + "\n";
+            ini += "NumberOfSegments=" + intToString(p.NumSegments()) + "\n";
+            ini += "M3U8WaitTimeout=" + intToString(p.M3U8WaitTimeout()) + "\n";
+            ini += "StreamTimeout=" + intToString(p.StreamTimeout()) + "\n\n";
+        }
     }
     char *page = (char *)malloc((ini.length() + 1) * sizeof(char));
     strcpy(page, ini.c_str());
