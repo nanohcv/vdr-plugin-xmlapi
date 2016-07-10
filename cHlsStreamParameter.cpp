@@ -72,6 +72,10 @@ int cHlsStreamParameter::SegmentDuration() {
     return this->segmentDuration;
 }
 
+size_t cHlsStreamParameter::SegmentBufferSize() {
+    return this->segmentBufferSize;
+}
+
 int cHlsStreamParameter::NumSegments() {
     return this->numSegments;
 }
