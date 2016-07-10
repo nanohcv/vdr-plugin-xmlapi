@@ -33,6 +33,7 @@ using namespace std;
 typedef struct {
     uint8_t *buffer;
     size_t size;
+    size_t maxSize;
 } segmentBuffer;
 
 class cHlsStream : public cBaseStream, public cThread {

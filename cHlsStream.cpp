@@ -170,8 +170,9 @@ void cHlsStream::Action() {
     
     snprintf(output_filename, 25, "%d-%u.ts", this->streamid, output_index++);
     segmentBuffer segBuf;
-    segBuf.buffer = new uint8_t[1024*1024*5];
+    segBuf.buffer = new uint8_t[this->parameter.SegmentBufferSize()];
     segBuf.size = 0;
+    segBuf.maxSize = this->parameter.SegmentBufferSize();
     this->segments.insert(pair<string, segmentBuffer>(string(output_filename), segBuf));
     avio_ctx = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size,
                                   1, &this->segments[output_filename], NULL, &cHlsStream::writeToSegment, NULL);
@@ -242,8 +243,9 @@ void cHlsStream::Action() {
 
             snprintf(output_filename, 25, "%d-%u.ts", this->streamid, output_index++);
             segmentBuffer sBuf;
-            sBuf.buffer = new uint8_t[1024*1024*5];
+            sBuf.buffer = new uint8_t[this->parameter.SegmentBufferSize()];
             sBuf.size = 0;
+            sBuf.maxSize = this->parameter.SegmentBufferSize();
             this->segments.insert(pair<string, segmentBuffer>(string(output_filename), sBuf));
             avio_ctx = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size,
                                   1, &this->segments[output_filename], NULL, &cHlsStream::writeToSegment, NULL);
@@ -399,7 +401,7 @@ AVStream *cHlsStream::add_output_stream(AVFormatContext *output_format_context, 
 
 int cHlsStream::writeToSegment(void* opaque, uint8_t* buf, int buf_size) {
     segmentBuffer *sbuf = (segmentBuffer*)opaque;
-    if((sbuf->size + buf_size) <= 5*1024*1024) {
+    if((sbuf->size + buf_size) <= sbuf->maxSize) {
         memcpy(sbuf->buffer+sbuf->size, buf, buf_size);
         sbuf->size += buf_size;
     }
