@@ -30,7 +30,7 @@ cHlsStream::~cHlsStream() {
     }
     this->Close();
     for(map<string, segmentBuffer>::iterator it = this->segments.begin(); it != this->segments.end(); it++) {
-        delete it->second.buffer;
+        delete[] it->second.buffer;
     }
     this->segments.clear();
 }
@@ -236,7 +236,7 @@ void cHlsStream::Action() {
             if (remove_file) {
                 snprintf(remove_filename, 25, "%d-%u.ts", this->streamid, first_segment - 1);
                 this->Lock();
-                delete this->segments[remove_filename].buffer;
+                delete[] this->segments[remove_filename].buffer;
                 this->segments.erase(remove_filename);
                 this->Unlock();
             }
@@ -303,11 +303,16 @@ void cHlsStream::Action() {
     if (remove_file) {
         snprintf(remove_filename, 25, "%d-%u.ts", this->streamid, first_segment - 1);
         this->Lock();
-        delete this->segments[remove_filename].buffer;
+        delete[] this->segments[remove_filename].buffer;
         this->segments.erase(remove_filename);
         this->Unlock();
     }
     this->Close();
+    
+    delete[] infile;
+    delete[] output_filename;
+    delete[] remove_filename;
+    
     if(this->streamid != 0) {
         StreamControl->RemoveStream(this->streamid);
     }
@@ -339,7 +344,7 @@ int cHlsStream::writeM3U8(const unsigned int first_segment, const unsigned int l
         this->m3u8condVar.Broadcast();
         this->m3u8mutex.Unlock();
     }
-    delete write_buf;
+    delete[] write_buf;
     return 0;
 }
 

@@ -83,8 +83,8 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
 }
 
 cPluginConfig::~cPluginConfig() {
-    delete this->sslKey;
-    delete this->sslCert;
+    delete[] this->sslKey;
+    delete[] this->sslCert;
 }
 
 cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
@@ -106,22 +106,22 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->hlsPresetsFile = src.hlsPresetsFile;
         this->streamdevUrl = src.streamdevUrl;
         if(src.sslKey != NULL) {
-            delete this->sslKey;
+            delete[] this->sslKey;
             this->sslKey = new char[src.sslKeySize];
             memcpy(this->sslKey, src.sslKey, src.sslKeySize);
             this->sslKeySize = src.sslKeySize;
         } else {
-            delete this->sslKey;
+            delete[] this->sslKey;
             this->sslKey = NULL;
             this->sslKeySize = 0;
         }
         if(src.sslCert != NULL) {
-            delete this->sslCert;
+            delete[] this->sslCert;
             this->sslCert = new char[src.sslCertSize];
             memcpy(this->sslCert, src.sslCert, src.sslCertSize);
             this->sslCertSize = src.sslCertSize;
         } else {
-            delete this->sslCert;
+            delete[] this->sslCert;
             this->sslCert = NULL;
             this->sslCertSize = 0;
         }
