@@ -430,13 +430,13 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
         string preset_audio = "[Audio]\n"
                               "Cmd=-analyzeduration 1M {start}"
                                  " -i \"{infile}\""
-                                 " -f mpegts -vn -acodec libmp3lame"
-                                 " -ab 128k -ar 44100 -ac 2 -y pipe:1\n"
+                                 " -f mpegts -vn"
+                                 " -acodec aac -strict -2 -ab 64k -ar 44100 -ac 2 -y pipe:1\n"
                               "SegmentDuration=2\n"
                               "SegmentBuffer=5242880\n"
                               "NumberOfSegments=3\n"
                               "M3U8WaitTimeout=10\n"
-                              "StreamTimeout=5\n";
+                              "StreamTimeout=3\n";
 
         string preset_low = "[Low]\n"
                             "Cmd=-analyzeduration 1M {start}"
@@ -447,13 +447,13 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -vf \"yadif=0:-1:1, scale=512:288\""
                                  " -preset medium -tune film"
                                  " -vprofile baseline -level 30"
-                                 " -acodec libmp3lame -ab 64k -ar 44100 -ac 1"
+                                 " -acodec aac -strict -2 -ab 48k -ar 44100 -ac 2"
                                  " -async 1 pipe:1\n"
-                            "SegmentDuration=2\n"
+                            "SegmentDuration=1\n"
                             "SegmentBuffer=5242880\n"
                             "NumberOfSegments=3\n"
                             "M3U8WaitTimeout=10\n"
-                            "StreamTimeout=5\n";
+                            "StreamTimeout=2\n";
 
         string preset_mid = "[Mid]\n"
                             "Cmd=-analyzeduration 1M {start}"
@@ -464,13 +464,13 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -vf \"yadif=0:-1:1, scale=640:360\""
                                  " -preset medium -tune film"
                                  " -vprofile main -level 30"
-                                 " -acodec libmp3lame -ab 96k -ar 44100 -ac 2"
+                                 " -acodec aac -strict -2 -ab 64k -ar 44100 -ac 2"
                                  " -async 1 pipe:1\n"
-                            "SegmentDuration=2\n"
+                            "SegmentDuration=1\n"
                             "SegmentBuffer=5242880\n"
                             "NumberOfSegments=3\n"
                             "M3U8WaitTimeout=10\n"
-                            "StreamTimeout=5\n";
+                            "StreamTimeout=2\n";
 
         string preset_high = "[High]\n"
                              "Cmd=-analyzeduration 1M {start}"
@@ -481,13 +481,13 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -vf \"yadif=0:-1:1, scale=800:450\""
                                  " -preset medium -tune film"
                                  " -vprofile main -level 30"
-                                 " -acodec libmp3lame -ab 96k -ar 44100 -ac 2"
+                                 " -acodec aac -strict -2 -ab 96k -ar 44100 -ac 2"
                                  " -async 1 pipe:1\n"
-                             "SegmentDuration=2\n"
+                             "SegmentDuration=1\n"
                              "SegmentBuffer=5242880\n"
                              "NumberOfSegments=3\n"
                              "M3U8WaitTimeout=10\n"
-                             "StreamTimeout=5\n";
+                             "StreamTimeout=2\n";
 
         pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low<<endl<<preset_audio;
         pcfile.close();

@@ -49,7 +49,7 @@ cHlsPreset cHlsPresets::operator [](string key) {
 }
 
 cHlsPreset cHlsPresets::GetDefaultPreset() {
-    string cmd = "-analyzeduration 1M {start} -i \"{infile}\" -f mpegts -vcodec libx264 -bufsize 2000k -maxrate 1200k -crf 22 -g 50 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=640:360\" -preset medium -tune film -vprofile main -level 30 -acodec libmp3lame -ab 96k -ar 44100 -ac 2 -async 1 pipe:1";
+    string cmd = "-analyzeduration 1M {start} -i \"{infile}\" -f mpegts -vcodec libx264 -bufsize 2000k -maxrate 1200k -crf 22 -g 50 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=640:360\" -preset medium -tune film -vprofile main -level 30 -acodec aac -strict -2 -ab 64k -ar 44100 -ac 2 -async 1 pipe:1";
     int segDur = 2;
     size_t segBuf = 5242880;
     int numSeg = 3;
