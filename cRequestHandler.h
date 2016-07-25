@@ -15,6 +15,8 @@
 #include <map>
 #include <string>
 #include <vdr/timers.h>
+#include <vdr/keys.h>
+#include <vdr/remote.h>
 #include "cDaemonParameter.h"
 #include "cPluginConfig.h"
 #include "cPreset.h"
@@ -25,6 +27,8 @@
 
 #ifndef CREQUESTHANDLER_H
 #define CREQUESTHANDLER_H
+
+using namespace std;
 
 class cRequestHandler {
 public:
@@ -39,6 +43,8 @@ private:
     cPresets presets;
     cHlsPresets hlsPresets;
     cUser user;
+    
+    map<string, eKeys> remoteKeys;
     
 
     int handleVersion();
@@ -67,6 +73,10 @@ private:
     int handleEPG();
     string eventsToXml(const char *chid, const char *at);
     string searchEventsToXml(const char* chid, string search, string options);
+    
+    int handleSwitchToChannel();
+    int handleRemote();
+    void initRemoteKeys();
 
     int handle404Error();
 
