@@ -3,33 +3,22 @@
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="." name="0">
       <in>cBaseStream.cpp</in>
-      <in>cBaseStream.h</in>
       <in>cDaemonParameter.cpp</in>
-      <in>cDaemonParameter.h</in>
       <in>cHlsPreset.cpp</in>
-      <in>cHlsPreset.h</in>
       <in>cHlsPresets.cpp</in>
-      <in>cHlsPresets.h</in>
       <in>cHlsStream.cpp</in>
-      <in>cHlsStream.h</in>
       <in>cHlsStreamParameter.cpp</in>
-      <in>cHlsStreamParameter.h</in>
       <in>cINIParser.cpp</in>
       <in>cPluginConfig.cpp</in>
       <in>cPreset.cpp</in>
       <in>cPresets.cpp</in>
       <in>cRequestHandler.cpp</in>
       <in>cStream.cpp</in>
-      <in>cStream.h</in>
       <in>cStreamControl.cpp</in>
-      <in>cStreamControl.h</in>
       <in>cUser.cpp</in>
-      <in>cUser.h</in>
       <in>cUsers.cpp</in>
-      <in>cUsers.h</in>
       <in>cWebServer.cpp</in>
       <in>helpers.cpp</in>
-      <in>streamControl.h</in>
       <in>xmlapi.c</in>
     </df>
     <logicalFolder name="ExternalFiles"
@@ -65,6 +54,9 @@
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>../../../../../bin/vdr</executablePath>
           <ccTool>
+            <incDir>
+              <pElem>../../../../../../include/x86_64-linux-gnu</pElem>
+            </incDir>
             <preprocessorList>
               <Elem>PLUGIN_NAME_I18N="xmlapi"</Elem>
               <Elem>_FILE_OFFSET_BITS=64</Elem>
@@ -80,28 +72,28 @@
         </preBuild>
       </makefileType>
       <item path="cBaseStream.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cBaseStream.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cDaemonParameter.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cDaemonParameter.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cHlsPreset.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cHlsPreset.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cHlsPresets.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cHlsPresets.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cHlsStream.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cHlsStream.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cHlsStreamParameter.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cHlsStreamParameter.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cINIParser.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
@@ -124,20 +116,20 @@
         </ccTool>
       </item>
       <item path="cStream.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cStream.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cStreamControl.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cStreamControl.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cUser.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cUser.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cUsers.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cUsers.h" ex="false" tool="3" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
       </item>
       <item path="cWebServer.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
@@ -146,8 +138,6 @@
       <item path="helpers.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
         </ccTool>
-      </item>
-      <item path="streamControl.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="xmlapi.c" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">

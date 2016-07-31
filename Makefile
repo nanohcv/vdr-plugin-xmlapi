@@ -36,6 +36,11 @@ APIVERSION = $(call PKGCFG,apiversion)
 
 -include $(PLGCFG)
 
+### get ffmpeg libs using pkg-config
+
+CXXFLAGS += $(shell pkg-config --cflags libavcodec libavutil libavformat)
+LIBS += -lmicrohttpd $(shell pkg-config --libs libavcodec libavutil libavformat)
+
 ### The name of the distribution archive:
 
 ARCHIVE = $(PLUGIN)-$(VERSION)
@@ -112,7 +117,7 @@ install-i18n: $(I18Nmsgs)
 ### Targets:
 
 $(SOFILE): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) -lmicrohttpd -lavformat -lavcodec -lavutil -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) $(LIBS) -o $@
 
 install-lib: $(SOFILE)
 	install -D $^ $(DESTDIR)$(LIBDIR)/$^.$(APIVERSION)
