@@ -235,8 +235,8 @@ int cRequestHandler::handleRecStream(const char* url) {
     if(cstr_start != NULL) {
         starttime = atoi(cstr_start);
     }
-    string recfiles = string(rec->FileName()) + "/*.ts";
-    string input = "concat:$(ls -1 \"" + recfiles + "\" | perl -0pe 's/\\n/|/g;s/\\|$//g')";
+    string recfiles = "'" + string(rec->FileName()) + "/'*.ts";
+    string input = "concat:$(ls -1 " + recfiles + " | perl -0pe 's/\\n/|/g;s/\\|$//g')";
     string ffmpegcmd = preset.FFmpegCmd(this->config.GetFFmpeg(), input, starttime);
     dsyslog("xmlapi: FFmpeg Cmd=%s\n", ffmpegcmd.c_str());
 
