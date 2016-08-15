@@ -368,6 +368,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
                                                MHD_RESPMEM_MUST_FREE);
             MHD_add_response_header (response, "Content-Type", "application/x-mpegURL");
             MHD_add_response_header (response, "Cache-Control", "no-cache");
+            MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
             return ret;
@@ -383,6 +384,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
                                                MHD_RESPMEM_MUST_FREE);
             MHD_add_response_header (response, "Content-Type", "application/x-mpegURL");
             MHD_add_response_header (response, "Cache-Control", "no-cache");
+            MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
             return ret;
@@ -403,6 +405,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
                                                MHD_RESPMEM_PERSISTENT);
             MHD_add_response_header (response, "Content-Type", "video/mp2t");
             MHD_add_response_header (response, "Cache-Control", "no-cache");
+            MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
             StreamControl->Mutex.Unlock();
