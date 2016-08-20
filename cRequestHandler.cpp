@@ -139,6 +139,8 @@ int cRequestHandler::handleVersion() {
                                                (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -199,6 +201,8 @@ int cRequestHandler::handleStream(const char *url) {
                                                 &cRequestHandler::clear_stream);
     MHD_add_response_header (response, "Content-Type", preset.MimeType().c_str());
     MHD_add_response_header (response, "Cache-Control", "no-cache");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -264,6 +268,8 @@ int cRequestHandler::handleRecStream(const char* url) {
                                                 &cRequestHandler::clear_stream);
     MHD_add_response_header (response, "Content-Type", preset.MimeType().c_str());
     MHD_add_response_header (response, "Cache-Control", "no-cache");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -369,6 +375,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
             MHD_add_response_header (response, "Content-Type", "application/x-mpegURL");
             MHD_add_response_header (response, "Cache-Control", "no-cache");
             MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+            MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
             return ret;
@@ -385,6 +392,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
             MHD_add_response_header (response, "Content-Type", "application/x-mpegURL");
             MHD_add_response_header (response, "Cache-Control", "no-cache");
             MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+            MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
             return ret;
@@ -406,6 +414,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
             MHD_add_response_header (response, "Content-Type", "video/mp2t");
             MHD_add_response_header (response, "Cache-Control", "no-cache");
             MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+            MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
             StreamControl->Mutex.Unlock();
@@ -455,6 +464,8 @@ int cRequestHandler::handleLogos(const char* url) {
     }
     response = MHD_create_response_from_fd(sbuf.st_size, fd);
     MHD_add_response_header (response, "Content-Type", "image/png");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
 
@@ -515,6 +526,8 @@ int cRequestHandler::handlePresets() {
                                                (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/plain");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -531,6 +544,8 @@ int cRequestHandler::handleChannels() {
                                                (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -639,6 +654,8 @@ int cRequestHandler::handleRecordings() {
                                                (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -691,6 +708,8 @@ int cRequestHandler::handleDeletedRecordings() {
                                                (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -829,6 +848,8 @@ int cRequestHandler::handleTimers() {
                                                (void *) page,
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -1016,6 +1037,8 @@ int cRequestHandler::handleEPG() {
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
     MHD_add_response_header (response, "Cache-Control", "no-cache");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -1217,6 +1240,8 @@ int cRequestHandler::handle404Error() {
                                                (void *) page,
                                                MHD_RESPMEM_PERSISTENT);
     MHD_add_response_header (response, "Content-Type", "text/html");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response(this->connection, MHD_HTTP_NOT_FOUND, response);
     MHD_destroy_response (response);
     return ret;
@@ -1264,6 +1289,8 @@ int cRequestHandler::handleSwitchToChannel() {
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
     MHD_add_response_header (response, "Cache-Control", "no-cache");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     
@@ -1294,6 +1321,8 @@ int cRequestHandler::handleRemote() {
                                                MHD_RESPMEM_MUST_FREE);
     MHD_add_response_header (response, "Content-Type", "text/xml");
     MHD_add_response_header (response, "Cache-Control", "no-cache");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     
