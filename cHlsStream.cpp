@@ -118,203 +118,214 @@ void cHlsStream::Action() {
     ret = avformat_open_input(&ic, infile, ifmt, NULL);
     if (ret != 0) {
         fprintf(stderr, "Could not open input file, make sure it is an mpegts file: %d\n", ret);
-    }
+        this->Close();
 
-    if (avformat_find_stream_info(ic, NULL) < 0) {
-        fprintf(stderr, "Could not read stream information\n");
-    }
-
-    ofmt = av_guess_format("mpegts", NULL, NULL);
-    if (!ofmt) {
-        fprintf(stderr, "Could not find MPEG-TS muxer\n");
-    }
-
-    oc = avformat_alloc_context();
-    if (!oc) {
-        fprintf(stderr, "Could not allocated output context");
-    }
-    oc->oformat = ofmt;
-    
-    for (i = 0; i < ic->nb_streams && (video_index < 0 || audio_index < 0); i++) {
-        switch (ic->streams[i]->codec->codec_type) {
-            case AVMEDIA_TYPE_VIDEO:
-                video_index = i;
-                ic->streams[i]->discard = AVDISCARD_NONE;
-                video_st = add_output_stream(oc, ic->streams[i]);
-                break;
-            case AVMEDIA_TYPE_AUDIO:
-                audio_index = i;
-                ic->streams[i]->discard = AVDISCARD_NONE;
-                audio_st = add_output_stream(oc, ic->streams[i]);
-                break;
-            default:
-                ic->streams[i]->discard = AVDISCARD_ALL;
-                break;
-        }
-    }
-    // Don't print warnings when PTS and DTS are identical.
-    ic->flags |= AVFMT_FLAG_IGNDTS;
-    
-    //av_dump_format(oc, 0, output_prefix, 1);
-
-    if (video_st) {
-      codec = avcodec_find_decoder(video_st->codec->codec_id);
-      if (!codec) {
-          fprintf(stderr, "Could not find video decoder %x, key frames will not be honored\n", video_st->codec->codec_id);
-      }
-
-      if (avcodec_open2(video_st->codec, codec, NULL) < 0) {
-          fprintf(stderr, "Could not open video decoder, key frames will not be honored\n");
-      }
-    }
-    
-    snprintf(output_filename, 25, "%d-%u.ts", this->streamid, output_index++);
-    segmentBuffer segBuf;
-    segBuf.buffer = new uint8_t[this->parameter.SegmentBufferSize()];
-    segBuf.size = 0;
-    segBuf.maxSize = this->parameter.SegmentBufferSize();
-    this->segments.insert(pair<string, segmentBuffer>(string(output_filename), segBuf));
-    avio_ctx = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size,
-                                  1, &this->segments[output_filename], NULL, &cHlsStream::writeToSegment, NULL);
-    oc->pb = avio_ctx;
-    oc->flags |= AVIO_FLAG_WRITE;
-    
-    if (avformat_write_header(oc, NULL)) {
-        fprintf(stderr, "Could not write mpegts header to first output file\n");
-    }
-    
-    write_index = !this->writeM3U8(first_segment, last_segment, 0);
-    
-    do {
-        double segment_time = prev_segment_time;
-        AVPacket packet;
-        time(&currentTime);
-        if ((!this->Running()) || ((currentTime - this->last_m3u8_access > this->parameter.StreamTimeout()) && (!this->firstAccess)) ){
-          break;
+            if(this->streamid != 0) {
+                StreamControl->RemoveStream(this->streamid);
         }
 
-        decode_done = av_read_frame(ic, &packet);
-        if (decode_done < 0) {
-            break;
-        }
-
-        if (av_dup_packet(&packet) < 0) {
-            fprintf(stderr, "Could not duplicate packet");
-            av_free_packet(&packet);
-            break;
-        }
-
-        // Use video stream as time base and split at keyframes. Otherwise use audio stream
-        if (packet.stream_index == video_index && (packet.flags & AV_PKT_FLAG_KEY)) {
-            segment_time = packet.pts * av_q2d(video_st->time_base);
-        }
-        else if (video_index < 0) {
-            segment_time = packet.pts * av_q2d(audio_st->time_base);
-        }
-        else {
-          segment_time = prev_segment_time;
-        }
+        this->Cancel();
 
 
-        if (segment_time - prev_segment_time >= this->parameter.SegmentDuration()) {
-            av_write_trailer(oc);   // close ts file and free memory
-            avio_flush(oc->pb);
-            //avio_close(oc->pb);
+    } else {
 
-            if (this->parameter.NumSegments() && (int)(last_segment - first_segment) >= this->parameter.NumSegments() - 1) {
-                remove_file = 1;
-                first_segment++;
-            }
-            else {
-                remove_file = 0;
-            }
+		if (avformat_find_stream_info(ic, NULL) < 0) {
+			fprintf(stderr, "Could not read stream information\n");
+		}
 
-            if (write_index) {
-                write_index = !this->writeM3U8(first_segment, ++last_segment, 0);
-            }
+		ofmt = av_guess_format("mpegts", NULL, NULL);
+		if (!ofmt) {
+			fprintf(stderr, "Could not find MPEG-TS muxer\n");
+		}
 
-            if (remove_file) {
-                snprintf(remove_filename, 25, "%d-%u.ts", this->streamid, first_segment - 1);
-                this->Lock();
-                delete[] this->segments[remove_filename].buffer;
-                this->segments.erase(remove_filename);
-                this->Unlock();
-            }
+		oc = avformat_alloc_context();
+		if (!oc) {
+			fprintf(stderr, "Could not allocated output context");
+		}
+		oc->oformat = ofmt;
 
-            snprintf(output_filename, 25, "%d-%u.ts", this->streamid, output_index++);
-            segmentBuffer sBuf;
-            sBuf.buffer = new uint8_t[this->parameter.SegmentBufferSize()];
-            sBuf.size = 0;
-            sBuf.maxSize = this->parameter.SegmentBufferSize();
-            this->segments.insert(pair<string, segmentBuffer>(string(output_filename), sBuf));
-            avio_ctx = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size,
-                                  1, &this->segments[output_filename], NULL, &cHlsStream::writeToSegment, NULL);
-            oc->pb = avio_ctx;
-            oc->flags |= AVIO_FLAG_WRITE;
+		for (i = 0; i < ic->nb_streams && (video_index < 0 || audio_index < 0); i++) {
+			switch (ic->streams[i]->codec->codec_type) {
+				case AVMEDIA_TYPE_VIDEO:
+					video_index = i;
+					ic->streams[i]->discard = AVDISCARD_NONE;
+					video_st = add_output_stream(oc, ic->streams[i]);
+					break;
+				case AVMEDIA_TYPE_AUDIO:
+					audio_index = i;
+					ic->streams[i]->discard = AVDISCARD_NONE;
+					audio_st = add_output_stream(oc, ic->streams[i]);
+					break;
+				default:
+					ic->streams[i]->discard = AVDISCARD_ALL;
+					break;
+			}
+		}
+		// Don't print warnings when PTS and DTS are identical.
+		ic->flags |= AVFMT_FLAG_IGNDTS;
 
-            // Write a new header at the start of each file
-            if (avformat_write_header(oc, NULL)) {
-              fprintf(stderr, "Could not write mpegts header to first output file\n");
-              break;
-            }
+		//av_dump_format(oc, 0, output_prefix, 1);
 
-            prev_segment_time = segment_time;
-        }
+		if (video_st) {
+		  codec = avcodec_find_decoder(video_st->codec->codec_id);
+		  if (!codec) {
+			  fprintf(stderr, "Could not find video decoder %x, key frames will not be honored\n", video_st->codec->codec_id);
+		  }
 
-        ret = av_interleaved_write_frame(oc, &packet);
-        if (ret < 0) {
-            fprintf(stderr, "Warning: Could not write frame of stream\n");
-        }
-        else if (ret > 0) {
-            fprintf(stderr, "End of stream requested\n");
-            av_free_packet(&packet);
-            break;
-        }
+		  if (avcodec_open2(video_st->codec, codec, NULL) < 0) {
+			  fprintf(stderr, "Could not open video decoder, key frames will not be honored\n");
+		  }
+		}
 
-        av_free_packet(&packet);
-    } while (!decode_done);
-    
-    av_write_trailer(oc);
+		snprintf(output_filename, 25, "%d-%u.ts", this->streamid, output_index++);
+		segmentBuffer segBuf;
+		segBuf.buffer = new uint8_t[this->parameter.SegmentBufferSize()];
+		segBuf.size = 0;
+		segBuf.maxSize = this->parameter.SegmentBufferSize();
+		this->segments.insert(pair<string, segmentBuffer>(string(output_filename), segBuf));
+		avio_ctx = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size,
+									  1, &this->segments[output_filename], NULL, &cHlsStream::writeToSegment, NULL);
+		oc->pb = avio_ctx;
+		oc->flags |= AVIO_FLAG_WRITE;
 
-    if (video_st) {
-      avcodec_close(video_st->codec);
-    }
+		if (avformat_write_header(oc, NULL)) {
+			fprintf(stderr, "Could not write mpegts header to first output file\n");
+		}
 
-    for(i = 0; i < oc->nb_streams; i++) {
-        av_freep(&oc->streams[i]->codec);
-        av_freep(&oc->streams[i]);
-    }
+		write_index = !this->writeM3U8(first_segment, last_segment, 0);
 
-    //avio_close(oc->pb);
-    av_free(oc);
+		do {
+			double segment_time = prev_segment_time;
+			AVPacket packet;
+			time(&currentTime);
+			if ((!this->Running()) || ((currentTime - this->last_m3u8_access > this->parameter.StreamTimeout()) && (!this->firstAccess)) ){
+			  break;
+			}
 
-    if (this->parameter.NumSegments() && (int)(last_segment - first_segment) >= this->parameter.NumSegments() - 1) {
-        remove_file = 1;
-        first_segment++;
-    }
-    else {
-        remove_file = 0;
-    }
+			decode_done = av_read_frame(ic, &packet);
+			if (decode_done < 0) {
+				break;
+			}
 
-    if (write_index) {
-        this->writeM3U8(first_segment, ++last_segment, 1);
-    }
+			if (av_dup_packet(&packet) < 0) {
+				fprintf(stderr, "Could not duplicate packet");
+				av_free_packet(&packet);
+				break;
+			}
 
-    if (remove_file) {
-        snprintf(remove_filename, 25, "%d-%u.ts", this->streamid, first_segment - 1);
-        this->Lock();
-        delete[] this->segments[remove_filename].buffer;
-        this->segments.erase(remove_filename);
-        this->Unlock();
-    }
-    this->Close();
-    
-    delete[] infile;
-    delete[] output_filename;
-    delete[] remove_filename;
-    
-    if(this->streamid != 0) {
-        StreamControl->RemoveStream(this->streamid);
+			// Use video stream as time base and split at keyframes. Otherwise use audio stream
+			if (packet.stream_index == video_index && (packet.flags & AV_PKT_FLAG_KEY)) {
+				segment_time = packet.pts * av_q2d(video_st->time_base);
+			}
+			else if (video_index < 0) {
+				segment_time = packet.pts * av_q2d(audio_st->time_base);
+			}
+			else {
+			  segment_time = prev_segment_time;
+			}
+
+
+			if (segment_time - prev_segment_time >= this->parameter.SegmentDuration()) {
+				av_write_trailer(oc);   // close ts file and free memory
+				avio_flush(oc->pb);
+				//avio_close(oc->pb);
+
+				if (this->parameter.NumSegments() && (int)(last_segment - first_segment) >= this->parameter.NumSegments() - 1) {
+					remove_file = 1;
+					first_segment++;
+				}
+				else {
+					remove_file = 0;
+				}
+
+				if (write_index) {
+					write_index = !this->writeM3U8(first_segment, ++last_segment, 0);
+				}
+
+				if (remove_file) {
+					snprintf(remove_filename, 25, "%d-%u.ts", this->streamid, first_segment - 1);
+					this->Lock();
+					delete[] this->segments[remove_filename].buffer;
+					this->segments.erase(remove_filename);
+					this->Unlock();
+				}
+
+				snprintf(output_filename, 25, "%d-%u.ts", this->streamid, output_index++);
+				segmentBuffer sBuf;
+				sBuf.buffer = new uint8_t[this->parameter.SegmentBufferSize()];
+				sBuf.size = 0;
+				sBuf.maxSize = this->parameter.SegmentBufferSize();
+				this->segments.insert(pair<string, segmentBuffer>(string(output_filename), sBuf));
+				avio_ctx = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size,
+									  1, &this->segments[output_filename], NULL, &cHlsStream::writeToSegment, NULL);
+				oc->pb = avio_ctx;
+				oc->flags |= AVIO_FLAG_WRITE;
+
+				// Write a new header at the start of each file
+				if (avformat_write_header(oc, NULL)) {
+				  fprintf(stderr, "Could not write mpegts header to first output file\n");
+				  break;
+				}
+
+				prev_segment_time = segment_time;
+			}
+
+			ret = av_interleaved_write_frame(oc, &packet);
+			if (ret < 0) {
+				fprintf(stderr, "Warning: Could not write frame of stream\n");
+			}
+			else if (ret > 0) {
+				fprintf(stderr, "End of stream requested\n");
+				av_free_packet(&packet);
+				break;
+			}
+
+			av_free_packet(&packet);
+		} while (!decode_done);
+
+		av_write_trailer(oc);
+
+		if (video_st) {
+		  avcodec_close(video_st->codec);
+		}
+
+		for(i = 0; i < oc->nb_streams; i++) {
+			av_freep(&oc->streams[i]->codec);
+			av_freep(&oc->streams[i]);
+		}
+
+		//avio_close(oc->pb);
+		av_free(oc);
+
+		if (this->parameter.NumSegments() && (int)(last_segment - first_segment) >= this->parameter.NumSegments() - 1) {
+			remove_file = 1;
+			first_segment++;
+		}
+		else {
+			remove_file = 0;
+		}
+
+		if (write_index) {
+			this->writeM3U8(first_segment, ++last_segment, 1);
+		}
+
+		if (remove_file) {
+			snprintf(remove_filename, 25, "%d-%u.ts", this->streamid, first_segment - 1);
+			this->Lock();
+			delete[] this->segments[remove_filename].buffer;
+			this->segments.erase(remove_filename);
+			this->Unlock();
+		}
+		this->Close();
+
+		delete[] infile;
+		delete[] output_filename;
+		delete[] remove_filename;
+
+		if(this->streamid != 0) {
+			StreamControl->RemoveStream(this->streamid);
+		}
+
     }
 }
 
