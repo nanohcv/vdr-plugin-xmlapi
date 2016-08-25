@@ -21,22 +21,28 @@
 #include <signal.h>
 #include <vdr/tools.h>
 #include "cBaseStream.h"
+#include "cPreset.h"
 
 
 using namespace std;
 
 class cStream : public cBaseStream {
 public:
-    cStream(string ffmpegCmd, map<string, string> conInfo);
+    cStream(cPreset preset, map<string, string> conInfo);
     cStream(const cStream& src);
     virtual ~cStream();
 
     cStream& operator = (const cStream& src);
 
-    bool StartFFmpeg();
+    bool StartFFmpeg(string input, int start=0);
     void StopFFmpeg();
     ssize_t Read(char *buf, size_t max);
 private:
+    cPreset preset;
+    FILE *f;
+    
+    bool Open(const char *Command, const char *Mode);
+    int Close(void);
     
 };
 

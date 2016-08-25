@@ -14,58 +14,61 @@
 #ifndef CHLSSTREAM_H
 #define CHLSSTREAM_H
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/inotify.h>
+#include <signal.h>
+#include <time.h>
 #include <map>
 #include <string>
 #include <ctime>
+#include <cstdio>
+#include <cstdlib>
 #include <stdint.h>
 #include <vdr/thread.h>
-#ifdef __cplusplus
-extern "C"
-{
-    #include <libavformat/avformat.h>
-}
-#endif
 #include "cBaseStream.h"
-#include "cHlsStreamParameter.h"
+#include "cHlsPreset.h"
+
+#define EVENT_SIZE  ( sizeof (struct inotify_event) )
+#define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
+
 
 using namespace std;
 
-typedef struct {
-    uint8_t *buffer;
-    size_t size;
-    size_t maxSize;
-} segmentBuffer;
 
 class cHlsStream : public cBaseStream, public cThread {
 public:
-    cHlsStream(cHlsStreamParameter parameter, map<string, string> conInfo);
+    cHlsStream(string hlsTmpPath, cHlsPreset preset, map<string, string> conInfo);
     cHlsStream(const cHlsStream& src);
     virtual ~cHlsStream();
     
-    bool StartStream();
-    
-    string M3U8();
-    segmentBuffer *Segments(string segment);
-    
     string StreamName();
+    int StreamId();
     
     void SetStreamId(int id);
+    void SetStreamName(string streamName);
+    bool StartStream();
+    bool StartStream(string input, int start = 0);
+    void StopStream();
+    string m3u8File();
+    string StreamPath();
+    
+    bool Stopped();
     
 private:
-    cHlsStreamParameter parameter;
-    string m3u8;
-    map<string, segmentBuffer> segments;
+    cHlsPreset preset;
     int streamid;
-    cMutex m3u8mutex;
-    cCondVar m3u8condVar;
+    string streamName;
+    
+    string hlsTmpPath;
+    string streamPath;
+    
+    bool stopped;
     time_t last_m3u8_access;
-    bool firstAccess;
-    
+    bool firstM3U8Access;
     void Action();
-    int writeM3U8(const unsigned int first_segment, const unsigned int last_segment, const int end);
-    AVStream *add_output_stream(AVFormatContext *output_format_context, AVStream *input_stream);
-    
-    static int writeToSegment(void *opaque,  uint8_t *buf, int buf_size);
 };
 
 #endif /* CHLSSTREAM_H */

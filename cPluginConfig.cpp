@@ -20,7 +20,7 @@
 #include <vdr/tools.h>
 #include "helpers.h"
 
-cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName,
+cPluginConfig::cPluginConfig(const char *configDir, const char *cacheDir, const char *pluginName,
         const char *version) {
     this->configFile = string(configDir) + "/" + string(pluginName) + ".conf";
 
@@ -36,10 +36,10 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *pluginName,
     this->sslCert = NULL;
     this->sslCertSize = 0;
     this->usersFile = string(configDir) + "/users.ini";
-    this->ffmpeg = "ffmpeg";
     this->waitForFFmpeg = true;
     this->presetsFile = string(configDir) + "/presets.ini";
     this->hlsPresetsFile = string(configDir) + "/hls_presets.ini";
+    this->hlsTmpDir = string(cacheDir) + "/streams";
     this->streamdevUrl = "http://127.0.0.1:3000/";
     this->readFromConfFile(configFile);
     this->createDefaultUserFile(this->usersFile);
@@ -74,10 +74,10 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     }
     this->usersFile = src.usersFile;
     this->users = src.users;
-    this->ffmpeg = src.ffmpeg;
     this->waitForFFmpeg = src.waitForFFmpeg;
     this->presetsFile = src.presetsFile;
     this->hlsPresetsFile = src.hlsPresetsFile;
+    this->hlsTmpDir = src.hlsTmpDir;
     this->streamdevUrl = src.streamdevUrl;
 
 }
@@ -100,10 +100,10 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->httpsOnly = src.httpsOnly;
         this->users = src.users;
         this->usersFile = src.usersFile;
-        this->ffmpeg = src.ffmpeg;
         this->waitForFFmpeg = src.waitForFFmpeg;
         this->presetsFile = src.presetsFile;
         this->hlsPresetsFile = src.hlsPresetsFile;
+        this->hlsTmpDir = src.hlsTmpDir;
         this->streamdevUrl = src.streamdevUrl;
         if(src.sslKey != NULL) {
             delete[] this->sslKey;
@@ -177,10 +177,6 @@ cUsers cPluginConfig::GetUsers() {
     return this->users;
 }
 
-string cPluginConfig::GetFFmpeg() {
-    return this->ffmpeg;
-}
-
 bool cPluginConfig::GetWaitForFFmpeg() {
     return this->waitForFFmpeg;
 }
@@ -191,6 +187,10 @@ string cPluginConfig::GetPresetsFile() {
 
 string cPluginConfig::GetHlsPresetsFile() {
     return this->hlsPresetsFile;
+}
+
+string cPluginConfig::GetHlsTmpDir() {
+    return this->hlsTmpDir;
 }
 
 string cPluginConfig::GetStreamdevUrl() {
@@ -232,10 +232,10 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "SSLKeyFile="<<endl<<
             "SSLCertFile="<<endl<<
             "Users="<<this->usersFile<<endl<<
-            "FFMPEG="<<this->ffmpeg<<endl<<
             "WaitForFFmpeg="<<this->waitForFFmpeg<<endl<<
             "Presets="<<this->presetsFile<<endl<<
             "HlsPresets="<<this->hlsPresetsFile<<endl<<
+            "HlsTmpDir="<<this->hlsTmpDir<<endl<<
             "StreamdevUrl="<<this->streamdevUrl<<endl;
         fc.close();
         this->createDefaultPresetFile(this->presetsFile);
@@ -281,10 +281,6 @@ bool cPluginConfig::readFromConfFile(string configFile) {
                 this->usersFile = right;
             }
         }
-        else if (left == "FFMPEG") {
-            if(right != "")
-                this->ffmpeg = right;
-        }
         else if (left == "WaitForFFmpeg") {
             this->waitForFFmpeg = (bool)atoi(right.c_str());
         }
@@ -296,6 +292,15 @@ bool cPluginConfig::readFromConfFile(string configFile) {
         else if (left == "HlsPresets") {
             if(right != "") {
                 this->hlsPresetsFile = right;
+            }
+        }
+        else if (left == "HlsTmpDir") {
+            if(right != "") {
+                if(right.at(right.length() -1) == '/') {
+                    this->hlsTmpDir = right.substr(0, right.length()-1);
+                } else {
+                    this->hlsTmpDir = right;
+                }
             }
         }
         else if (left == "StreamdevUrl") {
@@ -360,7 +365,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
         }
 
         string preset_audio = "[Audio]\n"
-                              "Cmd=-analyzeduration 1M {start}"
+                              "Cmd=ffmpeg -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -f mpegts -vn -acodec libmp3lame"
                                  " -ab 128k -ar 44100 -ac 2 -y pipe:1\n"
@@ -368,7 +373,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                               "Ext=.ts\n";
 
         string preset_low = "[Low]\n"
-                            "Cmd=-analyzeduration 1M {start}"
+                            "Cmd=ffmpeg -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -f mpegts -vcodec libx264"
                                  " -bufsize 1400k -maxrate 700k -crf 25 -g 50"
@@ -382,7 +387,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                             "Ext=.ts\n";
 
         string preset_mid = "[Mid]\n"
-                            "Cmd=-analyzeduration 1M {start}"
+                            "Cmd=ffmpeg -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -f mpegts -vcodec libx264"
                                  " -bufsize 2000k -maxrate 1200k -crf 22 -g 50"
@@ -396,7 +401,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                             "Ext=.ts\n";
 
         string preset_high = "[High]\n"
-                             "Cmd=-analyzeduration 1M {start}"
+                             "Cmd=ffmpeg -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -f mpegts -vcodec libx264"
                                  " -bufsize 3200k -maxrate 1800k -crf 22 -g 50"
@@ -426,70 +431,123 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
         if(!pcfile.good()) {
             return false;
         }
+        
+        string preset_nv_low = "[nv_low]\n"
+                               "Cmd=ffmpeg -analyzeduration 1M {start}"
+                                " -i \"{infile}\""
+                                " -c:v nvenc_h264 -bufsize 400k -maxrate 200k"
+                                " -g 60 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=416:234\""
+                                " -preset slow -profile:v baseline"
+                                " -c:a libfdk_aac -profile:a aac_he -b:a 64k -ar 44100 -ac 2"
+                                " -async 1"
+                                " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                               "StreamTimeout=2\n"
+                               "MinSegments=2\n";
+        
+        string preset_nv_mid = "[nv_mid]\n"
+                               "Cmd=ffmpeg -analyzeduration 1M {start}"
+                                " -i \"{infile}\""
+                                " -c:v nvenc_h264 -bufsize 2400k -maxrate 1200k"
+                                " -g 60 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=640:360\""
+                                " -preset slow -profile:v baseline"
+                                " -c:a libfdk_aac -profile:a aac_he -ab 96k -ar 44100 -ac 2"
+                                " -async 1"
+                                " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                               "StreamTimeout=2\n"
+                               "MinSegments=2\n";
+        
+        string preset_nv_main = "[nv_main]\n"
+                                 "Cmd=ffmpeg -analyzeduration 1M {start}"
+                                 " -i \"{infile}\""
+                                 " -c:v nvenc_h264 -bufsize 4000k -maxrate 2000k"
+                                 " -g 50 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=960:540\""
+                                 " -preset medium -profile:v main"
+                                 " -c:a aac -ab 96k -ar 44100 -ac 2 -strict 2"
+                                 " -async 1"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                                "StreamTimeout=2\n"
+                                "MinSegments=2\n";
+        
+        string preset_nv_high = "[nv_high]\n"
+                                 "Cmd=ffmpeg -analyzeduration 1M {start}"
+                                 " -i \"{infile}\""
+                                 " -c:v nvenc_h264 -bufsize 7000k -maxrate 3500k"
+                                 " -g 50 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=1280:720\""
+                                 " -preset medium -profile:v main"
+                                 " -c:a aac -ab 128k -ar 44100 -ac 2 -strict 2"
+                                 " -async 1"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                                "StreamTimeout=2\n"
+                                "MinSegments=2\n";
+        
+        string preset_nv_hd = "[nv_hd]\n"
+                               "Cmd=ffmpeg -analyzeduration 1M {start}"
+                               " -i \"{infile}\""
+                               " -c:v nvenc_h264 -bufsize 10000k -maxrate 5000k"
+                               " -g 50 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=1920:1080\""
+                               " -preset medium -profile:v high"
+                               " -c:a aac -ab 128k -ar 44100 -ac 2 -strict 2"
+                               " -async 1"
+                               " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                              "StreamTimeout=2\n"
+                              "MinSegments=2\n";
+                                
 
         string preset_audio = "[Audio]\n"
-                              "Cmd=-analyzeduration 1M {start}"
+                              "Cmd=ffmpeg -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
-                                 " -f mpegts -vn"
-                                 " -acodec aac -strict -2 -ab 64k -ar 44100 -ac 2 -y pipe:1\n"
-                              "SegmentDuration=2\n"
-                              "SegmentBuffer=5242880\n"
-                              "NumberOfSegments=3\n"
-                              "M3U8WaitTimeout=10\n"
-                              "StreamTimeout=3\n";
+                                 " -vn"
+                                 " -acodec aac -strict -2 -ab 64k -ar 44100 -ac 2 -y"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                              "StreamTimeout=2\n"
+                              "MinSegments=2\n";
 
         string preset_low = "[Low]\n"
-                            "Cmd=-analyzeduration 1M {start}"
+                            "Cmd=ffmpeg -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
-                                 " -f mpegts -vcodec libx264"
+                                 " -vcodec libx264"
                                  " -bufsize 1400k -maxrate 700k -crf 25 -g 50"
                                  " -map 0:v -map a:0"
                                  " -vf \"yadif=0:-1:1, scale=512:288\""
                                  " -preset medium -tune film"
                                  " -vprofile baseline -level 30"
                                  " -acodec aac -strict -2 -ab 48k -ar 44100 -ac 2"
-                                 " -async 1 pipe:1\n"
-                            "SegmentDuration=1\n"
-                            "SegmentBuffer=5242880\n"
-                            "NumberOfSegments=3\n"
-                            "M3U8WaitTimeout=10\n"
-                            "StreamTimeout=2\n";
+                                 " -async 1"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                            "StreamTimeout=2\n"
+                            "MinSegments=2\n";
 
         string preset_mid = "[Mid]\n"
-                            "Cmd=-analyzeduration 1M {start}"
+                            "Cmd=ffmpeg -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
-                                 " -f mpegts -vcodec libx264"
+                                 " -vcodec libx264"
                                  " -bufsize 2000k -maxrate 1200k -crf 22 -g 50"
                                  " -map 0:v -map a:0"
                                  " -vf \"yadif=0:-1:1, scale=640:360\""
                                  " -preset medium -tune film"
-                                 " -vprofile main -level 30"
+                                 " -vprofile baseline -level 30"
                                  " -acodec aac -strict -2 -ab 64k -ar 44100 -ac 2"
-                                 " -async 1 pipe:1\n"
-                            "SegmentDuration=1\n"
-                            "SegmentBuffer=5242880\n"
-                            "NumberOfSegments=3\n"
-                            "M3U8WaitTimeout=10\n"
-                            "StreamTimeout=2\n";
+                                 " -async 1"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                            "StreamTimeout=2\n"
+                            "MinSegments=2\n";
 
         string preset_high = "[High]\n"
-                             "Cmd=-analyzeduration 1M {start}"
+                             "Cmd=ffmpeg -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
-                                 " -f mpegts -vcodec libx264"
+                                 " -vcodec libx264"
                                  " -bufsize 3200k -maxrate 1800k -crf 22 -g 50"
                                  " -map 0:v -map a:0"
                                  " -vf \"yadif=0:-1:1, scale=800:450\""
                                  " -preset medium -tune film"
-                                 " -vprofile main -level 30"
+                                 " -vprofile baseline -level 30"
                                  " -acodec aac -strict -2 -ab 96k -ar 44100 -ac 2"
-                                 " -async 1 pipe:1\n"
-                             "SegmentDuration=1\n"
-                             "SegmentBuffer=5242880\n"
-                             "NumberOfSegments=3\n"
-                             "M3U8WaitTimeout=10\n"
-                             "StreamTimeout=2\n";
+                                 " -async 1"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                             "StreamTimeout=2\n"
+                             "MinSegments=2\n";
 
-        pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low<<endl<<preset_audio;
+        pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low<<endl<<preset_audio<<endl<<preset_nv_hd<<endl<<preset_nv_high<<endl<<preset_nv_main<<endl<<preset_nv_mid<<endl<<preset_nv_low;
         pcfile.close();
         return true;
     }

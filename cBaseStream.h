@@ -23,9 +23,10 @@ using namespace std;
 
 class cBaseStream {
 public:
-    cBaseStream(string ffmpegCmd, map<string, string> conInfo, bool hls);
+    cBaseStream(map<string, string> conInfo, bool hls);
     cBaseStream(const cBaseStream& src);
     virtual ~cBaseStream();
+    
     
     
     string GetClientIP();
@@ -38,11 +39,9 @@ protected:
     string cmd;
     map<string, string> connectionInfo;
     pid_t pid;
-    FILE *f;
     bool isHlsStream;
     
-    bool Open(const char *Command, const char *Mode);
-    int Close(void);
+    void SetFFmpegCmd(string cmd);
     
 private:
 

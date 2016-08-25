@@ -14,13 +14,14 @@
 #include "helpers.h"
 #include "cHlsPreset.h"
 
-cHlsPreset::cHlsPreset(string cmd, int segDuration_s, size_t segBufferSize, int numSegments, int m3u8waitTimeout, int streamTimeout) 
-    : cmd(cmd), segDuration_s(segDuration_s), segBufferSize(segBufferSize), numSegments(numSegments), m3u8waitTimeout(m3u8waitTimeout), streamTimeout(streamTimeout) {
+cHlsPreset::cHlsPreset(string cmd, int streamTimeout, int minSegments) 
+    : cmd(cmd), streamTimeout(streamTimeout), minSegments(minSegments), hls_time(2), hls_list_size(5) {
+    this->setHlsTimeFromCmd();
+    this->setHlsListSizeFromCmd();
 }
 
 cHlsPreset::cHlsPreset(const cHlsPreset& src) 
-    : cmd(src.cmd), segDuration_s(src.segDuration_s), segBufferSize(src.segBufferSize), 
-        numSegments(src.numSegments), m3u8waitTimeout(src.m3u8waitTimeout), streamTimeout(src.streamTimeout) {
+    : cmd(src.cmd), streamTimeout(src.streamTimeout), minSegments(src.minSegments), hls_time(src.hls_time), hls_list_size(src.hls_list_size) {
 }
 
 cHlsPreset::~cHlsPreset() {
@@ -29,16 +30,13 @@ cHlsPreset::~cHlsPreset() {
 cHlsPreset& cHlsPreset::operator =(const cHlsPreset& src) {
     if(this != &src) {
         this->cmd = src.cmd;
-        this->segDuration_s = src.segDuration_s;
-        this->segBufferSize = src.segBufferSize;
-        this->numSegments = src.numSegments;
-        this->m3u8waitTimeout = src.m3u8waitTimeout;
         this->streamTimeout = src.streamTimeout;
     }
     return *this;
 }
 
-string cHlsPreset::FFmpegCmd(string ffmpeg, string input, int start) {
+string cHlsPreset::FFmpegCmd(string input, string hlsTmpPath, int streamid, int start) {
+    string hlstmp = hlsTmpPath + "/" + intToString(streamid);
     string rstring = "{infile}";
     size_t start_pos = cmd.find(rstring);
     if(start_pos != std::string::npos)
@@ -55,30 +53,60 @@ string cHlsPreset::FFmpegCmd(string ffmpeg, string input, int start) {
         }
         cmd.replace(start_pos, rstring.length(), s);
     }
-    ffmpeg += " " + cmd;
-    return ffmpeg;
+    rstring = "{streamid}";
+    start_pos = cmd.find(rstring);
+    if(start_pos != std::string::npos)
+    {
+        cmd.replace(start_pos, rstring.length(), intToString(streamid));
+    }
+    rstring = "{hls_tmp_path}";
+    while((start_pos = cmd.find(rstring)) != std::string::npos) {
+        cmd.replace(start_pos, rstring.length(), hlstmp);
+    }
+    return cmd;
 }
 
 string cHlsPreset::Cmd() {
     return this->cmd;
 }
 
-int cHlsPreset::SegmentDuration() {
-    return this->segDuration_s;
-}
-
-size_t cHlsPreset::SegmentBuffer() {
-    return this->segBufferSize;
-}
-
-int cHlsPreset::NumSegments() {
-    return this->numSegments;
-}
-
-int cHlsPreset::M3U8WaitTimeout() {
-    return this->m3u8waitTimeout;
-}
 
 int cHlsPreset::StreamTimeout() {
+    if(this->streamTimeout < 1) {
+        return 1;
+    }
     return this->streamTimeout;
+}
+
+int cHlsPreset::MinSegments() {
+    if(this->minSegments > this->hls_list_size)
+        return this->hls_list_size;
+    if(this->minSegments == 0)
+        return 1;
+    return this->minSegments;
+}
+
+int cHlsPreset::HlsTime() {
+    return this->hls_time;
+}
+
+int cHlsPreset::HlsListSize() {
+    return this->hls_list_size;
+}
+
+void cHlsPreset::setHlsTimeFromCmd() {
+    size_t pos = cmd.find("-hls_time");
+    if(pos == string::npos)
+        return;
+    string sub = cmd.substr(pos);
+    sscanf(sub.c_str(), "%*s%d", &this->hls_time);
+}
+
+void cHlsPreset::setHlsListSizeFromCmd() {
+    size_t pos = cmd.find("-hls_list_size");
+    if(pos == string::npos) {
+        return;
+    }
+    string sub = cmd.substr(pos);
+    sscanf(sub.c_str(), "%*s%d", &this->hls_list_size);
 }

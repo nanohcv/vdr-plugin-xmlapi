@@ -40,10 +40,9 @@ private:
     struct MHD_Connection *connection;
     cDaemonParameter *daemonParameter;
     cPluginConfig config;
+    cUser user;
     cPresets presets;
     cHlsPresets hlsPresets;
-    cUser user;
-    
     map<string, eKeys> remoteKeys;
     
 

@@ -23,9 +23,11 @@
 #include <microhttpd.h>
 #include "cRequestHandler.h"
 #include "cUser.h"
+#include "cHlsPresets.h"
+#include "cPresets.h"
 
 #define EXTERN
-#include "streamControl.h"
+#include "globals.h"
 
 cWebServer::cWebServer(cPluginConfig config) : config(config) {
     this->http_daemon = NULL;
@@ -101,6 +103,17 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
     char *user = NULL;
     char *pass = NULL;
     bool fail;
+    
+    if (0 == strcmp (method, MHD_HTTP_METHOD_OPTIONS)) {
+		const char *page = "OK";
+		response = MHD_create_response_from_buffer (strlen (page), (void *) page, MHD_RESPMEM_PERSISTENT);
+		MHD_add_response_header (response, "Allow", "GET");
+		MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+		ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+		MHD_destroy_response (response);
+		return ret;
+    }
 
     if (0 != strcmp (method, MHD_HTTP_METHOD_GET)) {
         printf("No get. Method = %s\n", method);

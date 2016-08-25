@@ -36,10 +36,7 @@ APIVERSION = $(call PKGCFG,apiversion)
 
 -include $(PLGCFG)
 
-### get ffmpeg libs using pkg-config
-
-CXXFLAGS += $(shell pkg-config --cflags libavcodec libavutil libavformat)
-LIBS += -lmicrohttpd $(shell pkg-config --libs libavcodec libavutil libavformat)
+LIBS += -lmicrohttpd -lrt
 
 ### The name of the distribution archive:
 

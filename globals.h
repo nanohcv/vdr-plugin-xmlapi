@@ -11,10 +11,9 @@
  * Created on 1. Mai 2016, 16:51
  */
 
-#ifndef STREAMCONTROL_H
-#define STREAMCONTROL_H
+#ifndef GLOBALS_H
+#define GLOBALS_H
 
-#include <vdr/thread.h>
 #include "cStreamControl.h"
 
 #ifndef EXTERN
@@ -22,8 +21,6 @@
 #endif
 
 EXTERN cStreamControl *StreamControl;
-
-
 
 #endif /* STREAMCONTROL_H */
 

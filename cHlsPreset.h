@@ -15,32 +15,35 @@
 #define CHLSPRESET_H
 
 #include <string>
+#include <cstdio>
 
 using namespace std;
 
 class cHlsPreset {
 public:
-    cHlsPreset(string cmd, int segDuration_s, size_t segBufferSize, int numSegments, int m3u8waitTimeout, int streamTimeout);
+    cHlsPreset(string cmd, int streamTimeout, int minSegments);
     cHlsPreset(const cHlsPreset& src);
     virtual ~cHlsPreset();
     
     cHlsPreset& operator = (const cHlsPreset& src);
     
-    string FFmpegCmd(string ffmpeg, string input, int start = 0);
+    string FFmpegCmd(string input, string hlsTmpPath, int streamid, int start = 0);
     string Cmd();
-    int SegmentDuration();
-    size_t SegmentBuffer();
-    int NumSegments();
-    int M3U8WaitTimeout();
     int StreamTimeout();
+    int MinSegments();
+    int HlsTime();
+    int HlsListSize();
     
 private:
     string cmd;
-    int segDuration_s;
-    size_t segBufferSize;
-    int numSegments;
-    int m3u8waitTimeout;
     int streamTimeout;
+    int minSegments;
+    
+    int hls_time;
+    int hls_list_size;
+    
+    void setHlsTimeFromCmd();
+    void setHlsListSizeFromCmd();
 
 };
 

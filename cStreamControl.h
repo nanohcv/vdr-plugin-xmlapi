@@ -18,12 +18,13 @@
 #include <map>
 #include <queue>
 #include <vdr/thread.h>
+#include <vdr/tools.h>
 #include "cBaseStream.h"
 #include "cHlsStream.h"
 
 using namespace std;
 
-class cStreamControl {
+class cStreamControl : public cThread {
 public:
     cStreamControl();
     cStreamControl(const cStreamControl& orig);
@@ -34,6 +35,7 @@ public:
     cHlsStream* GetHlsStream(string streamName);
 
     void RemoveStream(int streamid);
+    void RemoveHlsStream(int streamid);
     int RemoveStreamsByIP(string ip);
     int RemoveStreamsByUserAgent(string useragent);
     int RemoveStreamsByUserAgentAndIP(string ip, string useragent);
@@ -49,7 +51,11 @@ public:
 
 private:
     map<int, cBaseStream*> streams;
-
+    vector<cHlsStream*> hlsStreamsToRemove;
+    cMutex hlsRemoveMutex;
+    cCondVar hlsRemoveCondVar;
+    
+    void Action();
 };
 
 #endif /* CSTREAMCONTROL_H */

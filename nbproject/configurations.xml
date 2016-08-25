@@ -7,7 +7,6 @@
       <in>cHlsPreset.cpp</in>
       <in>cHlsPresets.cpp</in>
       <in>cHlsStream.cpp</in>
-      <in>cHlsStreamParameter.cpp</in>
       <in>cINIParser.cpp</in>
       <in>cPluginConfig.cpp</in>
       <in>cPreset.cpp</in>
@@ -54,9 +53,6 @@
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>../../../../../bin/vdr</executablePath>
           <ccTool>
-            <incDir>
-              <pElem>../../../../../../include/x86_64-linux-gnu</pElem>
-            </incDir>
             <preprocessorList>
               <Elem>PLUGIN_NAME_I18N="xmlapi"</Elem>
               <Elem>_FILE_OFFSET_BITS=64</Elem>
@@ -88,10 +84,6 @@
         </ccTool>
       </item>
       <item path="cHlsStream.cpp" ex="false" tool="1" flavor2="0">
-        <ccTool flags="0">
-        </ccTool>
-      </item>
-      <item path="cHlsStreamParameter.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
         </ccTool>
       </item>

@@ -22,7 +22,7 @@ using namespace std;
 
 class cPluginConfig {
 public:
-    cPluginConfig(const char *configDir, const char *pluginName, const char *version);
+    cPluginConfig(const char *configDir, const char *cacheDir, const char *pluginName, const char *version);
     cPluginConfig(const cPluginConfig& src);
     virtual ~cPluginConfig();
 
@@ -40,10 +40,10 @@ public:
     char *GetSSLCert();
     string GetUsersFile();
     cUsers GetUsers();
-    string GetFFmpeg();
     bool GetWaitForFFmpeg();
     string GetPresetsFile();
     string GetHlsPresetsFile();
+    string GetHlsTmpDir();
     string GetStreamdevUrl();
 
 private:
@@ -61,10 +61,10 @@ private:
     size_t sslCertSize;
     string usersFile;
     cUsers users;
-    string ffmpeg;
     bool waitForFFmpeg;
     string presetsFile;
     string hlsPresetsFile;
+    string hlsTmpDir;
     string streamdevUrl;
 
     string generatePassword(unsigned int length);

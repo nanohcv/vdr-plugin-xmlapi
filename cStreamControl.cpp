@@ -16,6 +16,7 @@
 #include "cStreamControl.h"
 
 cStreamControl::cStreamControl() {
+    this->Start();
 }
 
 cStreamControl::cStreamControl(const cStreamControl& orig) {
@@ -23,6 +24,9 @@ cStreamControl::cStreamControl(const cStreamControl& orig) {
 }
 
 cStreamControl::~cStreamControl() {
+    if(this->Active()) {
+        this->Cancel(1);
+    }
     for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
         delete it->second;
     }
@@ -60,10 +64,21 @@ cHlsStream* cStreamControl::GetHlsStream(string streamName) {
 }
 
 void cStreamControl::RemoveStream(int streamid) {
+    dsyslog("xmlapi: removing stream with id %d ...", streamid);
     this->Mutex.Lock();
     delete this->streams[streamid];
     this->streams.erase(streamid);
     this->Mutex.Unlock();
+    dsyslog("xmlapi: stream with id %d removed", streamid);
+}
+
+void cStreamControl::RemoveHlsStream(int streamid) {
+    dsyslog("xmlapi: removing hls stream with id %d ...", streamid);
+    this->hlsRemoveMutex.Lock();
+    this->hlsStreamsToRemove.push_back((cHlsStream*)this->streams[streamid]);
+    this->hlsRemoveCondVar.Broadcast();
+    this->hlsRemoveMutex.Unlock();
+    this->streams.erase(streamid);
 }
 
 int cStreamControl::RemoveStreamsByIP(string ip) {
@@ -158,4 +173,18 @@ string cStreamControl::GetStreamsXML() {
     }
     xml += "</streams>\n";
     return xml;
+}
+
+void cStreamControl::Action() {
+    while(this->Running()) {
+        this->hlsRemoveMutex.Lock();
+        this->hlsRemoveCondVar.Wait(this->hlsRemoveMutex);
+        for(vector<cHlsStream*>::iterator it = this->hlsStreamsToRemove.begin(); it != this->hlsStreamsToRemove.end(); it++) {
+            int streamId = (*it)->StreamId();
+            delete (*it);
+            dsyslog("xmlapi: hls stream with id %d removed", streamId);        
+        }
+        this->hlsStreamsToRemove.clear();
+        this->hlsRemoveMutex.Unlock();;
+    }
 }

@@ -115,7 +115,8 @@ bool cPluginXmlapi::Initialize(void)
 
 bool cPluginXmlapi::Start(void)
 {
-    cPluginConfig config(ConfigDirectory(Name()), Name(), VERSION);
+    cPluginConfig config(ConfigDirectory(Name()), CacheDirectory(Name()), Name(), VERSION);
+    dsyslog("xmlapi: Cache-Dir=%s", CacheDirectory(Name()));
     dsyslog("xmlapi: Config-File=%s", config.GetConfigFile().c_str());
     dsyslog("xmlapi: Preset.ini=%s", config.GetPresetsFile().c_str());
     dsyslog("xmlapi: HTTP-Port=%d, HTTPs-Port=%d, Use HTTPs=%d, HTTPS only=%d",
