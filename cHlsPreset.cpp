@@ -31,6 +31,9 @@ cHlsPreset& cHlsPreset::operator =(const cHlsPreset& src) {
     if(this != &src) {
         this->cmd = src.cmd;
         this->streamTimeout = src.streamTimeout;
+        this->minSegments = src.minSegments;
+        this->hls_time = src.hls_time;
+        this->hls_list_size = src.hls_list_size;
     }
     return *this;
 }
