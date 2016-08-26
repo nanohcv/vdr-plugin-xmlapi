@@ -5,12 +5,6 @@ VDR Plugin for the VDR Windows Phone / Windows 10 Uwp App
 #### 1.1 Libraries
 - libmicrohttpd (Ubuntu: sudo apt-get install libmicrohttpd10)
 - libmicrohttpd headers (Ubuntu: sudo apt-get install libmicrohttpd-dev)
-- libavformat (Ubuntu: sudo apt-get install libavformat-ffmpeg56)
-- libavformat headers (Ubuntu: sudo apt-get install libavformat-dev)
-- libavcodec (Ubuntu: sudo apt-get install libavcodec-extra)
-- libavcodec headers (Ubuntu: sudo apt-get install libavcodec-dev)
-- libavutil (Ubuntu: sudo apt-get install libavutil-ffmpeg54)
-- libavutil headers (Ubuntu: sudo apt-get install libavutil-dev)
 
 
 #### 1.2 VDR-Plugins
@@ -32,12 +26,12 @@ https://www.linuxtv.org/vdrwiki/index.php/Plugin_Installation
 On Ubuntu (16.04):
 Install requirements:
 
-    sudo apt-get install vdr-dev vdr-plugin-streamdev-server libmicrohttpd10 libmicrohttpd-dev libavformat-ffmpeg56 libavformat-dev libavcodec-extra libavcodec-dev libavutil-ffmpeg54 libavutil-dev build-essential git ffmpeg
+    sudo apt-get install vdr-dev vdr-plugin-streamdev-server libmicrohttpd10 libmicrohttpd-dev build-essential git ffmpeg
 
 Download, compile and install the xmlapi plugin:
 
     cd ~
-    git clone https://github.com/nanohcv/vdr-plugin-xmlapi.git
+    git clone -b dev https://github.com/nanohcv/vdr-plugin-xmlapi.git
     cd vdr-plugin-xmlapi
     make
     sudo make install
@@ -98,13 +92,6 @@ To change the path to users.ini, change the following line:
 
     Users=/var/lib/vdr/plugins/xmlapi/users.ini
 
-
-If FFMpeg can't be found in the global search PATH then you can set the 
-path to your ffmpeg binray with the following parameter:
-
-    FFMPEG=/path/to/your/ffmpeg
-
-
 By default only on transcoded stream can be started. If another client connect
 to the plugin and request a stream, the plugin wait until all other ffmpeg 
 processes, started by the plugin, are closed. You can change this by setting the
@@ -114,11 +101,12 @@ following parameter: (I recommend this only if you have more than one tuner.)
 
 
 The plugin use presets for transcoding. The presets can be configured in the 
-presets.ini which was created on first start in the plugin config folder of the 
-vdr plugin configuration folde. For information about the presets, read section
-4. The path to the file can set with this parameter:
+presets.ini and hls_presets.ini (for hls streaming) which created on first start in the plugin config folder of the 
+vdr plugin configuration folder. For information about the presets, read section 4.
+The path for the preset files can set with the following parameter:
 
     Presets=/var/lib/vdr/plugins/xmlapi/presets.ini
+    HlsPresets=/var/lib/vdr/plugins/xmlapi/hls_presets.ini
 
 
 If the streamdev-server plugin doesnt run on port 3000 change the following
@@ -130,7 +118,7 @@ parameter. Make sure that the url ends with a slash.
 #### 3.1 Users - users.ini
 Users can be configured in the users.ini file.
 The file has two sections. The first section is called "AdminUsers" and the second called "Users".
-AdminUsers can control streams, Users not.
+AdminUsers can control streams, Users not. (not really implemented yet)
 The file should look like this. Make sure that no spaces between username, "=" and password are added.
 
     [AdminUsers]
@@ -145,11 +133,13 @@ To transcode a channel you have to open the url
 http://server:port/stream{extenstion}?preset={preset}&chid={channelId}
 The ffmpeg parameter -i must be set to {infile} and the output file must be set
 to pipe:1
+If the requested url contains the &start= parameter the placeholder {start} in the preset
+is replaced by "-ss position"
 
 The presets.ini should look like this:
 
     [preset name]
-    Cmd=your ffmepg parameter
+    Cmd=your ffmepg command with parameters
     MimeType=your Mime Type
     Ext=your file extension
 
@@ -157,13 +147,35 @@ The presets.ini should look like this:
 An short (not working) examle looks like this:
 
     [Low]
-    Cmd=-i "{infile}" -f mpegts -vcodec libx264 -bufsize 1400k -maxrate 700k -acodec libmp3lame -ab 64k -ar 44100 pipe:1
+    Cmd=ffmpeg {start} -i "{infile}" -f mpegts -vcodec libx264 -bufsize 1400k -maxrate 700k -acodec libmp3lame -ab 64k -ar 44100 pipe:1
     MimeType=video/mpeg
     Ext=.ts
 
 
 For more information read the FFMPEG documentation. I recommend to copy a 
 default preset and adjust the settings.
+
+#### 3.3 Presets - hls_presets.ini
+For HLS-Streaming the hls_presets.ini is used.
+The ffmpeg parameter -i must be set to {infile} and the output format must be
+"-f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8"
+Do not touch "-hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8" !!
+The parameters "-hls_time 2 -hls_list_size 5 -hls_wrap 5" are optional but highly recommended.
+
+The hls_presets.ini should look like this:
+
+    [preset name]
+    Cmd=your ffmepg command with parameters
+    StreamTimeout=Time (in seconds) after the stream is terminated, if no client access the stream anymore.
+    MinSegments=Minimum number of segments which need to be created before a client can access the stream.m3u8
+
+
+An short (not working) examle looks like this:
+
+    [Low]
+    Cmd=ffmpeg {start} -i "{infile}" -vcodec libx264 -bufsize 1400k -maxrate 700k -acodec libmp3lame -ab 64k -ar 44100 -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8
+    StreamTimeout=5
+    MinSegments=3
 
 
 
@@ -293,15 +305,90 @@ Example:
     http(s)://<server-ip>:<port>/timers.xml?action=add&chid=C-1-1079-10351&name=Test&aux=Beschreibung&flags=1&weekdays=0&day=1463436000&start=1230&stop=1300&priority=50&lifetime=99
 
 
+#### 4.6 Remote control
 
-#### 4.6 Presets.ini
+There are two APIs to control your VDR.
+To switch to a channel use the following API:
+
+    http(s)://<server-ip>:<port>/switch.xml?chid=<channel-id>
+
+To send a remote control command use the following API
+
+    http(s)://<server-ip>:<port>/remote.xml?key=<key>
+
+Possible values for key are:
+
+- up
+- down
+- menu
+- ok
+- back
+- left
+- right
+- red
+- green
+- yellow
+- blue
+- 0
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+- 7
+- 8
+- 9
+- info
+- play
+- pause
+- stop
+- record
+- fastfwd
+- fastrew
+- next
+- prev
+- power
+- chanup
+- chandn
+- chanprev
+- volup
+- voldn
+- mute
+- audio
+- subtitles
+- schedule
+- channels
+- timers
+- recordings
+- setup
+- commands
+- user0
+- user1
+- user2
+- user3
+- user4
+- user5
+- user6
+- user7
+- user8
+- user9
+- none
+
+
+
+#### 4.7 Presets.ini
 
 You can access the presets.ini with the following command:
 
     http(s)://<server-ip>:<port>/presets.ini
 
+To get the hls_presets.ini, use the following command:
 
-#### 4.7 Transcoded Streams
+    http(s)://<server-ip>:<port>/presets.ini?hls=1
+
+
+#### 4.8 Transcoded Streams
 
 For streaming a channel you need a channel id and a preset (section from presets.ini).
 You also need the extension (Ext= from presets.ini) from your choosen preset.
@@ -345,7 +432,7 @@ Example for recording stream:
 
 
 
-#### 4.8 Stream control
+#### 4.9 Stream control
 
 To view the currently active streams or stop/remove a stream, you can use this API.
 
