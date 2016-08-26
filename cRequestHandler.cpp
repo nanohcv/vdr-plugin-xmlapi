@@ -516,13 +516,15 @@ int cRequestHandler::handlePresets() {
             for(map<string,cHlsPreset>::iterator it = hlsPresets.begin(); it != hlsPresets.end(); ++it) {
                 ini += "[" + it->first + "]\n";
                 ini += "Cmd=" + it->second.Cmd() + "\n";
-                ini += "StreamTimeout=" + intToString(it->second.StreamTimeout()) + "\n\n";
+                ini += "StreamTimeout=" + intToString(it->second.StreamTimeout()) + "\n";
+                ini += "MinSegments=" + intToString(it->second.MinSegments()) +"\n\n";
             }
         } else {
             cHlsPreset p = hlsPresets.GetDefaultPreset();
             ini += "[Default]\n";
             ini += "Cmd=" + p.Cmd() + "\n";
-            ini += "StreamTimeout=" + intToString(p.StreamTimeout()) + "\n\n";
+            ini += "StreamTimeout=" + intToString(p.StreamTimeout()) + "\n";
+            ini += "MinSegments=" + intToString(p.MinSegments()) + "\n\n";
         }
     }
     char *page = (char *)malloc((ini.length() + 1) * sizeof(char));
