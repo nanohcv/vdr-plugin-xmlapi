@@ -441,7 +441,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                 " -c:a libfdk_aac -profile:a aac_he -b:a 64k -ar 44100 -ac 2"
                                 " -async 1"
                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
-                               "StreamTimeout=2\n"
+                               "StreamTimeout=3\n"
                                "MinSegments=2\n";
         
         string preset_nv_mid = "[nv_mid]\n"
@@ -453,7 +453,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                 " -c:a libfdk_aac -profile:a aac_he -ab 96k -ar 44100 -ac 2"
                                 " -async 1"
                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
-                               "StreamTimeout=2\n"
+                               "StreamTimeout=3\n"
                                "MinSegments=2\n";
         
         string preset_nv_main = "[nv_main]\n"
@@ -465,7 +465,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -c:a aac -ab 96k -ar 44100 -ac 2 -strict 2"
                                  " -async 1"
                                  " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
-                                "StreamTimeout=2\n"
+                                "StreamTimeout=3\n"
                                 "MinSegments=2\n";
         
         string preset_nv_high = "[nv_high]\n"
@@ -477,7 +477,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -c:a aac -ab 128k -ar 44100 -ac 2 -strict 2"
                                  " -async 1"
                                  " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
-                                "StreamTimeout=2\n"
+                                "StreamTimeout=3\n"
                                 "MinSegments=2\n";
         
         string preset_nv_hd = "[nv_hd]\n"
@@ -489,7 +489,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                " -c:a aac -ab 128k -ar 44100 -ac 2 -strict 2"
                                " -async 1"
                                " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
-                              "StreamTimeout=2\n"
+                              "StreamTimeout=3\n"
                               "MinSegments=2\n";
                                 
 
@@ -499,7 +499,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -vn"
                                  " -acodec aac -strict -2 -ab 64k -ar 44100 -ac 2 -y"
                                  " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
-                              "StreamTimeout=2\n"
+                              "StreamTimeout=3\n"
                               "MinSegments=2\n";
 
         string preset_low = "[Low]\n"
@@ -514,7 +514,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -acodec aac -strict -2 -ab 48k -ar 44100 -ac 2"
                                  " -async 1"
                                  " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
-                            "StreamTimeout=2\n"
+                            "StreamTimeout=3\n"
                             "MinSegments=2\n";
 
         string preset_mid = "[Mid]\n"
@@ -529,7 +529,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -acodec aac -strict -2 -ab 64k -ar 44100 -ac 2"
                                  " -async 1"
                                  " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
-                            "StreamTimeout=2\n"
+                            "StreamTimeout=3\n"
                             "MinSegments=2\n";
 
         string preset_high = "[High]\n"
@@ -544,7 +544,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -acodec aac -strict -2 -ab 96k -ar 44100 -ac 2"
                                  " -async 1"
                                  " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
-                             "StreamTimeout=2\n"
+                             "StreamTimeout=3\n"
                              "MinSegments=2\n";
 
         pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low<<endl<<preset_audio<<endl<<preset_nv_hd<<endl<<preset_nv_high<<endl<<preset_nv_main<<endl<<preset_nv_mid<<endl<<preset_nv_low;
