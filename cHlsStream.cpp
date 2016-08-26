@@ -155,7 +155,7 @@ void cHlsStream::StopStream() {
         pid = -1;
         string rmCmd = "rm -f -R " + streamPath;
         if(system(rmCmd.c_str()) != 0) {
-            esyslog("xmlapi: cHlsStream::StopStream() can't remove  %s", streamPath);
+            esyslog("xmlapi: cHlsStream::StopStream() can't remove  %s", streamPath.c_str());
         }
         this->stopped = true;
         this->firstM3U8Access = true;
