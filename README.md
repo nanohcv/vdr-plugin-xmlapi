@@ -157,9 +157,11 @@ default preset and adjust the settings.
 
 #### 3.3 Presets - hls_presets.ini
 For HLS-Streaming the hls_presets.ini is used.
-The ffmpeg parameter -i must be set to {infile} and the output format must be
-"-f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8"
-Do not touch "-hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8" !!
+The ffmpeg parameter -i must be set to {infile} and the output format must be:
+
+    "-f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8"
+
+Do not touch "-hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8" !!  
 The parameters "-hls_time 2 -hls_list_size 5 -hls_wrap 5" are optional but highly recommended.
 
 The hls_presets.ini should look like this:
