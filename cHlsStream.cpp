@@ -63,7 +63,6 @@ bool cHlsStream::StartStream() {
         return false;
     }
 
-    
     if ((pid = fork()) < 0) {
         esyslog("xmlapi: cHlsStream::StartStream() fork failed");
         return false;
@@ -76,8 +75,7 @@ bool cHlsStream::StartStream() {
             _exit(-1);
         }
         _exit(0);
-    }
-        
+    }      
     
     int length, rv, i = 0;
     int fd;
@@ -152,7 +150,7 @@ void cHlsStream::StopStream() {
     } else {
         int status = 0;
         kill(-pid, SIGKILL);
-        waitpid(-pid, &status, WNOHANG);
+        waitpid(-pid, &status, 0);
         pid = -1;
         string rmCmd = "rm -f -R " + streamPath;
         if(system(rmCmd.c_str()) != 0) {

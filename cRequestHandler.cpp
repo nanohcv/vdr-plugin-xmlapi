@@ -357,6 +357,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
             int streamid = StreamControl->AddStream(stream);
             stream->SetStreamId(streamid);
             if(!stream->StartStream(input, starttime)) {
+                StreamControl->RemoveStream(streamid);
                 return this->handle404Error();
             }
             
@@ -367,6 +368,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
                 (0 != fstat (fd, &sbuf)) ) {
                  if (fd != -1)
                      close (fd);
+                 StreamControl->RemoveStream(streamid);
                  return this->handle404Error();
              }
             response = MHD_create_response_from_fd(sbuf.st_size, fd);
@@ -385,6 +387,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
                 (0 != fstat (fd, &sbuf)) ) {
                  if (fd != -1)
                      close (fd);
+                 StreamControl->RemoveStream(stream->StreamId());
                  return this->handle404Error();
              }
             response = MHD_create_response_from_fd(sbuf.st_size, fd);
@@ -416,6 +419,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
                 (0 != fstat (fd, &sbuf)) ) {
                  if (fd != -1)
                      close (fd);
+                 StreamControl->RemoveStream(stream->StreamId());
                  return this->handle404Error();
              }
             response = MHD_create_response_from_fd(sbuf.st_size, fd);
