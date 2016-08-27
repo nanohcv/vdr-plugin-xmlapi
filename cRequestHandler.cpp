@@ -348,26 +348,25 @@ int cRequestHandler::handleHlsStream(const char* url) {
 
         cHlsStream *stream = StreamControl->GetHlsStream(streamName);
         if(stream == NULL) {
+            
             string baseurl = "/hls/";
             cHlsPreset preset = this->hlsPresets[cstr_preset];
             string presetName = cstr_preset;
             stream = new cHlsStream(this->config.GetHlsTmpDir(), preset, this->conInfo);
             stream->SetStreamName(streamName);
-            StreamControl->Mutex.Lock();
             int streamid = StreamControl->AddStream(stream);
             stream->SetStreamId(streamid);
             if(!stream->StartStream(input, starttime)) {
-                StreamControl->Mutex.Unlock();
                 return this->handle404Error();
             }
             
             int fd;
             struct stat sbuf;
-            if ( (-1 == (fd = open (stream->m3u8File().c_str(), O_RDONLY))) ||
+            string m3u8File = stream->m3u8File();
+            if ( (-1 == (fd = open (m3u8File.c_str(), O_RDONLY))) ||
                 (0 != fstat (fd, &sbuf)) ) {
                  if (fd != -1)
                      close (fd);
-                 StreamControl->Mutex.Unlock();
                  return this->handle404Error();
              }
             response = MHD_create_response_from_fd(sbuf.st_size, fd);
@@ -377,23 +376,15 @@ int cRequestHandler::handleHlsStream(const char* url) {
             MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
-            StreamControl->Mutex.Unlock();
             return ret;
         }
         else {
             int fd;
             struct stat sbuf;
-            StreamControl->Mutex.Lock();
-            if(stream->Stopped()) {
-                if(!stream->StartStream()) {
-                    return this->handle404Error();
-                }
-            }
             if ( (-1 == (fd = open (stream->m3u8File().c_str(), O_RDONLY))) ||
                 (0 != fstat (fd, &sbuf)) ) {
                  if (fd != -1)
                      close (fd);
-                 StreamControl->Mutex.Unlock();
                  return this->handle404Error();
              }
             response = MHD_create_response_from_fd(sbuf.st_size, fd);
@@ -403,7 +394,6 @@ int cRequestHandler::handleHlsStream(const char* url) {
             MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
-            StreamControl->Mutex.Unlock();
             return ret;
         }
         
@@ -413,17 +403,19 @@ int cRequestHandler::handleHlsStream(const char* url) {
         if(parts.size() != 2)
             return this->handle404Error();
         int streamid = atoi(parts[0].c_str());
+        StreamControl->Mutex.Lock();
         cHlsStream *stream = (cHlsStream*)StreamControl->GetStream(streamid);
+        StreamControl->Mutex.Unlock();
         if(stream != NULL) {
             StreamControl->Mutex.Lock();
             string tsFile = stream->StreamPath() + file;
+            StreamControl->Mutex.Unlock();
             int fd;
             struct stat sbuf;
             if ( (-1 == (fd = open (tsFile.c_str(), O_RDONLY))) ||
                 (0 != fstat (fd, &sbuf)) ) {
                  if (fd != -1)
                      close (fd);
-                 StreamControl->Mutex.Unlock();
                  return this->handle404Error();
              }
             response = MHD_create_response_from_fd(sbuf.st_size, fd);
@@ -433,7 +425,6 @@ int cRequestHandler::handleHlsStream(const char* url) {
             MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
-            StreamControl->Mutex.Unlock();
             return ret;
         } 
     }

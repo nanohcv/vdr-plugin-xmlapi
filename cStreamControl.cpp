@@ -181,7 +181,9 @@ void cStreamControl::Action() {
         this->hlsRemoveCondVar.Wait(this->hlsRemoveMutex);
         for(vector<cHlsStream*>::iterator it = this->hlsStreamsToRemove.begin(); it != this->hlsStreamsToRemove.end(); it++) {
             int streamId = (*it)->StreamId();
+            this->Mutex.Lock();
             delete (*it);
+            this->Mutex.Unlock();
             dsyslog("xmlapi: hls stream with id %d removed", streamId);        
         }
         this->hlsStreamsToRemove.clear();

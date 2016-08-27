@@ -51,6 +51,7 @@ void cHlsStream::SetStreamName(string streamName) {
 bool cHlsStream::StartStream() {
     if(this->cmd == "")
         return false;
+    printf("StartStream(): StreamPath = %s\n", streamPath.c_str());
     string rmCmd = "rm -f -R " + streamPath;
     if(system(rmCmd.c_str()) != 0) {
         esyslog("xmlapi: cHlsStream::StartStream() can't remove %s", streamPath.c_str());
