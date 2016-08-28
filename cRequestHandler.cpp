@@ -173,7 +173,7 @@ int cRequestHandler::handleStream(const char *url) {
         esyslog("xmlapi: stream -> invalid chid given");
         return this->handle404Error();
     }
-    cStream *stream = new cStream(preset, this->conInfo);
+    cStream *stream = new cStream(this->config.GetFFmpeg(), preset, this->conInfo);
     if(this->config.GetWaitForFFmpeg()) {
         StreamControl->WaitingForStreamsByUserAgentAndIP(this->conInfo["ClientIP"], this->conInfo["User-Agent"]);
         sleep(1);
@@ -240,7 +240,7 @@ int cRequestHandler::handleRecStream(const char* url) {
 
     struct MHD_Response *response;
     int ret;
-    cStream *stream = new cStream(preset, this->conInfo);
+    cStream *stream = new cStream(this->config.GetFFmpeg(), preset, this->conInfo);
     if(this->config.GetWaitForFFmpeg()) {
         StreamControl->WaitingForStreamsByUserAgentAndIP(this->conInfo["ClientIP"], this->conInfo["User-Agent"]);
         sleep(1);
@@ -352,7 +352,7 @@ int cRequestHandler::handleHlsStream(const char* url) {
             string baseurl = "/hls/";
             cHlsPreset preset = this->hlsPresets[cstr_preset];
             string presetName = cstr_preset;
-            stream = new cHlsStream(this->config.GetHlsTmpDir(), preset, this->conInfo);
+            stream = new cHlsStream(this->config.GetFFmpeg(), this->config.GetHlsTmpDir(), preset, this->conInfo);
             stream->SetStreamName(streamName);
             int streamid = StreamControl->AddStream(stream);
             stream->SetStreamId(streamid);

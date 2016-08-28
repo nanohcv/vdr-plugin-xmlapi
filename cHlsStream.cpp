@@ -17,8 +17,8 @@
 #include "cHlsStream.h"
 #include "globals.h"
 
-cHlsStream::cHlsStream(string hlsTmpPath, cHlsPreset preset, map<string, string> conInfo)
-    : cBaseStream(conInfo, true), preset(preset), streamid(0), streamName(""), hlsTmpPath(hlsTmpPath), streamPath(hlsTmpPath + "/" + intToString(this->streamid)), stopped(true), last_m3u8_access(0), firstM3U8Access(true) {
+cHlsStream::cHlsStream(string ffmpeg, string hlsTmpPath, cHlsPreset preset, map<string, string> conInfo)
+    : cBaseStream(ffmpeg, conInfo, true), preset(preset), streamid(0), streamName(""), hlsTmpPath(hlsTmpPath), streamPath(hlsTmpPath + "/" + intToString(this->streamid)), stopped(true), last_m3u8_access(0), firstM3U8Access(true) {
 }
 
 cHlsStream::cHlsStream(const cHlsStream& src)
@@ -139,7 +139,7 @@ bool cHlsStream::StartStream() {
 }
 
 bool cHlsStream::StartStream(string input, int start) {
-    this->SetFFmpegCmd(this->preset.FFmpegCmd(input, this->hlsTmpPath, this->streamid, start));
+    this->SetFFmpegCmd(this->preset.FFmpegCmd(this->ffmpeg, input, this->hlsTmpPath, this->streamid, start));
     return this->StartStream();
     
 }

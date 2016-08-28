@@ -40,6 +40,7 @@ public:
     char *GetSSLCert();
     string GetUsersFile();
     cUsers GetUsers();
+    string GetFFmpeg();
     bool GetWaitForFFmpeg();
     string GetPresetsFile();
     string GetHlsPresetsFile();
@@ -61,6 +62,7 @@ private:
     size_t sslCertSize;
     string usersFile;
     cUsers users;
+    string ffmpeg;
     bool waitForFFmpeg;
     string presetsFile;
     string hlsPresetsFile;

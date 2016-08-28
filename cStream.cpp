@@ -18,8 +18,8 @@
 #include <vdr/thread.h>
 #include "cStream.h"
 
-cStream::cStream(cPreset preset, map<string, string> conInfo)
-    : cBaseStream(conInfo, false), preset(preset), f(NULL) {
+cStream::cStream(string ffmpeg, cPreset preset, map<string, string> conInfo)
+    : cBaseStream(ffmpeg, conInfo, false), preset(preset), f(NULL) {
 }
 
 cStream::cStream(const cStream& src) 
@@ -43,7 +43,7 @@ cStream& cStream::operator =(const cStream& src) {
 }
 
 bool cStream::StartFFmpeg(string input, int start) {
-    this->SetFFmpegCmd(this->preset.FFmpegCmd(input, start));
+    this->SetFFmpegCmd(this->preset.FFmpegCmd(this->ffmpeg, input, start));
     if(this->f == NULL) {
         this->Open(cmd.c_str(), "r");
     }

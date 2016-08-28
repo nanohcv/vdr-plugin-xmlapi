@@ -26,7 +26,7 @@ public:
 
     cPreset& operator = (const cPreset& src);
 
-    string FFmpegCmd(string input, int start = 0);
+    string FFmpegCmd(string ffmpeg, string input, int start = 0);
     string GetCmd();
     string MimeType();
     string Extension();

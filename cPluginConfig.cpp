@@ -36,6 +36,7 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *cacheDir, const 
     this->sslCert = NULL;
     this->sslCertSize = 0;
     this->usersFile = string(configDir) + "/users.ini";
+    this->ffmpeg = "ffmpeg";
     this->waitForFFmpeg = true;
     this->presetsFile = string(configDir) + "/presets.ini";
     this->hlsPresetsFile = string(configDir) + "/hls_presets.ini";
@@ -74,6 +75,7 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     }
     this->usersFile = src.usersFile;
     this->users = src.users;
+    this->ffmpeg = src.ffmpeg;
     this->waitForFFmpeg = src.waitForFFmpeg;
     this->presetsFile = src.presetsFile;
     this->hlsPresetsFile = src.hlsPresetsFile;
@@ -100,6 +102,7 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->httpsOnly = src.httpsOnly;
         this->users = src.users;
         this->usersFile = src.usersFile;
+        this->ffmpeg = src.ffmpeg;
         this->waitForFFmpeg = src.waitForFFmpeg;
         this->presetsFile = src.presetsFile;
         this->hlsPresetsFile = src.hlsPresetsFile;
@@ -177,6 +180,10 @@ cUsers cPluginConfig::GetUsers() {
     return this->users;
 }
 
+string cPluginConfig::GetFFmpeg() {
+    return this->ffmpeg;
+}
+
 bool cPluginConfig::GetWaitForFFmpeg() {
     return this->waitForFFmpeg;
 }
@@ -232,6 +239,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "SSLKeyFile="<<endl<<
             "SSLCertFile="<<endl<<
             "Users="<<this->usersFile<<endl<<
+            "FFMPEG="<<this->ffmpeg<<endl<<
             "WaitForFFmpeg="<<this->waitForFFmpeg<<endl<<
             "Presets="<<this->presetsFile<<endl<<
             "HlsPresets="<<this->hlsPresetsFile<<endl<<
@@ -280,6 +288,10 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             if(right != "") {
                 this->usersFile = right;
             }
+        }
+        else if (left == "FFMPEG") {
+            if(right != "")
+                this->ffmpeg = right;
         }
         else if (left == "WaitForFFmpeg") {
             this->waitForFFmpeg = (bool)atoi(right.c_str());
@@ -363,9 +375,69 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
         if(!pcfile.good()) {
             return false;
         }
+        
+        string preset_nv_low = "[nv_low]\n"
+                               "Cmd={ffmpeg} -analyzeduration 1M {start}"
+                                " -i \"{infile}\""
+                                " -c:v h264_nvenc -bufsize 400k -maxrate 200k"
+                                " -g 60 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=416:234\""
+                                " -preset slow -profile:v baseline"
+                                " -c:a libfdk_aac -profile:a aac_he -b:a 64k -ar 44100 -ac 2"
+                                " -async 1"
+                                " -f mpegts pipe:1\n"
+                               "MimeType=video/mpeg\n"
+                               "Ext=.ts\n";
+        
+        string preset_nv_mid = "[nv_mid]\n"
+                               "Cmd={ffmpeg} -analyzeduration 1M {start}"
+                                " -i \"{infile}\""
+                                " -c:v h264_nvenc -bufsize 2400k -maxrate 1200k"
+                                " -g 60 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=640:360\""
+                                " -preset slow -profile:v baseline"
+                                " -c:a libfdk_aac -profile:a aac_he -ab 96k -ar 44100 -ac 2"
+                                " -async 1"
+                                " -f mpegts pipe:1\n"
+                               "MimeType=video/mpeg\n"
+                               "Ext=.ts\n";
+        
+        string preset_nv_main = "[nv_main]\n"
+                                 "Cmd={ffmpeg} -analyzeduration 1M {start}"
+                                 " -i \"{infile}\""
+                                 " -c:v h264_nvenc -bufsize 4000k -maxrate 2000k"
+                                 " -g 50 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=960:540\""
+                                 " -preset medium -profile:v main"
+                                 " -c:a aac -ab 96k -ar 44100 -ac 2 -strict 2"
+                                 " -async 1"
+                                 " -f mpegts pipe:1\n"
+                                "MimeType=video/mpeg\n"
+                                "Ext=.ts\n";
+        
+        string preset_nv_high = "[nv_high]\n"
+                                 "Cmd={ffmpeg} -analyzeduration 1M {start}"
+                                 " -i \"{infile}\""
+                                 " -c:v h264_nvenc -bufsize 7000k -maxrate 3500k"
+                                 " -g 50 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=1280:720\""
+                                 " -preset medium -profile:v main"
+                                 " -c:a aac -ab 128k -ar 44100 -ac 2 -strict 2"
+                                 " -async 1"
+                                 " -f mpegts pipe:1\n"
+                                "MimeType=video/mpeg\n"
+                                "Ext=.ts\n";
+        
+        string preset_nv_hd = "[nv_hd]\n"
+                               "Cmd={ffmpeg} -analyzeduration 1M {start}"
+                               " -i \"{infile}\""
+                               " -c:v h264_nvenc -bufsize 10000k -maxrate 5000k"
+                               " -g 50 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=1920:1080\""
+                               " -preset medium -profile:v high"
+                               " -c:a aac -ab 128k -ar 44100 -ac 2 -strict 2"
+                               " -async 1"
+                               " -f mpegts pipe:1\n"
+                              "MimeType=video/mpeg\n"
+                              "Ext=.ts\n";
 
         string preset_audio = "[Audio]\n"
-                              "Cmd=ffmpeg -analyzeduration 1M {start}"
+                              "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -f mpegts -vn -acodec libmp3lame"
                                  " -ab 128k -ar 44100 -ac 2 -y pipe:1\n"
@@ -373,7 +445,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                               "Ext=.ts\n";
 
         string preset_low = "[Low]\n"
-                            "Cmd=ffmpeg -analyzeduration 1M {start}"
+                            "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -f mpegts -vcodec libx264"
                                  " -bufsize 1400k -maxrate 700k -crf 25 -g 50"
@@ -387,7 +459,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                             "Ext=.ts\n";
 
         string preset_mid = "[Mid]\n"
-                            "Cmd=ffmpeg -analyzeduration 1M {start}"
+                            "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -f mpegts -vcodec libx264"
                                  " -bufsize 2000k -maxrate 1200k -crf 22 -g 50"
@@ -401,7 +473,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                             "Ext=.ts\n";
 
         string preset_high = "[High]\n"
-                             "Cmd=ffmpeg -analyzeduration 1M {start}"
+                             "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -f mpegts -vcodec libx264"
                                  " -bufsize 3200k -maxrate 1800k -crf 22 -g 50"
@@ -414,7 +486,7 @@ bool cPluginConfig::createDefaultPresetFile(string presetFile) {
                              "MimeType=video/mpeg\n"
                              "Ext=.ts\n";
 
-        pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low<<endl<<preset_audio;
+        pcfile<<preset_high<<endl<<preset_mid<<endl<<preset_low<<endl<<preset_audio<<endl<<preset_nv_hd<<endl<<preset_nv_high<<endl<<preset_nv_main<<endl<<preset_nv_mid<<endl<<preset_nv_low;
         pcfile.close();
         return true;
     }
@@ -433,9 +505,9 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
         }
         
         string preset_nv_low = "[nv_low]\n"
-                               "Cmd=ffmpeg -analyzeduration 1M {start}"
+                               "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                 " -i \"{infile}\""
-                                " -c:v nvenc_h264 -bufsize 400k -maxrate 200k"
+                                " -c:v h264_nvenc -bufsize 400k -maxrate 200k"
                                 " -g 60 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=416:234\""
                                 " -preset slow -profile:v baseline"
                                 " -c:a libfdk_aac -profile:a aac_he -b:a 64k -ar 44100 -ac 2"
@@ -445,9 +517,9 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                "MinSegments=2\n";
         
         string preset_nv_mid = "[nv_mid]\n"
-                               "Cmd=ffmpeg -analyzeduration 1M {start}"
+                               "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                 " -i \"{infile}\""
-                                " -c:v nvenc_h264 -bufsize 2400k -maxrate 1200k"
+                                " -c:v h264_nvenc -bufsize 2400k -maxrate 1200k"
                                 " -g 60 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=640:360\""
                                 " -preset slow -profile:v baseline"
                                 " -c:a libfdk_aac -profile:a aac_he -ab 96k -ar 44100 -ac 2"
@@ -457,9 +529,9 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                "MinSegments=2\n";
         
         string preset_nv_main = "[nv_main]\n"
-                                 "Cmd=ffmpeg -analyzeduration 1M {start}"
+                                 "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
-                                 " -c:v nvenc_h264 -bufsize 4000k -maxrate 2000k"
+                                 " -c:v h264_nvenc -bufsize 4000k -maxrate 2000k"
                                  " -g 50 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=960:540\""
                                  " -preset medium -profile:v main"
                                  " -c:a aac -ab 96k -ar 44100 -ac 2 -strict 2"
@@ -469,9 +541,9 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                 "MinSegments=2\n";
         
         string preset_nv_high = "[nv_high]\n"
-                                 "Cmd=ffmpeg -analyzeduration 1M {start}"
+                                 "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
-                                 " -c:v nvenc_h264 -bufsize 7000k -maxrate 3500k"
+                                 " -c:v h264_nvenc -bufsize 7000k -maxrate 3500k"
                                  " -g 50 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=1280:720\""
                                  " -preset medium -profile:v main"
                                  " -c:a aac -ab 128k -ar 44100 -ac 2 -strict 2"
@@ -481,9 +553,9 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                 "MinSegments=2\n";
         
         string preset_nv_hd = "[nv_hd]\n"
-                               "Cmd=ffmpeg -analyzeduration 1M {start}"
+                               "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                " -i \"{infile}\""
-                               " -c:v nvenc_h264 -bufsize 10000k -maxrate 5000k"
+                               " -c:v h264_nvenc -bufsize 10000k -maxrate 5000k"
                                " -g 50 -map 0:v -map a:0 -vf \"yadif=0:-1:1, scale=1920:1080\""
                                " -preset medium -profile:v high"
                                " -c:a aac -ab 128k -ar 44100 -ac 2 -strict 2"
@@ -494,7 +566,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                 
 
         string preset_audio = "[Audio]\n"
-                              "Cmd=ffmpeg -analyzeduration 1M {start}"
+                              "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -vn"
                                  " -acodec aac -strict -2 -ab 64k -ar 44100 -ac 2 -y"
@@ -503,7 +575,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                               "MinSegments=2\n";
 
         string preset_low = "[Low]\n"
-                            "Cmd=ffmpeg -analyzeduration 1M {start}"
+                            "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -vcodec libx264"
                                  " -bufsize 1400k -maxrate 700k -crf 25 -g 50"
@@ -518,7 +590,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                             "MinSegments=2\n";
 
         string preset_mid = "[Mid]\n"
-                            "Cmd=ffmpeg -analyzeduration 1M {start}"
+                            "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -vcodec libx264"
                                  " -bufsize 2000k -maxrate 1200k -crf 22 -g 50"
@@ -533,7 +605,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                             "MinSegments=2\n";
 
         string preset_high = "[High]\n"
-                             "Cmd=ffmpeg -analyzeduration 1M {start}"
+                             "Cmd={ffmpeg} -analyzeduration 1M {start}"
                                  " -i \"{infile}\""
                                  " -vcodec libx264"
                                  " -bufsize 3200k -maxrate 1800k -crf 22 -g 50"

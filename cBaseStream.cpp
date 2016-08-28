@@ -14,12 +14,12 @@
 #include <vdr/tools.h>
 #include "cBaseStream.h"
 
-cBaseStream::cBaseStream(map<string, string> conInfo, bool hls)
-    : cmd(""), connectionInfo(conInfo), pid(-1), isHlsStream(hls) {
+cBaseStream::cBaseStream(string ffmpeg, map<string, string> conInfo, bool hls)
+    : cmd(""), ffmpeg(ffmpeg), connectionInfo(conInfo), pid(-1), isHlsStream(hls) {
 }
 
 cBaseStream::cBaseStream(const cBaseStream& src) 
-    : cmd(src.cmd), connectionInfo(src.connectionInfo), pid(src.pid), isHlsStream(src.isHlsStream) {
+    : cmd(src.cmd), ffmpeg(src.ffmpeg), connectionInfo(src.connectionInfo), pid(src.pid), isHlsStream(src.isHlsStream) {
 }
 
 cBaseStream::~cBaseStream() {

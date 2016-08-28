@@ -28,7 +28,7 @@ using namespace std;
 
 class cStream : public cBaseStream {
 public:
-    cStream(cPreset preset, map<string, string> conInfo);
+    cStream(string ffmpeg, cPreset preset, map<string, string> conInfo);
     cStream(const cStream& src);
     virtual ~cStream();
 

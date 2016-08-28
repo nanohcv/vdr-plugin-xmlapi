@@ -23,7 +23,7 @@ using namespace std;
 
 class cBaseStream {
 public:
-    cBaseStream(map<string, string> conInfo, bool hls);
+    cBaseStream(string ffmpeg, map<string, string> conInfo, bool hls);
     cBaseStream(const cBaseStream& src);
     virtual ~cBaseStream();
     
@@ -37,6 +37,7 @@ public:
     
 protected:
     string cmd;
+    string ffmpeg;
     map<string, string> connectionInfo;
     pid_t pid;
     bool isHlsStream;

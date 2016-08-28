@@ -38,14 +38,16 @@ cHlsPreset& cHlsPreset::operator =(const cHlsPreset& src) {
     return *this;
 }
 
-string cHlsPreset::FFmpegCmd(string input, string hlsTmpPath, int streamid, int start) {
+string cHlsPreset::FFmpegCmd(string ffmpeg, string input, string hlsTmpPath, int streamid, int start) {
     string hlstmp = hlsTmpPath + "/" + intToString(streamid);
-    string rstring = "{infile}";
+    
+    string rstring = "{ffmpeg}";
     size_t start_pos = cmd.find(rstring);
     if(start_pos != std::string::npos)
     {
-        cmd.replace(start_pos, rstring.length(), input);
+        cmd.replace(start_pos, rstring.length(), ffmpeg);
     }
+    
     rstring = "{start}";
     start_pos = cmd.find(rstring);
     if(start_pos != std::string::npos)
@@ -56,6 +58,14 @@ string cHlsPreset::FFmpegCmd(string input, string hlsTmpPath, int streamid, int 
         }
         cmd.replace(start_pos, rstring.length(), s);
     }
+    
+    rstring = "{infile}";
+    start_pos = cmd.find(rstring);
+    if(start_pos != std::string::npos)
+    {
+        cmd.replace(start_pos, rstring.length(), input);
+    }
+    
     rstring = "{streamid}";
     start_pos = cmd.find(rstring);
     if(start_pos != std::string::npos)

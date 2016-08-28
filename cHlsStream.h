@@ -40,7 +40,7 @@ using namespace std;
 
 class cHlsStream : public cBaseStream, public cThread {
 public:
-    cHlsStream(string hlsTmpPath, cHlsPreset preset, map<string, string> conInfo);
+    cHlsStream(string ffmpeg, string hlsTmpPath, cHlsPreset preset, map<string, string> conInfo);
     cHlsStream(const cHlsStream& src);
     virtual ~cHlsStream();
     
@@ -61,7 +61,6 @@ private:
     cHlsPreset preset;
     int streamid;
     string streamName;
-    
     string hlsTmpPath;
     string streamPath;
     

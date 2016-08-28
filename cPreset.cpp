@@ -38,13 +38,17 @@ cPreset& cPreset::operator =(const cPreset& src) {
     return *this;
 }
 
-string cPreset::FFmpegCmd(string input, int start) {
-    string rstring = "{infile}";
+string cPreset::FFmpegCmd(string ffmpeg, string input, int start) {
+    
+    
+    
+    string rstring = "{ffmpeg}";
     size_t start_pos = cmd.find(rstring);
     if(start_pos != std::string::npos)
     {
-        cmd.replace(start_pos, rstring.length(), input);
+        cmd.replace(start_pos, rstring.length(), ffmpeg);
     }
+    
     rstring = "{start}";
     start_pos = cmd.find(rstring);
     if(start_pos != std::string::npos)
@@ -55,6 +59,14 @@ string cPreset::FFmpegCmd(string input, int start) {
         }
         cmd.replace(start_pos, rstring.length(), s);
     }
+    
+    rstring = "{infile}";
+    start_pos = cmd.find(rstring);
+    if(start_pos != std::string::npos)
+    {
+        cmd.replace(start_pos, rstring.length(), input);
+    }
+    
     return cmd;
 }
 

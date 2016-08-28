@@ -27,7 +27,7 @@ public:
     
     cHlsPreset& operator = (const cHlsPreset& src);
     
-    string FFmpegCmd(string input, string hlsTmpPath, int streamid, int start = 0);
+    string FFmpegCmd(string ffmpeg, string input, string hlsTmpPath, int streamid, int start = 0);
     string Cmd();
     int StreamTimeout();
     int MinSegments();
