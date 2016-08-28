@@ -16,6 +16,7 @@
 #include <cstring>
 #include <map>
 #include "cUsers.h"
+#include "cRights.h"
 #include "cINIParser.h"
 
 cUsers::cUsers() {
@@ -36,15 +37,37 @@ void cUsers::ReadFromINI(string userIniFile) {
         if(key == "AdminUsers") {
             map<string, string> users = parser[key];
             for(map<string, string>::iterator it = users.begin(); it != users.end(); ++it) {
-                cUser user(it->first, it->second, true);
+                cUser user(it->first, it->second, cRights(true));
                 this->push_back(user);
             }
         }
         else {
             map<string, string> users = parser[key];
             for(map<string, string>::iterator it = users.begin(); it != users.end(); ++it) {
-                cUser user(it->first, it->second, false);
-                this->push_back(user);
+                vector<string> ur = split(it->first, ':');
+                if(ur.size() == 1) {
+                    cUser user(ur[0], it->second, cRights(false));
+                    this->push_back(user);
+                }
+                if(ur.size() == 2) {
+                    string rights_str = ur[1];
+                    vector<string> rights_vec = split(rights_str, ',');
+                    cRights rights;
+                    for(vector<string>::iterator rit = rights_vec.begin(); rit != rights_vec.end(); ++rit) {
+                        if(*rit == "streaming")
+                            rights.SetStreaming(true);
+                        if(*rit == "timers")
+                            rights.SetTimers(true);
+                        if(*rit == "recordings")
+                            rights.SetRecordings(true);
+                        if(*rit == "remotecontrol")
+                            rights.SetRemoteControl(true);
+                        if(*rit == "streamcontrol")
+                            rights.SetStreamControl(true);
+                    }
+                    cUser user(ur[0], it->second, rights);
+                    this->push_back(user);
+                }
             }
         }
     }

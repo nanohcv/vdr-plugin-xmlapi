@@ -75,9 +75,11 @@ private:
     
     int handleSwitchToChannel();
     int handleRemote();
+    int handleRights();
     void initRemoteKeys();
 
     int handle404Error();
+    int handle403Error();
 
     static ssize_t stream_reader (void *cls, uint64_t pos, char *buf, size_t max);
     static void clear_stream(void *cls);

@@ -117,6 +117,9 @@ int cRequestHandler::HandleRequest(const char* url) {
     else if (0 == strcmp(url, "/remote.xml")) {
         return this->handleRemote();
     }
+    else if (0 == strcmp(url, "/rights.xml")) {
+        return this->handleRights();
+    }
     else {
         return this->handle404Error();
     }
@@ -146,6 +149,11 @@ int cRequestHandler::handleVersion() {
 }
 
 int cRequestHandler::handleStream(const char *url) {
+    if(!this->user.Rights().Streaming()) {
+        dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), url);
+        return this->handle403Error();
+    }
+        
     struct MHD_Response *response;
     int ret;
     const char* cstr_preset = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "preset");
@@ -205,6 +213,10 @@ int cRequestHandler::handleStream(const char *url) {
 }
 
 int cRequestHandler::handleRecStream(const char* url) {
+    if(!this->user.Rights().Streaming()) {
+        dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), url);
+        return this->handle403Error();
+    }
     const char* cstr_preset = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "preset");
     if(cstr_preset == NULL)
     {
@@ -294,6 +306,10 @@ void cRequestHandler::clear_stream(void* cls) {
 }
 
 int cRequestHandler::handleHlsStream(const char* url) {
+    if(!this->user.Rights().Streaming()) {
+        dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), url);
+        return this->handle403Error();
+    }
     struct MHD_Response *response;
     int ret;
     if(strlen(url) == 5)
@@ -437,6 +453,11 @@ int cRequestHandler::handleHlsStream(const char* url) {
 
 int cRequestHandler::handleStreamControl() {
 
+    if(!this->user.Rights().StreamControl()) {
+        dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), "/streamcontrol.xml");
+        return this->handle403Error();
+    }
+    
     const char* removeid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "remove");
     if(removeid != NULL)
     {
@@ -628,6 +649,10 @@ int cRequestHandler::handleRecordings() {
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
 
     if(recfile != NULL && action != NULL) {
+        if(!this->user.Rights().Recordings()) {
+            dsyslog("xmlapi: The user %s don't have the permission to do any action on /recordings.xml", this->user.Name().c_str());
+            return this->handle403Error();
+        }
         xml += "<actions>\n";
         cRecording *rec = Recordings.GetByName(recfile);
         if(rec == NULL) {
@@ -673,6 +698,11 @@ int cRequestHandler::handleDeletedRecordings() {
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
 
     if(recfile != NULL && action != NULL) {
+        if(!this->user.Rights().Recordings()) {
+            dsyslog("xmlapi: The user %s don't have the permission to do any action on /deletedrecordings.xml", this->user.Name().c_str());
+            return this->handle403Error();
+        }
+            
         xml += "<actions>\n";
         cRecording *rec = DeletedRecordings.GetByName(recfile);
         if(rec == NULL) {
@@ -776,6 +806,10 @@ int cRequestHandler::handleTimers() {
     string xml = "";
     const char *action = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "action");
     if(action != NULL) {
+        if(!this->user.Rights().Timers()) {
+            dsyslog("xmlapi: The user %s don't have the permission to do any action on /timers.xml", this->user.Name().c_str());
+            return this->handle403Error();
+        }
         if(0 == strcmp(action, "delete")) {
             const char *tid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "id");
             bool deleted = this->deleteTimer(tid);
@@ -1252,7 +1286,34 @@ int cRequestHandler::handle404Error() {
     return ret;
 }
 
+int cRequestHandler::handle403Error() {
+    struct MHD_Response *response;
+    int ret;
+    const char *page = "<html>\n"
+                       "  <head>\n"
+                       "    <title>403 permission denied</title>\n"
+                       "  </head>\n"
+                       "  <body>\n"
+                       "    <h1>Permission denied</h1>\n"
+                       "    <p>You don't have the permission to access this site.</p>\n"
+                       "  </body>\n"
+                       "</html>\n";
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
+                                               MHD_RESPMEM_PERSISTENT);
+    MHD_add_response_header (response, "Content-Type", "text/html");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+    ret = MHD_queue_response(this->connection, MHD_HTTP_FORBIDDEN, response);
+    MHD_destroy_response (response);
+    return ret;
+}
+
 int cRequestHandler::handleSwitchToChannel() {
+    if(!this->user.Rights().RemoteControl()) {
+        dsyslog("xmlapi: The user %s don't have the permission to switch to an channel", this->user.Name().c_str());
+        return this->handle403Error();
+    }
     struct MHD_Response *response;
     int ret;
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
@@ -1303,6 +1364,10 @@ int cRequestHandler::handleSwitchToChannel() {
 }
 
 int cRequestHandler::handleRemote() {
+    if(!this->user.Rights().RemoteControl()) {
+        dsyslog("xmlapi: The user %s don't have the permission to send a remote command", this->user.Name().c_str());
+        return this->handle403Error();
+    }
     struct MHD_Response *response;
     int ret;
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
@@ -1332,6 +1397,32 @@ int cRequestHandler::handleRemote() {
     MHD_destroy_response (response);
     
     
+    return ret;
+}
+
+int cRequestHandler::handleRights() {
+    struct MHD_Response *response;
+    int ret;
+    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
+    xml += "<rights>\n";
+    xml += "    <streaming>" + string(this->user.Rights().Streaming() ? "true" : "false") + "</streaming>\n";
+    xml += "    <timers>" + string(this->user.Rights().Timers() ? "true" : "false") + "</timers>\n";
+    xml += "    <recordings>" + string(this->user.Rights().Recordings() ? "true" : "false") + "</recordings>\n";
+    xml += "    <remotecontrol>" + string(this->user.Rights().RemoteControl() ? "true" : "false") + "</remotecontrol>\n";
+    xml += "    <streamcontrol>" + string(this->user.Rights().StreamControl() ? "true" : "false") + "</streamcontrol>\n";
+    xml += "</rights>\n";
+    
+    char *page = (char *)malloc((xml.length()+1) * sizeof(char));
+    strcpy(page, xml.c_str());
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
+                                               MHD_RESPMEM_MUST_FREE);
+    MHD_add_response_header (response, "Content-Type", "text/xml");
+    MHD_add_response_header (response, "Cache-Control", "no-cache");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
+    MHD_destroy_response (response);
     return ret;
 }
 

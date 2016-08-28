@@ -636,9 +636,35 @@ bool cPluginConfig::createDefaultUserFile(string usersFile) {
         if(!urfile.good()) {
             return false;
         }
-        string adminusers = "[AdminUsers]\n"
-                            "xmlapi=" + this->generatePassword(10) + "\n";
-        string users = "[Users]\n";
+        string adminusers = "; To disable the authentication, remove all admin users and users.\n"
+                            "; But do not remove the sections [AdminUsers] and [Users]!\n"
+                            ";\n"
+                            "; Admin users can do everything :-)\n\n"
+                            "[AdminUsers]\n"
+                            "xmlapi=" + this->generatePassword(10) + "\n\n";
+        string users = "; Users can only read the api's by default!\n"
+                       "; They cannot access streams, add any timers, delete/undelete or remove recordings,\n"
+                       "; remote contol the vdr or killing streams via streamcontrol api.\n"
+                       ";\n"
+                       "; You can give an user specific rights.\n"
+                       "; To do that, use the following scheme:\n"
+                       "; <user name>:<rights separated by commas>=<password>\n"
+                       ";\n"
+                       "; Possible rights are:\n"
+                       ";  streaming  (The user can access streams.)\n"
+                       ";  timers  (The user can add or remove timers.)\n"
+                       ";  recordings  (The user can delete, undelte or remove recordings.)\n"
+                       ";  remotecontrol  (The user can use the switch to channel api and the remote control api.)\n"
+                       ";  streamcontrol  (The user can see and remove active streams via stream control api.)\n"
+                       ";\n"
+                       "; Example:\n"
+                       "; You want to give the user \"guest1\" the rights \"streaming\" and \"timers\"\n"
+                       "; and the user \"guest2\" the rights \"streaming\" and \"remotecontrol\".\n"
+                       ";\n"
+                       "; [Users]\n"
+                       "; guest1:streaming,timers=pw1234\n"
+                       "; guest2:streaming,remotecontrol=pw4321\n\n"
+                       "[Users]\n";
         urfile<<adminusers<<endl<<users<<endl;
         urfile.close();
         return true;

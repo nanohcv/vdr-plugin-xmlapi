@@ -13,18 +13,15 @@
 
 #include "cUser.h"
 
-cUser::cUser() {
-    name = "Anonymous";
-    password = "";
-    isAdmin = false;
+cUser::cUser() : name("Anonymous"), password(""), rights(true) {
 }
 
-cUser::cUser(string name, string password, bool isadmin)
-    : name(name), password(password), isAdmin(isadmin) {
+cUser::cUser(string name, string password, cRights rights)
+    : name(name), password(password), rights(rights) {
 }
 
 cUser::cUser(const cUser& src)
-    : name(src.name), password(src.password), isAdmin(src.isAdmin) {
+    : name(src.name), password(src.password), rights(src.rights) {
 }
 
 cUser::~cUser() {
@@ -34,7 +31,7 @@ cUser& cUser::operator =(const cUser& src) {
     if(this != &src) {
         this->name = src.name;
         this->password = src.password;
-        this->isAdmin = src.isAdmin;
+        this->rights = src.rights;
     }
     return *this;
 }
@@ -47,6 +44,6 @@ string cUser::Password() {
     return this->password;
 }
 
-bool cUser::IsAdmin() {
-    return this->isAdmin;
+cRights cUser::Rights() {
+    return this->rights;
 }

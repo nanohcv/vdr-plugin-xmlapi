@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include "cUser.h"
+#include "helpers.h"
 
 using namespace std;
 

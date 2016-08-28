@@ -12,6 +12,8 @@
       <in>cPreset.cpp</in>
       <in>cPresets.cpp</in>
       <in>cRequestHandler.cpp</in>
+      <in>cRights.cpp</in>
+      <in>cRights.h</in>
       <in>cStream.cpp</in>
       <in>cStreamControl.cpp</in>
       <in>cUser.cpp</in>
@@ -106,6 +108,10 @@
       <item path="cRequestHandler.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
         </ccTool>
+      </item>
+      <item path="cRights.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="cRights.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="cStream.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">

@@ -15,13 +15,14 @@
 #define CUSER_H
 
 #include <string>
+#include "cRights.h"
 
 using namespace std;
 
 class cUser {
 public:
     cUser();
-    cUser(string name, string password, bool isadmin);
+    cUser(string name, string password, cRights rights);
     cUser(const cUser& src);
     virtual ~cUser();
     
@@ -29,12 +30,12 @@ public:
     
     string Name();
     string Password();
-    bool IsAdmin();
+    cRights Rights();
     
 private:
     string name;
     string password;
-    bool isAdmin;
+    cRights rights;
 
 };
 
