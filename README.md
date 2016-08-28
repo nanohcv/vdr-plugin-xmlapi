@@ -99,6 +99,10 @@ following parameter: (I recommend this only if you have more than one tuner.)
 
     WaitForFFmpeg=0
 
+If FFMpeg can't be found in the global search PATH then you can set the 
+path to your ffmpeg binray with the following parameter:
+
+    FFMPEG=/path/to/your/ffmpeg
 
 The plugin use presets for transcoding. The presets can be configured in the 
 presets.ini and hls_presets.ini (for hls streaming) which created on first start in the plugin config folder of the 
@@ -107,6 +111,11 @@ The path for the preset files can set with the following parameter:
 
     Presets=/var/lib/vdr/plugins/xmlapi/presets.ini
     HlsPresets=/var/lib/vdr/plugins/xmlapi/hls_presets.ini
+
+The tmp dir for hls stream files can be configured with the following parameter.
+It will be automatically cleaned.
+
+    HlsTmpDir=/var/cache/vdr/plugins/xmlapi/streams
 
 
 If the streamdev-server plugin doesnt run on port 3000 change the following
@@ -118,23 +127,48 @@ parameter. Make sure that the url ends with a slash.
 #### 3.1 Users - users.ini
 Users can be configured in the users.ini file.
 The file has two sections. The first section is called "AdminUsers" and the second called "Users".
-AdminUsers can control streams, Users not. (not really implemented yet)
-The file should look like this. Make sure that no spaces between username, "=" and password are added.
+AdminUsers can do everything, Users can only read the API by default, that means they don't have
+the permission to access streams, add or remove timers, delete/undelete or remove recordings,
+remote control the vdr or see or killing active streams via stream control api.
+ 
+The file should look like this. Make sure that no spaces between username, rights "=" and password are added.
 
     [AdminUsers]
     xmlapi=abcd1234
 
     [Users]
     guest=4321dcba
+
+You can give an user specific rights.
+To do that, use the following scheme:
+
+    <user name>:<rights separated by commas>=<password>
+
+Possible user rights are:
+
+- streaming  (The user can access streams.)
+- timers  (The user can add or remove timers.)
+- recordings  (The user can delete, undelte or remove recordings.)
+- remotecontrol  (The user can use the switch to channel api and the remote control api.)
+- streamcontrol  (The user can see and remove active streams via stream control api.)
+
+Example:
+You want to give the user "guest1" the rights "streaming" and "timers"
+and the user "guest2" the rights "streaming" and "remotecontrol".
+
+    [Users]
+    guest1:streaming,timers=pw1234
+    guest2:streaming,remotecontrol=pw4321
   
 
 #### 3.2 Presets - presets.ini
-To transcode a channel you have to open the url 
-http://server:port/stream{extenstion}?preset={preset}&chid={channelId}
-The ffmpeg parameter -i must be set to {infile} and the output file must be set
-to pipe:1
-If the requested url contains the &start= parameter the placeholder {start} in the preset
-is replaced by "-ss position"
+To transcode a channel you have to open the url :
+
+    http://server:port/stream{extenstion}?preset={preset}&chid={channelId}
+
+The ffmpeg parameter -i must be set to {infile} and the output file must be set to pipe:1  
+If the requested url contains the &start= parameter, the placeholder {start} in the preset is replaced by "-ss position".  
+You can use the placeholder {ffmpeg} in your presets. It will be replaced by the FFMPEG paramter from your xmlapi.conf.
 
 The presets.ini should look like this:
 
@@ -147,7 +181,7 @@ The presets.ini should look like this:
 An short (not working) examle looks like this:
 
     [Low]
-    Cmd=ffmpeg {start} -i "{infile}" -f mpegts -vcodec libx264 -bufsize 1400k -maxrate 700k -acodec libmp3lame -ab 64k -ar 44100 pipe:1
+    Cmd={ffmpeg} {start} -i "{infile}" -f mpegts -vcodec libx264 -bufsize 1400k -maxrate 700k -acodec libmp3lame -ab 64k -ar 44100 pipe:1
     MimeType=video/mpeg
     Ext=.ts
 
@@ -175,7 +209,7 @@ The hls_presets.ini should look like this:
 An short (not working) examle looks like this:
 
     [Low]
-    Cmd=ffmpeg {start} -i "{infile}" -vcodec libx264 -bufsize 1400k -maxrate 700k -acodec libmp3lame -ab 64k -ar 44100 -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8
+    Cmd={ffmpeg} {start} -i "{infile}" -vcodec libx264 -bufsize 1400k -maxrate 700k -acodec libmp3lame -ab 64k -ar 44100 -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8
     StreamTimeout=5
     MinSegments=3
 
@@ -209,7 +243,7 @@ Logos:
 
 #### 4.3 Epg
 
-To get whole EPG-Date just open the following url (Warning: this takes a long time)
+To get whole EPG-Data just open the following url (Warning: this can take a long time)
 
     http(s)://<server-ip>:<port>/epg.xml
 
@@ -446,3 +480,10 @@ Stop/remove a stream:
 
     http(s)://<server-ip>:<port>/streamcontrol.xml?remove={streamid}
  
+
+#### 4.10 Rights
+
+To view the rights of the currently authenticated user, use the following API:
+
+    http(s)://<server-ip>:<port>/rights.xml
+
