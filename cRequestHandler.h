@@ -24,6 +24,7 @@
 #include "cHlsPreset.h"
 #include "cHlsPresets.h"
 #include "cUser.h"
+#include "cExtensionHeaders.h"
 
 #ifndef CREQUESTHANDLER_H
 #define CREQUESTHANDLER_H
@@ -43,6 +44,7 @@ private:
     cUser user;
     cPresets presets;
     cHlsPresets hlsPresets;
+    cExtensionHeaders extHeaders;
     map<string, eKeys> remoteKeys;
     
 
@@ -76,6 +78,9 @@ private:
     int handleSwitchToChannel();
     int handleRemote();
     int handleRights();
+    
+    int handleWebSrv(const char *url);
+    
     void initRemoteKeys();
 
     int handle404Error();

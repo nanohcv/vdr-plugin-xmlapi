@@ -35,13 +35,15 @@
 #include "cStream.h"
 #include "helpers.h"
 #include "globals.h"
+#include "cResponseHeader.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
                                     cDaemonParameter *daemonParameter)
     : connection(connection), daemonParameter(daemonParameter),
         config(daemonParameter->GetPluginConfig()),
         presets(daemonParameter->GetPluginConfig().GetPresetsFile()),
-        hlsPresets(daemonParameter->GetPluginConfig().GetHlsPresetsFile()) {
+        hlsPresets(daemonParameter->GetPluginConfig().GetHlsPresetsFile()),
+        extHeaders(daemonParameter->GetPluginConfig().GetWebSrvHeadersFile()) {
     this->initRemoteKeys();
 }
 
@@ -119,6 +121,9 @@ int cRequestHandler::HandleRequest(const char* url) {
     }
     else if (0 == strcmp(url, "/rights.xml")) {
         return this->handleRights();
+    }
+    else if (startswith(url, "/websrv/")) {
+        return this->handleWebSrv(url);
     }
     else {
         return this->handle404Error();
@@ -492,7 +497,13 @@ int cRequestHandler::handleLogos(const char* url) {
        (0 != fstat (fd, &sbuf)) ) {
         if (fd != -1)
             close (fd);
-        return this->handle404Error();
+        logofile = this->config.GetConfigDir() + "/logos/default-logo.png";
+        if ( (-1 == (fd = open (logofile.c_str(), O_RDONLY))) ||
+            (0 != fstat (fd, &sbuf)) ) {
+             if (fd != -1)
+                 close (fd);
+             return this->handle404Error();
+        }
     }
     response = MHD_create_response_from_fd(sbuf.st_size, fd);
     MHD_add_response_header (response, "Content-Type", "image/png");
@@ -1421,6 +1432,48 @@ int cRequestHandler::handleRights() {
     MHD_add_response_header (response, "Cache-Control", "no-cache");
     MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
     MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
+    MHD_destroy_response (response);
+    return ret;
+}
+
+int cRequestHandler::handleWebSrv(const char* url) {
+    struct MHD_Response *response;
+    int ret;
+    string file = this->config.GetWebSrvRoot() + string(url).substr(7);
+    if(endswith(file.c_str(), "/"))
+        file += "index.html";
+    int fd;
+    struct stat sbuf;
+    if ( (-1 == (fd = open (file.c_str(), O_RDONLY))) ||
+        (0 != fstat (fd, &sbuf)) ) {
+         if (fd != -1)
+             close (fd);
+         return this->handle404Error();
+    }
+    if(S_ISDIR(sbuf.st_mode)) {
+        if(fd != -1)
+            close(fd);
+        return this->handle404Error();
+    }
+    
+    string fileExt = "";
+    size_t pos = file.find_last_of(".");
+    if(pos != string::npos) {
+        if(pos + 1 < file.length()) {
+            fileExt = file.substr(file.find_last_of(".") + 1);
+        }
+    }
+    
+    dsyslog("xmlapi: Request file %s with extension %s", file.c_str(), fileExt.c_str());
+    
+    response = MHD_create_response_from_fd(sbuf.st_size, fd);
+    
+    vector<cResponseHeader> headers = this->extHeaders[fileExt];
+    for(vector<cResponseHeader>::iterator it = headers.begin(); it != headers.end(); ++it) {
+        MHD_add_response_header(response, it->Key().c_str(), it->Value().c_str());
+    }
+    
     ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;

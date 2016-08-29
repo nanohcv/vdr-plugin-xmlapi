@@ -42,6 +42,8 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *cacheDir, const 
     this->hlsPresetsFile = string(configDir) + "/hls_presets.ini";
     this->hlsTmpDir = string(cacheDir) + "/streams";
     this->streamdevUrl = "http://127.0.0.1:3000/";
+    this->websrvroot = string(configDir) + "/websrv";
+    this->websrvheaders = string(configDir) + "/websrv_file_extensions.ini";
     this->readFromConfFile(configFile);
     this->createDefaultUserFile(this->usersFile);
     this->users.ReadFromINI(this->usersFile);
@@ -81,6 +83,8 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     this->hlsPresetsFile = src.hlsPresetsFile;
     this->hlsTmpDir = src.hlsTmpDir;
     this->streamdevUrl = src.streamdevUrl;
+    this->websrvroot = src.websrvroot;
+    this->websrvheaders = src.websrvheaders;
 
 }
 
@@ -108,6 +112,8 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->hlsPresetsFile = src.hlsPresetsFile;
         this->hlsTmpDir = src.hlsTmpDir;
         this->streamdevUrl = src.streamdevUrl;
+        this->websrvroot = src.websrvroot;
+        this->websrvheaders = src.websrvheaders;
         if(src.sslKey != NULL) {
             delete[] this->sslKey;
             this->sslKey = new char[src.sslKeySize];
@@ -204,6 +210,14 @@ string cPluginConfig::GetStreamdevUrl() {
     return this->streamdevUrl;
 }
 
+string cPluginConfig::GetWebSrvRoot() {
+    return this->websrvroot;
+}
+
+string cPluginConfig::GetWebSrvHeadersFile() {
+    return this->websrvheaders;
+}
+
 string cPluginConfig::generatePassword(unsigned int length){
     const char alphanum[] = "0123456789"
                             "_-!@#$%^&*"
@@ -244,10 +258,13 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "Presets="<<this->presetsFile<<endl<<
             "HlsPresets="<<this->hlsPresetsFile<<endl<<
             "HlsTmpDir="<<this->hlsTmpDir<<endl<<
-            "StreamdevUrl="<<this->streamdevUrl<<endl;
+            "StreamdevUrl="<<this->streamdevUrl<<endl<<
+            "WebSrvRoot="<<this->websrvroot<<endl<<
+            "WebSrvHeaders="<<this->websrvheaders<<endl;
         fc.close();
         this->createDefaultPresetFile(this->presetsFile);
         this->createDefaultHlsPresetFile(this->hlsPresetsFile);
+        this->createDefaultWebSrvHeadersFile(this->websrvheaders);
         return true;
     }
 
@@ -318,6 +335,20 @@ bool cPluginConfig::readFromConfFile(string configFile) {
         else if (left == "StreamdevUrl") {
             if(right != "") {
                 this->streamdevUrl = right;
+            }
+        }
+        else if (left == "WebSrvRoot") {
+            if(right != "") {
+                if(right.at(right.length() -1) == '/') {
+                    this->websrvroot = right.substr(0, right.length()-1);
+                } else {
+                    this->websrvroot = right;
+                }
+            }
+        }
+        else if (left == "WebSrvHeaders") {
+            if(right != "") {
+                this->websrvheaders = right;
             }
         }
     }
@@ -670,5 +701,44 @@ bool cPluginConfig::createDefaultUserFile(string usersFile) {
         return true;
     }
     ufile.close();
+    return true;
+}
+
+bool cPluginConfig::createDefaultWebSrvHeadersFile(string headersFile) {
+    ifstream hfile;
+    hfile.open(headersFile.c_str());
+    if(hfile.fail()) {
+        ofstream hrfile;
+        hrfile.open(headersFile.c_str());
+        if(!hrfile.good()) {
+            return false;
+        }
+        
+        string extJs = "[js]\n"
+                       "Content-Type=application/javascript\n";
+        string extCss = "[css]\n"
+                        "Content-Type=text/css\n";
+        string extHtm = "[htm]\n"
+                        "Content-Type=text/html\n";
+        string extHtml = "[html]\n"
+                         "Content-Type=text/html\n";
+        string extXml = "[xml]\n"
+                        "Content-Type=text/xml\n";
+        string extTxt = "[txt]\n"
+                        "Content-Type=text/plain\n";
+        string extJpg = "[jpg]\n"
+                        "Content-Type=image/jpeg\n";
+        string extJpeg = "[jpeg]\n"
+                        "Content-Type=image/jpeg\n";
+        string extJpe = "[jpe]\n"
+                        "Content-Type=image/jpeg\n";
+        string extPng = "[png]\n"
+                        "Content-Type=image/png\n";
+        
+        hrfile<<extJs<<endl<<extCss<<endl<<extHtm<<endl<<extHtml<<endl<<extXml<<endl<<extTxt<<endl<<extJpg<<endl<<extJpeg<<endl<<extJpe<<endl<<extPng<<endl;
+        hrfile.close();
+        return true;    
+    }
+    hfile.close();
     return true;
 }

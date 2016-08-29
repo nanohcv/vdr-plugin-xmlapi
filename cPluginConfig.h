@@ -46,6 +46,8 @@ public:
     string GetHlsPresetsFile();
     string GetHlsTmpDir();
     string GetStreamdevUrl();
+    string GetWebSrvRoot();
+    string GetWebSrvHeadersFile();
 
 private:
     string configFile;
@@ -68,12 +70,15 @@ private:
     string hlsPresetsFile;
     string hlsTmpDir;
     string streamdevUrl;
+    string websrvroot;
+    string websrvheaders;
 
     string generatePassword(unsigned int length);
     bool readFromConfFile(string configFile);
     bool createDefaultPresetFile(string presetFile);
     bool createDefaultHlsPresetFile(string hlsPresetFile);
     bool createDefaultUserFile(string usersFile);
+    bool createDefaultWebSrvHeadersFile(string headersFile);
 
 
 };
