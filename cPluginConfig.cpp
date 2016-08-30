@@ -35,6 +35,7 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *cacheDir, const 
     this->sslKeySize = 0;
     this->sslCert = NULL;
     this->sslCertSize = 0;
+    this->httpsPriorities = "NORMAL";
     this->usersFile = string(configDir) + "/users.ini";
     this->ffmpeg = "ffmpeg";
     this->waitForFFmpeg = true;
@@ -44,6 +45,7 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *cacheDir, const 
     this->streamdevUrl = "http://127.0.0.1:3000/";
     this->websrvroot = string(configDir) + "/websrv";
     this->websrvheaders = string(configDir) + "/websrv_file_extensions.ini";
+    this->realtiveLogoUrl = true;
     this->readFromConfFile(configFile);
     this->createDefaultUserFile(this->usersFile);
     this->users.ReadFromINI(this->usersFile);
@@ -75,6 +77,7 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
         this->sslCert = NULL;
         this->sslCertSize = 0;
     }
+    this->httpsPriorities = src.httpsPriorities;
     this->usersFile = src.usersFile;
     this->users = src.users;
     this->ffmpeg = src.ffmpeg;
@@ -85,6 +88,7 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     this->streamdevUrl = src.streamdevUrl;
     this->websrvroot = src.websrvroot;
     this->websrvheaders = src.websrvheaders;
+    this->realtiveLogoUrl = src.realtiveLogoUrl;
 
 }
 
@@ -104,6 +108,7 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->httpsPort = src.httpsPort;
         this->useHttps = src.useHttps;
         this->httpsOnly = src.httpsOnly;
+        this->httpsPriorities = src.httpsPriorities;
         this->users = src.users;
         this->usersFile = src.usersFile;
         this->ffmpeg = src.ffmpeg;
@@ -114,6 +119,7 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->streamdevUrl = src.streamdevUrl;
         this->websrvroot = src.websrvroot;
         this->websrvheaders = src.websrvheaders;
+        this->realtiveLogoUrl = src.realtiveLogoUrl;
         if(src.sslKey != NULL) {
             delete[] this->sslKey;
             this->sslKey = new char[src.sslKeySize];
@@ -178,6 +184,10 @@ char *cPluginConfig::GetSSLCert() {
     return this->sslCert;
 }
 
+string cPluginConfig::GetHttpsPriorities() {
+    return this->httpsPriorities;
+}
+
 string cPluginConfig::GetUsersFile() {
     return this->usersFile;
 }
@@ -218,6 +228,10 @@ string cPluginConfig::GetWebSrvHeadersFile() {
     return this->websrvheaders;
 }
 
+bool cPluginConfig::RelativeLogoUrl() {
+    return this->realtiveLogoUrl;
+}
+
 string cPluginConfig::generatePassword(unsigned int length){
     const char alphanum[] = "0123456789"
                             "_-!@#$%^&*"
@@ -252,6 +266,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "HttpsOnly="<<this->httpsOnly<<endl<<
             "SSLKeyFile="<<endl<<
             "SSLCertFile="<<endl<<
+            "HttpsPriorities="<<this->httpsPriorities<<endl<<
             "Users="<<this->usersFile<<endl<<
             "FFMPEG="<<this->ffmpeg<<endl<<
             "WaitForFFmpeg="<<this->waitForFFmpeg<<endl<<
@@ -260,7 +275,8 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "HlsTmpDir="<<this->hlsTmpDir<<endl<<
             "StreamdevUrl="<<this->streamdevUrl<<endl<<
             "WebSrvRoot="<<this->websrvroot<<endl<<
-            "WebSrvHeaders="<<this->websrvheaders<<endl;
+            "WebSrvHeaders="<<this->websrvheaders<<endl<<
+            "RelativeLogoUrl="<<this->realtiveLogoUrl<<endl;
         fc.close();
         this->createDefaultPresetFile(this->presetsFile);
         this->createDefaultHlsPresetFile(this->hlsPresetsFile);
@@ -300,6 +316,11 @@ bool cPluginConfig::readFromConfFile(string configFile) {
         }
         else if (left == "SSLCertFile") {
             certfile = right;
+        }
+        else if (left == "HttpsPriorities") {
+            if(right != "") {
+                this->httpsPriorities = right;
+            }
         }
         else if (left == "Users") {
             if(right != "") {
@@ -350,6 +371,9 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             if(right != "") {
                 this->websrvheaders = right;
             }
+        }
+        else if (left == "RelativeLogoUrl") {
+            this->realtiveLogoUrl  = (bool)atoi(right.c_str());
         }
     }
     fr.close();

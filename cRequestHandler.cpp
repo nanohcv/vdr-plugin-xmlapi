@@ -589,17 +589,19 @@ int cRequestHandler::handleChannels() {
 }
 
 string cRequestHandler::channelsToXml() {
-    string logourl = "";
-    string host = this->conInfo["Host"];
-    if(host != "")
-    {
-        if(this->daemonParameter->GetDaemonPort() == this->config.GetHttpsPort())
+    string logourl = "logos/";
+    if(!this->config.RelativeLogoUrl()) {
+        string host = this->conInfo["Host"];
+        if(host != "")
         {
-            logourl += "https://" + host;
-        }
-        else
-        {
-            logourl += "http://" + host;
+            if(this->daemonParameter->GetDaemonPort() == this->config.GetHttpsPort())
+            {
+                logourl = "https://" + host + "/logos/";
+            }
+            else
+            {
+                logourl = "http://" + host + "/logos/";
+            }
         }
     }
     string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
@@ -645,7 +647,7 @@ string cRequestHandler::channelsToXml() {
         xmlEncode(logo);
         xml += "            <name>" + name + "</name>\n";
         xml += "            <shortname>" + shortname + "</shortname>\n";
-        xml += "            <logo>" + logourl + "/logos/" + logo + ".png</logo>\n";
+        xml += "            <logo>" + logourl + logo + ".png</logo>\n";
         xml += "        </channel>\n";
     }
     xml += "    </group>\n";

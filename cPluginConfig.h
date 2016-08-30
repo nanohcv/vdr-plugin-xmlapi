@@ -38,6 +38,7 @@ public:
     bool GetHttpsOnly();
     char *GetSSLKey();
     char *GetSSLCert();
+    string GetHttpsPriorities();
     string GetUsersFile();
     cUsers GetUsers();
     string GetFFmpeg();
@@ -48,6 +49,7 @@ public:
     string GetStreamdevUrl();
     string GetWebSrvRoot();
     string GetWebSrvHeadersFile();
+    bool RelativeLogoUrl();
 
 private:
     string configFile;
@@ -62,6 +64,7 @@ private:
     size_t sslKeySize;
     char *sslCert;
     size_t sslCertSize;
+    string httpsPriorities;
     string usersFile;
     cUsers users;
     string ffmpeg;
@@ -72,6 +75,7 @@ private:
     string streamdevUrl;
     string websrvroot;
     string websrvheaders;
+    bool realtiveLogoUrl;
 
     string generatePassword(unsigned int length);
     bool readFromConfFile(string configFile);

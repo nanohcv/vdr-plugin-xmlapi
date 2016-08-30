@@ -53,6 +53,7 @@ bool cWebServer::Start() {
                              &cWebServer::handle_connection, this->httpsDaemonParameter,
                              MHD_OPTION_HTTPS_MEM_KEY, this->config.GetSSLKey(),
                              MHD_OPTION_HTTPS_MEM_CERT, this->config.GetSSLCert(),
+                             MHD_OPTION_HTTPS_PRIORITIES, this->config.GetHttpsPriorities().c_str(),
                              MHD_OPTION_NOTIFY_COMPLETED, &cWebServer::on_request_complete, this,
                              MHD_OPTION_END);
         if(NULL == this->https_daemon)

@@ -88,6 +88,13 @@ in the following line:
 
     SSLCertFile=/path/to/your/server.pem
 
+To change the TLS session’s handshake algorithms and options, you can use the  
+following parameter.  
+For more information about this parameter, look into the GnuTLS manual.  
+https://www.gnutls.org/manual/html_node/Priority-Strings.html#Priority-Strings
+
+    HttpsPriorities=NORMAL
+
 To change the path to users.ini, change the following line:
 
     Users=/var/lib/vdr/plugins/xmlapi/users.ini
@@ -122,6 +129,29 @@ If the streamdev-server plugin doesnt run on port 3000 change the following
 parameter. Make sure that the url ends with a slash.
 
     StreamdevUrl=http://127.0.0.1:3000/
+
+
+The built-in web server can provide files in addition to the API.  
+By default the files have to put into /var/lib/vdr/plugins/xmlapi/websrv/.  
+You can change the with the following parameter:
+
+    WebSrvRoot=/var/lib/vdr/plugins/xmlapi/websrv
+
+
+By default all files provided by the built-in web server are deliverd with the  
+header "Content-Type" and the value "text/plain".  
+You can set the headers for each file extension in the websrv_file_extensions.ini.  
+For more information about this file, read section 3.4.  
+The path and name of the file can be configured with the following parameter:
+
+    WebSrvHeaders=/var/lib/vdr/plugins/xmlapi/websrv_file_extensions.ini
+
+
+By default the channel list api use relative paths for the channel logos.  
+You can change this with the following parameter:  
+
+    RelativeLogoUrl=0
+
 
 
 #### 3.1 Users - users.ini
@@ -212,6 +242,22 @@ An short (not working) examle looks like this:
     Cmd={ffmpeg} {start} -i "{infile}" -vcodec libx264 -bufsize 1400k -maxrate 700k -acodec libmp3lame -ab 64k -ar 44100 -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8
     StreamTimeout=5
     MinSegments=3
+
+
+#### 3.4 websrv_file_extensions.ini
+This file contains the headers for each file extension deliverd by the built-in web server.  
+The scheme looks like this:
+
+    [File extension without leading dot]
+    <header>=<value>
+    ...
+
+For example you want to set the headers "Content-Type" and "Cache-Control" for files  
+with the extension ".ts":
+
+    [ts]
+    Content-Type=video/mp2t
+    Cache-Control=no-cache
 
 
 
@@ -486,4 +532,12 @@ Stop/remove a stream:
 To view the rights of the currently authenticated user, use the following API:
 
     http(s)://<server-ip>:<port>/rights.xml
+
+
+#### 4.11 Web-Server
+
+The plugin can act as simple web server.  
+To access the files stored in the configured WebSrvRoot use this url:
+
+    http(s):://<server-ip>:<port>/websrv/
 
