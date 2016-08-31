@@ -16,6 +16,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 #include "cPreset.h"
 
 using namespace std;
@@ -27,7 +28,10 @@ public:
     virtual ~cPresets();
     cPreset operator[] (string key);
     cPreset GetDefaultPreset();
+    vector<string> GetPresetNames();
 private:
+    
+    vector<string> keys;
 
 };
 

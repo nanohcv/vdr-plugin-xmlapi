@@ -522,14 +522,15 @@ int cRequestHandler::handlePresets() {
     string ini;
     
     if(hls == NULL) {
-        if(this->presets.size() != 0)
+        if(this->presets.GetPresetNames().size() != 0)
         {
-            for(map<string,cPreset>::iterator it = presets.begin();
-                    it != presets.end(); ++it) {
-                ini += "[" + it->first + "]\n";
-                ini += "Cmd=" + it->second.GetCmd() + "\n";
-                ini += "MimeType=" + it->second.MimeType() + "\n";
-                ini += "Ext=" + it->second.Extension() + "\n\n";
+            vector<string> presetNames = this->presets.GetPresetNames();
+            for(vector<string>::iterator it = presetNames.begin(); it != presetNames.end(); ++it) {
+                cPreset preset = this->presets[*it];
+                ini += "[" + *it + "]\n";
+                ini += "Cmd=" + preset.GetCmd() + "\n";
+                ini += "MimeType=" + preset.MimeType() + "\n";
+                ini += "Ext=" + preset.Extension() + "\n\n";
             }
         } else {
             cPreset dp = presets.GetDefaultPreset();
@@ -539,12 +540,14 @@ int cRequestHandler::handlePresets() {
             ini += "Ext=" + dp.Extension() + "\n\n";
         }
     } else {
-        if(this->hlsPresets.size() != 0) {
-            for(map<string,cHlsPreset>::iterator it = hlsPresets.begin(); it != hlsPresets.end(); ++it) {
-                ini += "[" + it->first + "]\n";
-                ini += "Cmd=" + it->second.Cmd() + "\n";
-                ini += "StreamTimeout=" + intToString(it->second.StreamTimeout()) + "\n";
-                ini += "MinSegments=" + intToString(it->second.MinSegments()) +"\n\n";
+        if(this->hlsPresets.GetPresetNames().size() != 0) {
+            vector<string> presetNames = this->hlsPresets.GetPresetNames();
+            for(vector<string>::iterator it = presetNames.begin(); it != presetNames.end(); ++it) {
+                cHlsPreset preset = this->hlsPresets[*it];
+                ini += "[" + *it + "]\n";
+                ini += "Cmd=" + preset.Cmd() + "\n";
+                ini += "StreamTimeout=" + intToString(preset.StreamTimeout()) + "\n";
+                ini += "MinSegments=" + intToString(preset.MinSegments()) + "\n\n";
             }
         } else {
             cHlsPreset p = hlsPresets.GetDefaultPreset();

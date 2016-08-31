@@ -19,7 +19,7 @@ using namespace std;
 
 cPresets::cPresets(string iniFile) {
     cINIParser parser(iniFile);
-    vector<string> keys = parser.GetKeys();
+    this->keys = parser.GetKeys();
     for(unsigned int i=0; i<keys.size(); i++)
     {
         string profileName = keys[i];
@@ -60,4 +60,8 @@ cPreset cPresets::GetDefaultPreset() {
     string ext = ".ts";
     cPreset preset(cmd, mime, ext);
     return preset;
+}
+
+vector<string> cPresets::GetPresetNames() {
+    return this->keys;
 }

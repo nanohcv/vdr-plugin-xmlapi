@@ -15,6 +15,7 @@
 #define CHLSPRESETS_H
 
 #include <map>
+#include <vector>
 #include <string>
 #include <cstdlib>
 #include "cHlsPreset.h"
@@ -29,9 +30,10 @@ public:
     
     cHlsPreset operator[] (string key);
     cHlsPreset GetDefaultPreset();
+    vector<string> GetPresetNames();
     
 private:
-
+    vector<string> keys;
 };
 
 #endif /* CHLSPRESETS_H */

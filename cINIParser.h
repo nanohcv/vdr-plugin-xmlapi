@@ -29,6 +29,7 @@ public:
 
 private:
     void parse(string iniFile);
+    vector<string> keys;
 };
 
 #endif /* CINIPARSER_H */

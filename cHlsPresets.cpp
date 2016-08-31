@@ -16,7 +16,7 @@
 
 cHlsPresets::cHlsPresets(string iniFile) {
     cINIParser parser(iniFile);
-    vector<string> keys = parser.GetKeys();
+    this->keys = parser.GetKeys();
     for(unsigned int i=0; i<keys.size(); i++)
     {
         string profileName = keys[i];
@@ -51,4 +51,8 @@ cHlsPreset cHlsPresets::GetDefaultPreset() {
     int minSegments = 3;
     cHlsPreset preset(cmd, sTimeout, minSegments);
     return preset;
+}
+
+vector<string> cHlsPresets::GetPresetNames() {
+    return this->keys;
 }

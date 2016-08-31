@@ -29,11 +29,7 @@ cINIParser::~cINIParser() {
 }
 
 vector<string> cINIParser::GetKeys() {
-    vector<string> keys;
-    for(map<string, map<string, string> >::iterator it = this->begin(); it != this->end(); ++it) {
-        keys.push_back(it->first);
-    }
-    return keys;
+    return this->keys;
 }
 
 void cINIParser::parse(string iniFile) {
@@ -53,6 +49,7 @@ void cINIParser::parse(string iniFile) {
             trim(section);
             map<string, string> keyvaluepair;
             this->insert(pair<string, map<string, string> >(section, keyvaluepair));
+            this->keys.push_back(section);
         }
         if(section == "")
             continue;
