@@ -36,7 +36,6 @@ public:
     cRequestHandler(struct MHD_Connection *connection, cDaemonParameter *daemonParameter);
     virtual ~cRequestHandler();
     int HandleRequest(const char *url);
-    void SetUser(cUser user);
 private:
     struct MHD_Connection *connection;
     cDaemonParameter *daemonParameter;
@@ -90,6 +89,10 @@ private:
     static void clear_stream(void *cls);
 
     std::map<std::string, std::string> conInfo;
+    
+    bool authenticated();
+    int handleNotAuthenticated();
+    
 
 };
 

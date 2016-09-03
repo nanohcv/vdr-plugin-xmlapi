@@ -50,10 +50,6 @@ cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
 cRequestHandler::~cRequestHandler() {
 }
 
-void cRequestHandler::SetUser(cUser user) {
-    this->user = user;
-}
-
 int cRequestHandler::HandleRequest(const char* url) {
     const MHD_ConnectionInfo *connectionInfo = MHD_get_connection_info (connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
     if (connectionInfo->client_addr->sa_family == AF_INET)
@@ -78,52 +74,52 @@ int cRequestHandler::HandleRequest(const char* url) {
 
     if(0 == strcmp(url, "/version.xml"))
     {
-        return this->handleVersion();
+        return this->authenticated() ? this->handleVersion() : this->handleNotAuthenticated();
     }
     else if (startswith(url, "/stream"))
     {
         if (0 == strcmp(url, "/streamcontrol.xml"))
-            return this->handleStreamControl();
-        return this->handleStream(url);
+            return this->authenticated() ? this->handleStreamControl() : this->handleNotAuthenticated();
+        return this->authenticated() ? this->handleStream(url) : this->handleNotAuthenticated();
     }
     else if (startswith(url, "/recstream")) {
-        return this->handleRecStream(url);
+        return this->authenticated() ? this->handleRecStream(url) : this->handleNotAuthenticated();
     }
     else if (startswith(url, "/hls/")) {
-        return this->handleHlsStream(url);
+        return this->authenticated() ? this->handleHlsStream(url) : this->handleNotAuthenticated();
     }
     else if (startswith(url, "/logos/") && endswith(url, ".png")) {
-        return this->handleLogos(url);
+        return this->authenticated() ? this->handleLogos(url) : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/presets.ini")) {
-        return this->handlePresets();
+        return this->authenticated() ? this->handlePresets() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/channels.xml")) {
-        return this->handleChannels();
+        return this->authenticated() ? this->handleChannels() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/epg.xml")) {
-        return this->handleEPG();
+        return this->authenticated() ? this->handleEPG() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/recordings.xml")) {
-        return this->handleRecordings();
+        return this->authenticated() ? this->handleRecordings() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/deletedrecordings.xml")) {
-        return this->handleDeletedRecordings();
+        return this->authenticated() ? this->handleDeletedRecordings() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/timers.xml")) {
-        return this->handleTimers();
+        return this->authenticated() ? this->handleTimers() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/switch.xml")) {
-        return this->handleSwitchToChannel();
+        return this->authenticated() ? this->handleSwitchToChannel() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/remote.xml")) {
-        return this->handleRemote();
+        return this->authenticated() ? this->handleRemote() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/rights.xml")) {
-        return this->handleRights();
+        return this->authenticated() ? this->handleRights() : this->handleNotAuthenticated();
     }
     else if (startswith(url, "/websrv/")) {
-        return this->handleWebSrv(url);
+        return this->authenticated() ? this->handleWebSrv(url) : this->handleNotAuthenticated();
     }
     else {
         return this->handle404Error();
@@ -1541,8 +1537,35 @@ void cRequestHandler::initRemoteKeys() {
     this->remoteKeys.insert(pair<string, eKeys>("user7", kUser7));
     this->remoteKeys.insert(pair<string, eKeys>("user8", kUser8));
     this->remoteKeys.insert(pair<string, eKeys>("user9", kUser9));
-    this->remoteKeys.insert(pair<string, eKeys>("none", kNone));
-    
-    
-    
+    this->remoteKeys.insert(pair<string, eKeys>("none", kNone)); 
+}
+
+bool cRequestHandler::authenticated() {
+    if(!this->config.GetUsers().empty()) {
+        char *user = NULL;
+        char *pass = NULL;
+        bool fail;
+        user = MHD_basic_auth_get_username_password (connection, &pass);
+        fail = ( (user == NULL) || !this->config.GetUsers().MatchUser(user, pass));
+        if(fail) {
+           if (user != NULL) free (user);
+           if (pass != NULL) free (pass);
+           return false; 
+        }
+        this->user = this->config.GetUsers().GetUser(user);
+        if (user != NULL) free (user);
+        if (pass != NULL) free (pass); 
+    }
+    return true;
+}
+
+int cRequestHandler::handleNotAuthenticated() {
+    struct MHD_Response *response;
+    int ret;
+    const char *page = "<html><body>Wrong credentials.</body></html>";
+    response = MHD_create_response_from_buffer (strlen (page), (void *) page,
+                                               MHD_RESPMEM_PERSISTENT);
+    ret = MHD_queue_basic_auth_fail_response (this->connection, "XMLAPI", response);
+    MHD_destroy_response (response);
+    return ret;
 }
