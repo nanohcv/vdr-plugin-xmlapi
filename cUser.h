@@ -27,10 +27,11 @@ public:
     virtual ~cUser();
     
     cUser& operator = (const cUser& src);
+    bool operator < (const cUser& src) const;
     
-    string Name();
-    string Password();
-    cRights Rights();
+    string Name() const;
+    string Password() const;
+    cRights Rights() const;
     
 private:
     string name;
@@ -38,6 +39,9 @@ private:
     cRights rights;
 
 };
+
+bool operator == (cUser const& lhs, cUser const& rhs);
+bool operator != (cUser const& lhs, cUser const& rhs);
 
 #endif /* CUSER_H */
 

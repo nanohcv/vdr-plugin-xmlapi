@@ -35,6 +35,7 @@ cWebServer::cWebServer(cPluginConfig config) : config(config) {
     this->httpDaemonParameter = new cDaemonParameter(this->config, this->config.GetHttpPort());
     this->httpsDaemonParameter = new cDaemonParameter(this->config, this->config.GetHttpsPort());
     StreamControl = new cStreamControl();
+    SessionControl = new cSessionControl();
 }
 
 cWebServer::~cWebServer() {
@@ -42,6 +43,8 @@ cWebServer::~cWebServer() {
     delete this->httpsDaemonParameter;
     delete StreamControl;
     StreamControl = NULL;
+    delete SessionControl;
+    SessionControl = NULL;
 }
 
 bool cWebServer::Start() {
@@ -100,10 +103,7 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
 
     cDaemonParameter *parameter = (cDaemonParameter *)cls;
     struct MHD_Response *response;
-    int ret;;
-    char *user = NULL;
-    char *pass = NULL;
-    bool fail;
+    int ret;
     
     if (0 == strcmp (method, MHD_HTTP_METHOD_OPTIONS)) {
 		const char *page = "OK";
@@ -127,42 +127,8 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
         *con_cls = connection;
         return MHD_YES;
     }
-    cRequestHandler *handler = new cRequestHandler(connection, parameter);
-    if(!parameter->GetPluginConfig().GetUsers().empty())
-    {
-        user = MHD_basic_auth_get_username_password (connection, &pass);
-        fail = ( (user == NULL) || !parameter->GetPluginConfig().GetUsers().MatchUser(user, pass));
-        if(!fail)
-            handler->SetUser(parameter->GetPluginConfig().GetUsers().GetUser(user));
-        if (user != NULL) free (user);
-        if (pass != NULL) free (pass);
-        if(fail)
-        {
-            const char *page = "<html><body>Wrong credentials.</body></html>";
-            response =
-                MHD_create_response_from_buffer (strlen (page), (void *) page,
-                                               MHD_RESPMEM_PERSISTENT);
-            ret = MHD_queue_basic_auth_fail_response (connection,
-                                                      "XMLAPI",
-                                                      response);
-            MHD_destroy_response (response);
-            delete handler;
-            return ret;
-        }
-        else
-        {
-            ret = handler->HandleRequest(url);
-            delete handler;
-            return ret;
-        }
-    }
-    else
-    {
-        ret = handler->HandleRequest(url);
-        delete handler;
-        return ret;
-    }
-    return MHD_NO;
+    cRequestHandler handler(connection, parameter);
+    return handler.HandleRequest(url);
 }
 
 int cWebServer::on_client_connect (void *cls,

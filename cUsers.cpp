@@ -64,6 +64,8 @@ void cUsers::ReadFromINI(string userIniFile) {
                             rights.SetRemoteControl(true);
                         if(*rit == "streamcontrol")
                             rights.SetStreamControl(true);
+                        if(*rit == "sessioncontrol")
+                            rights.SetSessionControl(true);
                     }
                     cUser user(ur[0], it->second, rights);
                     this->push_back(user);
@@ -81,7 +83,7 @@ bool cUsers::MatchUser(char* name, char* password) {
     return false;
 }
 
-cUser cUsers::GetUser(char* name) {
+cUser cUsers::GetUser(const char* name) {
     for(vector<cUser>::iterator it = this->begin(); it != this->end(); ++it) {
         if(0 == strcmp(name, it->Name().c_str()))
             return *it;

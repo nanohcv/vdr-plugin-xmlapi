@@ -25,7 +25,7 @@ cStreamControl::cStreamControl(const cStreamControl& orig) {
 
 cStreamControl::~cStreamControl() {
     if(this->Active()) {
-        this->Cancel(1);
+        this->Cancel(0);
     }
     for(map<int, cBaseStream*>::iterator it = this->streams.begin(); it != this->streams.end(); it++) {
         delete it->second;

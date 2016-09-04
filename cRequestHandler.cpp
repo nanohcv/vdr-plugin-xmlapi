@@ -36,6 +36,7 @@
 #include "helpers.h"
 #include "globals.h"
 #include "cResponseHeader.h"
+#include "cSession.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
                                     cDaemonParameter *daemonParameter)
@@ -48,10 +49,6 @@ cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
 }
 
 cRequestHandler::~cRequestHandler() {
-}
-
-void cRequestHandler::SetUser(cUser user) {
-    this->user = user;
 }
 
 int cRequestHandler::HandleRequest(const char* url) {
@@ -78,52 +75,61 @@ int cRequestHandler::HandleRequest(const char* url) {
 
     if(0 == strcmp(url, "/version.xml"))
     {
-        return this->handleVersion();
+        return this->authenticated() ? this->handleVersion() : this->handleNotAuthenticated();
     }
     else if (startswith(url, "/stream"))
     {
         if (0 == strcmp(url, "/streamcontrol.xml"))
-            return this->handleStreamControl();
-        return this->handleStream(url);
+            return this->authenticated() ? this->handleStreamControl() : this->handleNotAuthenticated();
+        return this->authenticated() ? this->handleStream(url) : this->handleNotAuthenticated();
     }
     else if (startswith(url, "/recstream")) {
-        return this->handleRecStream(url);
+        return this->authenticated() ? this->handleRecStream(url) : this->handleNotAuthenticated();
     }
     else if (startswith(url, "/hls/")) {
+        if(this->config.GetHlsAuthMode() == cPluginConfig::HLS_AUTH_BASIC) {
+            return this->authenticated() ? this->handleHlsStream(url) : this->handleNotAuthenticated();
+        }
         return this->handleHlsStream(url);
     }
     else if (startswith(url, "/logos/") && endswith(url, ".png")) {
-        return this->handleLogos(url);
+        return this->authenticated() ? this->handleLogos(url) : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/presets.ini")) {
-        return this->handlePresets();
+        return this->authenticated() ? this->handlePresets() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/channels.xml")) {
-        return this->handleChannels();
+        return this->authenticated() ? this->handleChannels() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/epg.xml")) {
-        return this->handleEPG();
+        return this->authenticated() ? this->handleEPG() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/recordings.xml")) {
-        return this->handleRecordings();
+        return this->authenticated() ? this->handleRecordings() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/deletedrecordings.xml")) {
-        return this->handleDeletedRecordings();
+        return this->authenticated() ? this->handleDeletedRecordings() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/timers.xml")) {
-        return this->handleTimers();
+        return this->authenticated() ? this->handleTimers() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/switch.xml")) {
-        return this->handleSwitchToChannel();
+        return this->authenticated() ? this->handleSwitchToChannel() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/remote.xml")) {
-        return this->handleRemote();
+        return this->authenticated() ? this->handleRemote() : this->handleNotAuthenticated();
     }
     else if (0 == strcmp(url, "/rights.xml")) {
-        return this->handleRights();
+        return this->authenticated() ? this->handleRights() : this->handleNotAuthenticated();
     }
     else if (startswith(url, "/websrv/")) {
-        return this->handleWebSrv(url);
+        return this->authenticated() ? this->handleWebSrv(url) : this->handleNotAuthenticated();
+    }
+    else if (0 == strcmp(url, "/sessions.xml")) {
+        return this->authenticated() ? this->handleSessions() : this->handleNotAuthenticated();
+    }
+    else if (0 == strcmp(url, "/sessioncontrol.xml")) {
+        return this->authenticated() ? this->handleSessionControl() : this->handleNotAuthenticated();
     }
     else {
         return this->handle404Error();
@@ -311,7 +317,44 @@ void cRequestHandler::clear_stream(void* cls) {
 }
 
 int cRequestHandler::handleHlsStream(const char* url) {
-    if(!this->user.Rights().Streaming()) {
+    cUser tmpUser = this->user;
+    const char *cookie = NULL;
+    if(this->config.GetHlsAuthMode() == cPluginConfig::HLS_AUTH_SESSION && !this->config.GetUsers().empty()) {
+        cookie = MHD_lookup_connection_value (connection,
+					MHD_COOKIE_KIND,
+					"vdr-plugin-xmlapi_sessionid");
+        if(cookie != NULL) {
+            dsyslog("xmlapi: handleHlsStream() -> found cookie vdr-plugin-xmlapi_sessionid=%s.", cookie);
+            string sessionid(cookie);
+            SessionControl->Mutex.Lock();
+            cSession* session = SessionControl->GetSessionBySessionId(sessionid);
+            if(session == NULL) {
+                dsyslog("xmlapi: handleHlsStream() -> No session found for session id \"%s\".", cookie);
+                SessionControl->Mutex.Unlock();
+                return this->handle403Error();
+            } else {
+                if(session->IsExpired()) {
+                    dsyslog("xmlapi: handleHlsStream() -> Session with session id \"%s\" is expired.", cookie);
+                    SessionControl->Mutex.Unlock();
+                    return this->handle403Error();
+                } else {
+                    const cUser *sessionUser = SessionControl->GetUserBySessionId(sessionid);
+                    if(sessionUser == NULL) {
+                        dsyslog("xmlapi: handleHlsStream() -> No user found for session id \"%s\".", cookie);
+                        SessionControl->Mutex.Unlock();
+                        return this->handle403Error();
+                    } else {
+                        tmpUser = *sessionUser;
+                    }
+                }
+            }
+            SessionControl->Mutex.Unlock();
+        } else {
+            dsyslog("xmlapi: handleHlsStream() -> No cookie found!");
+            return this->handle403Error();
+        }
+    }
+    if(!tmpUser.Rights().Streaming()) {
         dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), url);
         return this->handle403Error();
     }
@@ -397,6 +440,18 @@ int cRequestHandler::handleHlsStream(const char* url) {
             MHD_add_response_header (response, "Cache-Control", "no-cache");
             MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
             MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+            if(cookie != NULL) {
+                SessionControl->Mutex.Lock();
+                cSession *session = SessionControl->GetSessionBySessionId(string(cookie));
+                if(session != NULL) {
+                    dsyslog("xmlapi: handleHlsStream() -> Update cookie's start time...");
+                    session->UpdateStart();
+                    if (MHD_NO == MHD_add_response_header (response, MHD_HTTP_HEADER_SET_COOKIE, session->Cookie().c_str())) {
+                        dsyslog("xmlapi: Can't set cookie \"%s\".", session->Cookie().c_str());
+                    }
+                }
+                SessionControl->Mutex.Unlock();
+            }
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
             return ret;
@@ -416,6 +471,18 @@ int cRequestHandler::handleHlsStream(const char* url) {
             MHD_add_response_header (response, "Cache-Control", "no-cache");
             MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
             MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+            if(cookie != NULL) {
+                SessionControl->Mutex.Lock();
+                cSession *session = SessionControl->GetSessionBySessionId(string(cookie));
+                if(session != NULL) {
+                    dsyslog("xmlapi: handleHlsStream() -> Update cookie's start time...");
+                    session->UpdateStart();
+                    if (MHD_NO == MHD_add_response_header (response, MHD_HTTP_HEADER_SET_COOKIE, session->Cookie().c_str())) {
+                        dsyslog("xmlapi: Can't set cookie \"%s\".", session->Cookie().c_str());
+                    }
+                }
+                SessionControl->Mutex.Unlock();
+            }
             ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
             MHD_destroy_response (response);
             return ret;
@@ -1426,6 +1493,7 @@ int cRequestHandler::handleRights() {
     xml += "    <recordings>" + string(this->user.Rights().Recordings() ? "true" : "false") + "</recordings>\n";
     xml += "    <remotecontrol>" + string(this->user.Rights().RemoteControl() ? "true" : "false") + "</remotecontrol>\n";
     xml += "    <streamcontrol>" + string(this->user.Rights().StreamControl() ? "true" : "false") + "</streamcontrol>\n";
+    xml += "    <sessioncontrol>" + string(this->user.Rights().SessionControl() ? "true" : "false") + "</sessioncontrol>\n";
     xml += "</rights>\n";
     
     char *page = (char *)malloc((xml.length()+1) * sizeof(char));
@@ -1541,8 +1609,154 @@ void cRequestHandler::initRemoteKeys() {
     this->remoteKeys.insert(pair<string, eKeys>("user7", kUser7));
     this->remoteKeys.insert(pair<string, eKeys>("user8", kUser8));
     this->remoteKeys.insert(pair<string, eKeys>("user9", kUser9));
-    this->remoteKeys.insert(pair<string, eKeys>("none", kNone));
+    this->remoteKeys.insert(pair<string, eKeys>("none", kNone)); 
+}
+
+bool cRequestHandler::authenticated() {
+    if(!this->config.GetUsers().empty()) {
+        char *user = NULL;
+        char *pass = NULL;
+        bool fail;
+        user = MHD_basic_auth_get_username_password (connection, &pass);
+        fail = ( (user == NULL) || !this->config.GetUsers().MatchUser(user, pass));
+        if(fail) {
+           if (user != NULL) free (user);
+           if (pass != NULL) free (pass);
+           return false; 
+        }
+        this->user = this->config.GetUsers().GetUser(user);
+        if (user != NULL) free (user);
+        if (pass != NULL) free (pass); 
+    }
+    return true;
+}
+
+int cRequestHandler::handleNotAuthenticated() {
+    struct MHD_Response *response;
+    int ret;
+    const char *page = "<html><body>Wrong credentials.</body></html>";
+    response = MHD_create_response_from_buffer (strlen (page), (void *) page,
+                                               MHD_RESPMEM_PERSISTENT);
+    ret = MHD_queue_basic_auth_fail_response (this->connection, "XMLAPI", response);
+    MHD_destroy_response (response);
+    return ret;
+}
+
+int cRequestHandler::handleSessions() {
+    struct MHD_Response *response;
+    int ret;
+    bool setCookie = false;
+    cSession session(1);
+    const char* createAction = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "create");
+    const char* deleteAction = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "delete");
+    if(createAction != NULL && deleteAction != NULL) {
+        dsyslog("xmlapi: sessions.xml: create and delete parameters are not allowed together.");
+        return this->handle404Error();
+    }
+    if(createAction != NULL) {
+        long lifetime = atol(createAction);
+         session = SessionControl->AddSession(this->user, lifetime);
+         setCookie = true;
+    }
+    if(deleteAction != NULL) {
+        string delAction = string(deleteAction);
+        if(delAction == "all") {
+            SessionControl->RemoveSessionsByUser(this->user);
+        } else {
+            SessionControl->Mutex.Lock();
+            const cUser *tmpUser = SessionControl->GetUserBySessionId(delAction);
+            if(tmpUser != NULL && *tmpUser == this->user) {
+                SessionControl->Mutex.Unlock();
+                SessionControl->RemoveSessionBySessionId(delAction);
+            } else {
+                SessionControl->Mutex.Unlock();
+            }
+        }
+    }
+    vector<cSession> sessions = SessionControl->GetSessions(this->user);
+    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
+    xml += "<user name=\"" + this->user.Name() + "\">\n";
+    xml += "    <sessions>\n";
+    for(vector<cSession>::iterator it = sessions.begin(); it != sessions.end(); ++it) {
+        xml += "        <session id=\"" + it->GetSessionId() + "\">\n";
+        xml += "            <lifetime>" + longToString(it->GetLifetime()) + "</lifetime>\n";
+        xml += "            <start>" + timeToString(it->GetStart()) + "</start>\n";
+        xml += "            <expired>" + string(it->IsExpired() ? "true" : "false") + "</expired>\n";
+        xml += "            <expires>" + it->Expires() + "</expires>\n";
+        xml += "        </session>\n";
+    }
+    xml += "    </sessions>\n";
+    xml += "</user>\n";
+    char *page = (char *)malloc((xml.length()+1) * sizeof(char));
+    strcpy(page, xml.c_str());
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
+                                               MHD_RESPMEM_MUST_FREE);
+    MHD_add_response_header (response, "Content-Type", "text/xml");
+    MHD_add_response_header (response, "Cache-Control", "no-cache");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+    if(setCookie) {
+        if (MHD_NO == MHD_add_response_header (response, MHD_HTTP_HEADER_SET_COOKIE, session.Cookie().c_str())) {
+            dsyslog("xmlapi: Can't set cookie \"%s\".", session.Cookie().c_str());
+        }
+    }
+    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
+    MHD_destroy_response (response);
+    return ret; 
+}
+
+int cRequestHandler::handleSessionControl() {
     
+    if(!this->user.Rights().SessionControl()) {
+        dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), "/sessioncontrol.xml");
+        return this->handle403Error();
+    }
     
+    struct MHD_Response *response;
+    int ret;
+    const char* removeAction_cstr = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "remove");
+    if(removeAction_cstr != NULL) {
+        string removeAction(removeAction_cstr);
+        if(removeAction == "all") {
+            SessionControl->RemoveAllSessions();
+        } else if (removeAction == "expired") {
+            SessionControl->RemoveExpiredSessions();
+        } else if (removeAction == "user") {
+            const char* user_cstr = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "user");
+            if(user_cstr != NULL) {
+                cUser deluser = this->config.GetUsers().GetUser(user_cstr);
+                SessionControl->RemoveSessionsByUser(deluser);
+            } else {
+                dsyslog("xmlapi: /sessioncontrol.xml?remove=user ->  parameter user not specified.");
+                return this->handle404Error();
+            }
+        } else if (removeAction == "sessionid") {
+            const char* sessionid_cstr = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "sessionid");
+            if(sessionid_cstr != NULL) {
+                string sessionid(sessionid_cstr);
+                SessionControl->RemoveSessionBySessionId(sessionid);
+            } else {
+                dsyslog("xmlapi: /sessioncontrol.xml?remove=sessionid ->  parameter sessionid not specified.");
+                return this->handle404Error();
+            }
+        } else {
+            dsyslog("xmlapi: /sessioncontrol.xml?remove=%s ->  unknown remove action.", removeAction.c_str());
+            return this->handle404Error();
+        }  
+    }
     
+    string xml = SessionControl->GetSessionsXml();
+    char *page = (char *)malloc((xml.length()+1) * sizeof(char));
+    strcpy(page, xml.c_str());
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
+                                               MHD_RESPMEM_MUST_FREE);
+    MHD_add_response_header (response, "Content-Type", "text/xml");
+    MHD_add_response_header (response, "Cache-Control", "no-cache");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
+    MHD_destroy_response (response);
+    return ret;
 }

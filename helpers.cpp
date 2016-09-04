@@ -98,6 +98,12 @@ string uint32ToString(unsigned int  value) {
     return temp.str();
 }
 
+string longToString(long value) {
+    ostringstream temp;
+    temp<<value;
+    return temp.str();
+}
+
 string timeToString(time_t t) {
     ostringstream temp;
     temp<<t;

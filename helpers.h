@@ -33,6 +33,7 @@ string urlEncode(string str);
 string urlDecode(string str);
 
 string uint32ToString(unsigned int value);
+string longToString(long value);
 string timeToString(time_t t);
 string intToString(int value);
 

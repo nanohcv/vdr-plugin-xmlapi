@@ -42,6 +42,7 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *cacheDir, const 
     this->presetsFile = string(configDir) + "/presets.ini";
     this->hlsPresetsFile = string(configDir) + "/hls_presets.ini";
     this->hlsTmpDir = string(cacheDir) + "/streams";
+    this->hlsAuthMode = HLS_AUTH_BASIC;
     this->streamdevUrl = "http://127.0.0.1:3000/";
     this->websrvroot = string(configDir) + "/websrv";
     this->websrvheaders = string(configDir) + "/websrv_file_extensions.ini";
@@ -85,6 +86,7 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     this->presetsFile = src.presetsFile;
     this->hlsPresetsFile = src.hlsPresetsFile;
     this->hlsTmpDir = src.hlsTmpDir;
+    this->hlsAuthMode = src.hlsAuthMode;
     this->streamdevUrl = src.streamdevUrl;
     this->websrvroot = src.websrvroot;
     this->websrvheaders = src.websrvheaders;
@@ -116,6 +118,7 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->presetsFile = src.presetsFile;
         this->hlsPresetsFile = src.hlsPresetsFile;
         this->hlsTmpDir = src.hlsTmpDir;
+        this->hlsAuthMode = src.hlsAuthMode;
         this->streamdevUrl = src.streamdevUrl;
         this->websrvroot = src.websrvroot;
         this->websrvheaders = src.websrvheaders;
@@ -216,6 +219,10 @@ string cPluginConfig::GetHlsTmpDir() {
     return this->hlsTmpDir;
 }
 
+cPluginConfig::HlsAuthMode cPluginConfig::GetHlsAuthMode() {
+    return this->hlsAuthMode;
+}
+
 string cPluginConfig::GetStreamdevUrl() {
     return this->streamdevUrl;
 }
@@ -273,6 +280,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "Presets="<<this->presetsFile<<endl<<
             "HlsPresets="<<this->hlsPresetsFile<<endl<<
             "HlsTmpDir="<<this->hlsTmpDir<<endl<<
+            "HlsAuthMode=basic"<<endl<<
             "StreamdevUrl="<<this->streamdevUrl<<endl<<
             "WebSrvRoot="<<this->websrvroot<<endl<<
             "WebSrvHeaders="<<this->websrvheaders<<endl<<
@@ -350,6 +358,16 @@ bool cPluginConfig::readFromConfFile(string configFile) {
                     this->hlsTmpDir = right.substr(0, right.length()-1);
                 } else {
                     this->hlsTmpDir = right;
+                }
+            }
+        }
+        else if (left == "HlsAuthMode") {
+            if(right != "") {
+                if(right == "basic") {
+                    this->hlsAuthMode = HLS_AUTH_BASIC;
+                }
+                if(right == "session") {
+                    this->hlsAuthMode = HLS_AUTH_SESSION;
                 }
             }
         }
@@ -711,6 +729,7 @@ bool cPluginConfig::createDefaultUserFile(string usersFile) {
                        ";  recordings  (The user can delete, undelte or remove recordings.)\n"
                        ";  remotecontrol  (The user can use the switch to channel api and the remote control api.)\n"
                        ";  streamcontrol  (The user can see and remove active streams via stream control api.)\n"
+                       ";  sessioncontrol (The user can see and remove active sessions via session control api.)\n"
                        ";\n"
                        "; Example:\n"
                        "; You want to give the user \"guest1\" the rights \"streaming\" and \"timers\"\n"
