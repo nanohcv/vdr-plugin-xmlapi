@@ -196,6 +196,7 @@ Possible user rights are:
 - recordings  (The user can delete, undelte or remove recordings.)
 - remotecontrol  (The user can use the switch to channel api and the remote control api.)
 - streamcontrol  (The user can see and remove active streams via stream control api.)
+- sessioncontrol (The user can see and remove active sessions via session control api.)
 
 Example:
 You want to give the user "guest1" the rights "streaming" and "timers"

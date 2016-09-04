@@ -1493,6 +1493,7 @@ int cRequestHandler::handleRights() {
     xml += "    <recordings>" + string(this->user.Rights().Recordings() ? "true" : "false") + "</recordings>\n";
     xml += "    <remotecontrol>" + string(this->user.Rights().RemoteControl() ? "true" : "false") + "</remotecontrol>\n";
     xml += "    <streamcontrol>" + string(this->user.Rights().StreamControl() ? "true" : "false") + "</streamcontrol>\n";
+    xml += "    <sessioncontrol>" + string(this->user.Rights().SessionControl() ? "true" : "false") + "</sessioncontrol>\n";
     xml += "</rights>\n";
     
     char *page = (char *)malloc((xml.length()+1) * sizeof(char));
@@ -1706,6 +1707,12 @@ int cRequestHandler::handleSessions() {
 }
 
 int cRequestHandler::handleSessionControl() {
+    
+    if(!this->user.Rights().SessionControl()) {
+        dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), "/sessioncontrol.xml");
+        return this->handle403Error();
+    }
+    
     struct MHD_Response *response;
     int ret;
     const char* removeAction_cstr = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "remove");
