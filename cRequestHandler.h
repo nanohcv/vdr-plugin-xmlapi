@@ -93,6 +93,9 @@ private:
     bool authenticated();
     int handleNotAuthenticated();
     
+    int handleSessions();
+    int handleSessionControl();
+    
 
 };
 

@@ -25,11 +25,11 @@ public:
     
     cRights& operator = (const cRights& src);
     
-    bool Streaming();
-    bool Timers();
-    bool Recordings();
-    bool RemoteControl();
-    bool StreamControl();
+    bool Streaming() const;
+    bool Timers() const;
+    bool Recordings() const;
+    bool RemoteControl() const;
+    bool StreamControl() const;
     
     void SetStreaming(bool streaming);
     void SetTimers(bool timers);
@@ -44,6 +44,9 @@ private:
     bool remotecontrol;
     bool streamcontrol;
 };
+
+bool operator == (cRights const& lhs, cRights const& rhs);
+bool operator != (cRights const& lhs, cRights const& rhs);
 
 #endif /* CRIGHTS_H */
 

@@ -81,7 +81,7 @@ bool cUsers::MatchUser(char* name, char* password) {
     return false;
 }
 
-cUser cUsers::GetUser(char* name) {
+cUser cUsers::GetUser(const char* name) {
     for(vector<cUser>::iterator it = this->begin(); it != this->end(); ++it) {
         if(0 == strcmp(name, it->Name().c_str()))
             return *it;

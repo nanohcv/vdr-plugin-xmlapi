@@ -35,6 +35,7 @@ cWebServer::cWebServer(cPluginConfig config) : config(config) {
     this->httpDaemonParameter = new cDaemonParameter(this->config, this->config.GetHttpPort());
     this->httpsDaemonParameter = new cDaemonParameter(this->config, this->config.GetHttpsPort());
     StreamControl = new cStreamControl();
+    SessionControl = new cSessionControl();
 }
 
 cWebServer::~cWebServer() {
@@ -42,6 +43,8 @@ cWebServer::~cWebServer() {
     delete this->httpsDaemonParameter;
     delete StreamControl;
     StreamControl = NULL;
+    delete SessionControl;
+    SessionControl = NULL;
 }
 
 bool cWebServer::Start() {

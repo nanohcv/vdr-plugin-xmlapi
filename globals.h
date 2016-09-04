@@ -14,6 +14,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#include "cSessionControl.h"
 #include "cStreamControl.h"
 
 #ifndef EXTERN
@@ -21,6 +22,8 @@
 #endif
 
 EXTERN cStreamControl *StreamControl;
+EXTERN cSessionControl *SessionControl;
+
 
 #endif /* STREAMCONTROL_H */
 

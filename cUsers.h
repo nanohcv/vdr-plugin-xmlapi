@@ -30,7 +30,7 @@ public:
     void ReadFromINI(string userIniFile);
     
     bool MatchUser(char *name, char *password);
-    cUser GetUser(char *name);
+    cUser GetUser(const char *name);
     
 private:
 

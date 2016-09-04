@@ -36,14 +36,26 @@ cUser& cUser::operator =(const cUser& src) {
     return *this;
 }
 
-string cUser::Name() {
+bool cUser::operator <(const cUser& src) const {
+    return this->name < src.name;
+}
+
+string cUser::Name() const {
     return this->name;
 }
 
-string cUser::Password() {
+string cUser::Password() const {
     return this->password;
 }
 
-cRights cUser::Rights() {
+cRights cUser::Rights() const {
     return this->rights;
+}
+
+bool operator ==(cUser const& lhs, cUser const& rhs) {
+    return lhs.Name() == rhs.Name() && lhs.Password() == rhs.Password() && lhs.Rights() == rhs.Rights();
+}
+
+bool operator !=(cUser const& lhs, cUser const& rhs) {
+    return !(lhs == rhs);
 }

@@ -88,6 +88,7 @@ in the following line:
 
     SSLCertFile=/path/to/your/server.pem
 
+
 To change the TLS session’s handshake algorithms and options, you can use the  
 following parameter.  
 For more information about this parameter, look into the GnuTLS manual.  
@@ -95,9 +96,11 @@ https://www.gnutls.org/manual/html_node/Priority-Strings.html#Priority-Strings
 
     HttpsPriorities=NORMAL
 
+
 To change the path to users.ini, change the following line:
 
     Users=/var/lib/vdr/plugins/xmlapi/users.ini
+
 
 By default only on transcoded stream can be started. If another client connect
 to the plugin and request a stream, the plugin wait until all other ffmpeg 
@@ -106,10 +109,12 @@ following parameter: (I recommend this only if you have more than one tuner.)
 
     WaitForFFmpeg=0
 
+
 If FFMpeg can't be found in the global search PATH then you can set the 
 path to your ffmpeg binray with the following parameter:
 
     FFMPEG=/path/to/your/ffmpeg
+
 
 The plugin use presets for transcoding. The presets can be configured in the 
 presets.ini and hls_presets.ini (for hls streaming) which created on first start in the plugin config folder of the 
@@ -119,10 +124,20 @@ The path for the preset files can set with the following parameter:
     Presets=/var/lib/vdr/plugins/xmlapi/presets.ini
     HlsPresets=/var/lib/vdr/plugins/xmlapi/hls_presets.ini
 
+
 The tmp dir for hls stream files can be configured with the following parameter.
 It will be automatically cleaned.
 
     HlsTmpDir=/var/cache/vdr/plugins/xmlapi/streams
+
+
+By default basic auth (if enabled) is used for hls streams.  
+You can use a cookie with session id for authentication.  
+For more information about sessions, see section 4.12.    
+To change the authentication mode, use the following parameter.  
+(Possible values are "basic" for basic authentication and "session" for session based authentication.)
+
+    HlsAuthMode=session
 
 
 If the streamdev-server plugin doesnt run on port 3000 change the following
@@ -539,5 +554,73 @@ To view the rights of the currently authenticated user, use the following API:
 The plugin can act as simple web server.  
 To access the files stored in the configured WebSrvRoot use this url:
 
-    http(s):://<server-ip>:<port>/websrv/
+    http(s)://<server-ip>:<port>/websrv/
+
+
+#### 4.12 Sessions
+
+You can use session based authentication for HLS-Streams.
+There are two APIs for session control.  
+
+
+##### 4.12.1 User sessions
+
+To get the active sessions for the currently authenticated user, use the following API:
+
+    http(s)://<server-ip>:<port>/sessions.xml
+
+
+There are two possible parameters:
+
+- create -> Creates a new session for the currently authenticated user. The value must be the lifetime in seconds for the session.
+- delete -> Delete sessions for the currently authenticated user.  
+  Possible values are:
+    - all -> Delete all sessions from the currently authenticated user.
+    - sessionid -> Delete a specific session from the currently authenticated user.
+
+Examples:  
+Create a session with the lifetime of 10 minutes:
+
+    http(s)://<server-ip>:<port>/sessions.xml?create=600
+
+Delete all user sessions:
+
+    http(s)://<server-ip>:<port>/sessions.xml?delete=all
+
+Delete the session with id "1234567890":
+
+    http(s)://<server-ip>:<port>/sessions.xml?delete=1234567890
+
+
+##### 4.12.2 Session Control
+
+You can get all active sessions from every user by calling the following API.
+Expired sessions will be cleaned every 5 minutes.
+
+    http(s)://<server-ip>:<port>/sessioncontrol.xml
+
+For removing sessions you can use the parameter "remove".
+Possible values for the parameter remove are:
+
+- all -> Removes all sessions from every user.
+- expired -> Removes all expired sessions.
+- user -> Removes all sessions by the specified "user" parameter.
+- sessionid -> Removes the session by the specified "sessionid" parameter.
+
+Examples:  
+Delete all sessions from every user:
+
+    http(s)://<server-ip>:<port>/sessioncontrol.xml?remove=all
+
+Delete all expired sessions:
+
+    http(s)://<server-ip>:<port>/sessioncontrol.xml?remove=expired
+
+Delete all sessions from user "xmlapi":
+
+    http(s)://<server-ip>:<port>/sessioncontrol.xml?remove=user&user=xmlapi
+
+Delete the session with id "1234567890":
+
+    http(s)://<server-ip>:<port>/sessioncontrol.xml?remove=sessionid&sessionid=1234567890
 

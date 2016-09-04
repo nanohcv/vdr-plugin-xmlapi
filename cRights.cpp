@@ -39,23 +39,23 @@ cRights& cRights::operator =(const cRights& src) {
     return *this;
 }
 
-bool cRights::Streaming() {
+bool cRights::Streaming() const {
     return this->streaming;
 }
 
-bool cRights::Timers() {
+bool cRights::Timers() const {
     return this->timers;
 }
 
-bool cRights::Recordings() {
+bool cRights::Recordings() const {
     return this->recordings;
 }
 
-bool cRights::RemoteControl() {
+bool cRights::RemoteControl() const {
     return this->remotecontrol;
 }
 
-bool cRights::StreamControl() {
+bool cRights::StreamControl() const {
     return this->streamcontrol;
 }
 
@@ -77,4 +77,16 @@ void cRights::SetRemoteControl(bool remotecontrol) {
 
 void cRights::SetStreamControl(bool streamcontrol) {
     this->streamcontrol = streamcontrol;
+}
+
+bool operator ==(cRights const& lhs, cRights const& rhs) {
+    return lhs.Streaming() == rhs.Streaming() &&
+            lhs.Timers() == rhs.Timers() &&
+            lhs.Recordings() == rhs.Recordings() &&
+            lhs.RemoteControl() == rhs.RemoteControl() &&
+            lhs.StreamControl() == rhs.StreamControl();
+}
+
+bool operator !=(cRights const& lhs, cRights const& rhs) {
+    return !(lhs == rhs);
 }
