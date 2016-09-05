@@ -585,7 +585,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                 " -preset slow -profile:v baseline"
                                 " -c:a libfdk_aac -profile:a aac_he -b:a 64k -ar 44100 -ac 2"
                                 " -async 1"
-                                " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                                " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 6 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
                                "StreamTimeout=3\n"
                                "MinSegments=2\n";
         
@@ -597,7 +597,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                 " -preset slow -profile:v baseline"
                                 " -c:a libfdk_aac -profile:a aac_he -ab 96k -ar 44100 -ac 2"
                                 " -async 1"
-                                " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                                " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 6 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
                                "StreamTimeout=3\n"
                                "MinSegments=2\n";
         
@@ -609,7 +609,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -preset medium -profile:v main"
                                  " -c:a aac -ab 96k -ar 44100 -ac 2 -strict 2"
                                  " -async 1"
-                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 6 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
                                 "StreamTimeout=3\n"
                                 "MinSegments=2\n";
         
@@ -621,7 +621,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -preset medium -profile:v main"
                                  " -c:a aac -ab 128k -ar 44100 -ac 2 -strict 2"
                                  " -async 1"
-                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 6 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
                                 "StreamTimeout=3\n"
                                 "MinSegments=2\n";
         
@@ -633,7 +633,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                " -preset medium -profile:v high"
                                " -c:a aac -ab 128k -ar 44100 -ac 2 -strict 2"
                                " -async 1"
-                               " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                               " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 6 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
                               "StreamTimeout=3\n"
                               "MinSegments=2\n";
                                 
@@ -643,7 +643,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -i \"{infile}\""
                                  " -vn"
                                  " -acodec aac -strict -2 -ab 64k -ar 44100 -ac 2 -y"
-                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 6 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
                               "StreamTimeout=3\n"
                               "MinSegments=2\n";
 
@@ -658,7 +658,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -vprofile baseline -level 30"
                                  " -acodec aac -strict -2 -ab 48k -ar 44100 -ac 2"
                                  " -async 1"
-                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 6 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
                             "StreamTimeout=3\n"
                             "MinSegments=2\n";
 
@@ -673,7 +673,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -vprofile baseline -level 30"
                                  " -acodec aac -strict -2 -ab 64k -ar 44100 -ac 2"
                                  " -async 1"
-                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 6 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
                             "StreamTimeout=3\n"
                             "MinSegments=2\n";
 
@@ -688,7 +688,7 @@ bool cPluginConfig::createDefaultHlsPresetFile(string hlsPresetFile) {
                                  " -vprofile baseline -level 30"
                                  " -acodec aac -strict -2 -ab 96k -ar 44100 -ac 2"
                                  " -async 1"
-                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 5 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
+                                 " -f hls -hls_time 2 -hls_list_size 5 -hls_wrap 6 -hls_segment_filename '{hls_tmp_path}/{streamid}-%d.ts' {hls_tmp_path}/stream.m3u8\n"
                              "StreamTimeout=3\n"
                              "MinSegments=2\n";
 
