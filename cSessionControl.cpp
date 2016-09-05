@@ -168,6 +168,7 @@ string cSessionControl::GetSessionsXml() {
 void cSessionControl::Action() {
     while(this->Running()) {
         sleep(60*5);
-        this->RemoveExpiredSessions();
+        if(this->Running())
+            this->RemoveExpiredSessions();
     }
 }
