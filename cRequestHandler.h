@@ -47,7 +47,6 @@ private:
     map<string, eKeys> remoteKeys;
     
 
-    int handleVersion();
     int handleStream(const char *url);
     int handleRecStream(const char *url);
     int handleHlsStream(const char *url);

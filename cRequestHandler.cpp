@@ -36,6 +36,7 @@
 #include "helpers.h"
 #include "globals.h"
 #include "cResponseHeader.h"
+#include "cResponseVersion.h"
 #include "cSession.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
@@ -75,8 +76,14 @@ int cRequestHandler::HandleRequest(const char* url) {
 
     if(0 == strcmp(url, "/version.xml"))
     {
-        return this->authenticated() ? this->handleVersion() : this->handleNotAuthenticated();
+        if (!this->authenticated()) {
+        	return this->handleNotAuthenticated();
+        }
+
+    	cResponseVersion response(this->connection);
+    	return response.toXml(this->config);
     }
+
     else if (startswith(url, "/stream"))
     {
         if (0 == strcmp(url, "/streamcontrol.xml"))
@@ -135,28 +142,6 @@ int cRequestHandler::HandleRequest(const char* url) {
         return this->handle404Error();
     }
     return MHD_NO;
-}
-
-int cRequestHandler::handleVersion() {
-    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-                 "<plugin>\n"
-                 "    <name>" + this->config.GetPluginName() + "</name>\n"
-                 "    <version>" + this->config.GetVersion() + "</version>\n"
-                 "</plugin>\n";
-
-    struct MHD_Response *response;
-    int ret;
-    char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
-    strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header (response, "Content-Type", "text/xml");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
 }
 
 int cRequestHandler::handleStream(const char *url) {
