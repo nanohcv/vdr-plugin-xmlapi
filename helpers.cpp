@@ -44,7 +44,15 @@ void xmlEncode(string& data) {
             default:   buffer.append(&data[pos], 1); break;
         }
     }
-    data.swap(buffer);
+
+    try {
+       string converted;
+       utf8::replace_invalid(buffer.begin(), buffer.end(), back_inserter(converted));
+       data.swap(converted);
+    } catch(utf8::not_enough_room& e) {
+       std::string error = "Invalid piece of text. (Fixing Unicode failed.)";
+       data.swap(error);
+    }
 }
 
 string urlEncode(string str) {

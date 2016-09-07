@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <unistd.h>
+#include "utf8_checked.h"
 
 #define READ 0
 #define WRITE 1
