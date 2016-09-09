@@ -52,7 +52,6 @@ private:
     int handleRecStream(const char *url);
     int handleHlsStream(const char *url);
     int handleStreamControl();
-    int handleLogos(const char *url);
     int handleRecordings();
     int handleDeletedRecordings();
     string recordingsToXml(bool deleted = false);

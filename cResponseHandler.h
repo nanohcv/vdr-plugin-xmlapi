@@ -37,6 +37,7 @@ public:
 	cResponseHandler *setUser(cUser *user);
 
 	cResponseHandler *create(size_t size, void *buffer, enum MHD_ResponseMemoryMode mode);
+	cResponseHandler *create(size_t size, int fd);
 	cResponseHandler *header(const char *header, const char *content);
 	cResponseHandler *cors();
 	int flush();

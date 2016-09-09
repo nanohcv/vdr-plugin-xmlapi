@@ -43,6 +43,13 @@ cResponseHandler *cResponseHandler::create(size_t size, void *buffer, enum MHD_R
 	return this;
 }
 
+cResponseHandler *cResponseHandler::create(size_t size, int fd) {
+
+	this->response = MHD_create_response_from_fd(size, fd);
+	this->header(MHD_HTTP_HEADER_SET_COOKIE, this->session->Cookie().c_str());
+	return this;
+}
+
 cResponseHandler *cResponseHandler::header(const char *header, const char *content) {
 
 	MHD_add_response_header (this->response, header, content);

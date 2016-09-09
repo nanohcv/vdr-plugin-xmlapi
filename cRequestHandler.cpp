@@ -40,6 +40,7 @@
 #include "cResponseChannels.h"
 #include "cResponsePresets.h"
 #include "cResponseEpg.h"
+#include "cResponseLogo.h"
 #include "cSession.h"
 #include "cAuth.h"
 
@@ -100,7 +101,13 @@ int cRequestHandler::HandleRequest(const char* url) {
         return this->handleHlsStream(url);
     }
     else if (startswith(url, "/logos/") && endswith(url, ".png")) {
-        return this->handleLogos(url);
+
+
+    	cResponseLogo response(this->connection, this->auth->Session(), this->daemonParameter);
+    	int ret = response.toImage(url);
+
+        if (ret == MHD_HTTP_NOT_FOUND) return this->handle404Error();
+        return ret;
     }
     else if (0 == strcmp(url, "/presets.ini")) {
     	cResponsePresets response(this->connection, this->auth->Session(), this->daemonParameter);
@@ -533,35 +540,6 @@ int cRequestHandler::handleStreamControl() {
     return ret;
 
 
-}
-
-int cRequestHandler::handleLogos(const char* url) {
-    int ret;
-    int fd;
-    struct stat sbuf;
-    struct MHD_Response *response;
-    string logofile = this->config.GetConfigDir() + url;
-
-    if ( (-1 == (fd = open (logofile.c_str(), O_RDONLY))) ||
-       (0 != fstat (fd, &sbuf)) ) {
-        if (fd != -1)
-            close (fd);
-        logofile = this->config.GetConfigDir() + "/logos/default-logo.png";
-        if ( (-1 == (fd = open (logofile.c_str(), O_RDONLY))) ||
-            (0 != fstat (fd, &sbuf)) ) {
-             if (fd != -1)
-                 close (fd);
-             return this->handle404Error();
-        }
-    }
-    response = MHD_create_response_from_fd(sbuf.st_size, fd);
-    MHD_add_response_header (response, "Content-Type", "image/png");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-
-    return ret;
 }
 
 int cRequestHandler::handleRecordings() {
