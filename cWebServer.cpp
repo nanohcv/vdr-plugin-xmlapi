@@ -109,7 +109,7 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
 		const char *page = "OK";
 		response = MHD_create_response_from_buffer (strlen (page), (void *) page, MHD_RESPMEM_PERSISTENT);
 		MHD_add_response_header (response, "Allow", "GET");
-		MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+		MHD_add_response_header (response, "Access-Control-Allow-Origin", parameter->GetPluginConfig().GetCorsOrigin().c_str());
 		MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
 		ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
 		MHD_destroy_response (response);

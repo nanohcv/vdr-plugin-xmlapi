@@ -81,8 +81,8 @@ int cRequestHandler::HandleRequest(const char* url) {
 
     if(0 == strcmp(url, "/version.xml"))
     {
-    	cResponseVersion response(this->connection, auth.Session());
-    	return response.toXml(this->config);
+    	cResponseVersion response(this->connection, auth.Session(), this->daemonParameter);
+    	return response.toXml();
     }
 
     else if (startswith(url, "/stream"))

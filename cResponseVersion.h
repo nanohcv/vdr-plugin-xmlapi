@@ -8,8 +8,8 @@
 
 class cResponseVersion : public cResponseHandler {
 public:
-	cResponseVersion(struct MHD_Connection *connection, cSession *session);
-	int toXml(cPluginConfig config);
+	cResponseVersion(struct MHD_Connection *connection, cSession *session, cDaemonParameter *daemonParameter);
+	int toXml();
 };
 
 #endif /* CRESPONSEVERSION_H */

@@ -1,9 +1,8 @@
 #include "cResponseHandler.h"
 
-cResponseHandler::cResponseHandler() {
-
-	this->connection = NULL;
-	this->session = NULL;
+cResponseHandler::cResponseHandler(struct MHD_Connection *connection, cSession *session, cDaemonParameter *daemonParameter)
+	: connection(connection), session(session), daemonParameter(daemonParameter)
+{
 	this->user = NULL;
 	this->response = NULL;
 };
@@ -14,8 +13,7 @@ cResponseHandler::~cResponseHandler() {
 	this->user = NULL;
 	this->destroyResponse();
 	this->connection = NULL;
-	delete this->session;
-	delete this->user;
+	this->daemonParameter = NULL;
 };
 
 cResponseHandler *cResponseHandler::setSession(cSession *session) {
@@ -51,7 +49,9 @@ cResponseHandler *cResponseHandler::header(const char *header, const char *conte
 
 cResponseHandler *cResponseHandler::cors() {
 
-	this->header("Access-Control-Allow-Origin", "*")
+	cPluginConfig config = this->daemonParameter->GetPluginConfig();
+
+	this->header("Access-Control-Allow-Origin", config.GetCorsOrigin().c_str())
 		->header("Access-Control-Allow-Headers", "Authorization");
 
 	return this;

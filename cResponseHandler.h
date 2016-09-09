@@ -4,6 +4,7 @@
 
 #include <string>
 #include <microhttpd.h>
+#include "cDaemonParameter.h"
 #include "cSession.h"
 #include "cUser.h"
 #include "cAuth.h"
@@ -18,8 +19,9 @@ private:
 protected:
 	struct MHD_Connection *connection;
 	cSession *session;
+	cDaemonParameter *daemonParameter;
 public:
-	cResponseHandler();
+	cResponseHandler(struct MHD_Connection *connection, cSession *session, cDaemonParameter *daemonParameter);
     virtual ~cResponseHandler();
 	cResponseHandler *setConnection(struct MHD_Connection *connection);
 	cResponseHandler *setSession(cSession *session);
@@ -31,6 +33,7 @@ public:
 	int flush();
 	cSession *getSession();
 	cUser *getUser();
+
 };
 
 #endif  /* CRESPONSEHANDLER_H */
