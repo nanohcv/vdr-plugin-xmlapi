@@ -67,9 +67,6 @@ private:
                     const char *cstr_flags, const char *cstr_weekdays,
                     const char *cstr_day, const char *cstr_start, const char *cstr_stop,
                     const char *cstr_priority, const char *cstr_lifetime);
-    int handleEPG();
-    string eventsToXml(const char *chid, const char *at);
-    string searchEventsToXml(const char* chid, string search, string options);
     
     int handleSwitchToChannel();
     int handleRemote();
