@@ -1,10 +1,12 @@
 #include "cResponseHandler.h"
 
 cResponseHandler::cResponseHandler(struct MHD_Connection *connection, cSession *session, cDaemonParameter *daemonParameter)
-	: connection(connection), session(session), daemonParameter(daemonParameter)
+	: connection(connection), session(session), daemonParameter(daemonParameter), config(daemonParameter->GetPluginConfig())
 {
 	this->user = NULL;
 	this->response = NULL;
+
+	this->initConInfo();
 };
 
 cResponseHandler::~cResponseHandler() {
@@ -52,7 +54,8 @@ cResponseHandler *cResponseHandler::cors() {
 	cPluginConfig config = this->daemonParameter->GetPluginConfig();
 
 	this->header("Access-Control-Allow-Origin", config.GetCorsOrigin().c_str())
-		->header("Access-Control-Allow-Headers", "Authorization");
+		->header("Access-Control-Allow-Headers", "Authorization")
+		->header("Access-Control-Allow-Credentials", "true");
 
 	return this;
 };
@@ -69,4 +72,28 @@ void cResponseHandler::destroyResponse() {
 		MHD_destroy_response (this->response);
 		this->response = NULL;
 	}
+};
+
+void cResponseHandler::initConInfo() {
+
+    const MHD_ConnectionInfo *connectionInfo = MHD_get_connection_info (this->connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
+    if (connectionInfo->client_addr->sa_family == AF_INET)
+    {
+        struct sockaddr_in *sin = (struct sockaddr_in *) connectionInfo->client_addr;
+        char *ip = inet_ntoa(sin->sin_addr);
+        if(ip != NULL)
+        {
+            this->conInfo.insert(pair<string,string>("ClientIP", string(ip)));
+        }
+    }
+    const char *useragent = MHD_lookup_connection_value(this->connection, MHD_HEADER_KIND, "User-Agent");
+    if(useragent != NULL)
+    {
+        this->conInfo.insert(pair<string,string>("User-Agent",string(useragent)));
+    }
+    const char *host = MHD_lookup_connection_value(this->connection, MHD_HEADER_KIND, "Host");
+    if(host != NULL)
+    {
+        this->conInfo.insert(pair<string,string>("Host", string(host)));
+    }
 };

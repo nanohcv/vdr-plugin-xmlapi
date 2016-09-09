@@ -37,6 +37,8 @@
 #include "globals.h"
 #include "cResponseHeader.h"
 #include "cResponseVersion.h"
+#include "cResponseChannels.h"
+#include "cResponsePresets.h"
 #include "cSession.h"
 #include "cAuth.h"
 
@@ -46,11 +48,12 @@ cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
         config(daemonParameter->GetPluginConfig()),
         presets(daemonParameter->GetPluginConfig().GetPresetsFile()),
         hlsPresets(daemonParameter->GetPluginConfig().GetHlsPresetsFile()),
-        extHeaders(daemonParameter->GetPluginConfig().GetWebSrvHeadersFile()) {
+        extHeaders(daemonParameter->GetPluginConfig().GetWebSrvHeadersFile()), auth(NULL) {
     this->initRemoteKeys();
 }
 
 cRequestHandler::~cRequestHandler() {
+	delete this->auth;
 }
 
 int cRequestHandler::HandleRequest(const char* url) {
@@ -75,13 +78,13 @@ int cRequestHandler::HandleRequest(const char* url) {
         this->conInfo.insert(pair<string,string>("Host", string(host)));
     }
 
-    cAuth auth(this->connection, this->config);
+    this->auth = new cAuth(this->connection, this->config);
 
-    if (!auth.authenticated()) return this->handleNotAuthenticated();
+    if (!this->auth->authenticated()) return this->handleNotAuthenticated();
 
     if(0 == strcmp(url, "/version.xml"))
     {
-    	cResponseVersion response(this->connection, auth.Session(), this->daemonParameter);
+    	cResponseVersion response(this->connection, this->auth->Session(), this->daemonParameter);
     	return response.toXml();
     }
 
@@ -99,10 +102,12 @@ int cRequestHandler::HandleRequest(const char* url) {
         return this->handleLogos(url);
     }
     else if (0 == strcmp(url, "/presets.ini")) {
-        return this->handlePresets();
+    	cResponsePresets response(this->connection, this->auth->Session(), this->daemonParameter);
+    	return response.toIni();
     }
     else if (0 == strcmp(url, "/channels.xml")) {
-        return this->handleChannels();
+    	cResponseChannels response(this->connection, this->auth->Session(), this->daemonParameter);
+    	return response.toXml();
     }
     else if (0 == strcmp(url, "/epg.xml")) {
         return this->handleEPG();
@@ -127,12 +132,6 @@ int cRequestHandler::HandleRequest(const char* url) {
     }
     else if (startswith(url, "/websrv/")) {
         return this->handleWebSrv(url);
-    }
-    else if (0 == strcmp(url, "/sessions.xml")) {
-        return this->handleSessions();
-    }
-    else if (0 == strcmp(url, "/sessioncontrol.xml")) {
-        return this->handleSessionControl();
     }
     else {
         return this->handle404Error();
@@ -563,149 +562,6 @@ int cRequestHandler::handleLogos(const char* url) {
     return ret;
 }
 
-int cRequestHandler::handlePresets() {
-    
-    const char* hls = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "hls");
-    
-    string ini;
-    
-    if(hls == NULL) {
-        if(this->presets.GetPresetNames().size() != 0)
-        {
-            vector<string> presetNames = this->presets.GetPresetNames();
-            for(vector<string>::iterator it = presetNames.begin(); it != presetNames.end(); ++it) {
-                cPreset preset = this->presets[*it];
-                ini += "[" + *it + "]\n";
-                ini += "Cmd=" + preset.GetCmd() + "\n";
-                ini += "MimeType=" + preset.MimeType() + "\n";
-                ini += "Ext=" + preset.Extension() + "\n\n";
-            }
-        } else {
-            cPreset dp = presets.GetDefaultPreset();
-            ini += "[Default]\n";
-            ini += "Cmd=" + dp.GetCmd() + "\n";
-            ini += "MimeType=" + dp.MimeType() + "\n";
-            ini += "Ext=" + dp.Extension() + "\n\n";
-        }
-    } else {
-        if(this->hlsPresets.GetPresetNames().size() != 0) {
-            vector<string> presetNames = this->hlsPresets.GetPresetNames();
-            for(vector<string>::iterator it = presetNames.begin(); it != presetNames.end(); ++it) {
-                cHlsPreset preset = this->hlsPresets[*it];
-                ini += "[" + *it + "]\n";
-                ini += "Cmd=" + preset.Cmd() + "\n";
-                ini += "StreamTimeout=" + intToString(preset.StreamTimeout()) + "\n";
-                ini += "MinSegments=" + intToString(preset.MinSegments()) + "\n\n";
-            }
-        } else {
-            cHlsPreset p = hlsPresets.GetDefaultPreset();
-            ini += "[Default]\n";
-            ini += "Cmd=" + p.Cmd() + "\n";
-            ini += "StreamTimeout=" + intToString(p.StreamTimeout()) + "\n";
-            ini += "MinSegments=" + intToString(p.MinSegments()) + "\n\n";
-        }
-    }
-    char *page = (char *)malloc((ini.length() + 1) * sizeof(char));
-    strcpy(page, ini.c_str());
-    struct MHD_Response *response;
-    int ret;
-
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header (response, "Content-Type", "text/plain");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
-
-}
-
-int cRequestHandler::handleChannels() {
-    string xml = this->channelsToXml();
-    struct MHD_Response *response;
-    int ret;
-    char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
-    strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header (response, "Content-Type", "text/xml");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
-}
-
-string cRequestHandler::channelsToXml() {
-    string logourl = "logos/";
-    if(!this->config.RelativeLogoUrl()) {
-        string host = this->conInfo["Host"];
-        if(host != "")
-        {
-            if(this->daemonParameter->GetDaemonPort() == this->config.GetHttpsPort())
-            {
-                logourl = "https://" + host + "/logos/";
-            }
-            else
-            {
-                logourl = "http://" + host + "/logos/";
-            }
-        }
-    }
-    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    xml +=       "<groups>\n";
-    string group = "Unsorted";
-    bool firstgroup = true;
-    for(int i=0; i<Channels.Count(); i++) {
-        cChannel *channel = Channels.Get(i);
-        if(channel->GroupSep() && firstgroup) {
-            group = channel->Name();
-            xml += "    <group name=\"" + group + "\">\n";
-            firstgroup = false;
-            continue;
-        }
-        if(channel->GroupSep() && !firstgroup) {
-            xml += "    </group>\n";
-            group = channel->Name();
-            xml += "    <group name=\"" + group + "\">\n";
-            continue;
-        }
-        if(!channel->GroupSep() && i == 0) {
-            xml += "    <group name=\"" + group + "\">\n";
-            firstgroup = false;
-        }
-        xml += "        <channel id=\"" +
-                string(channel->GetChannelID().ToString()) +
-                "\">\n";
-        if(channel->Vpid() == 0 || channel->Vpid() == 1) {
-            xml += "        <isradio>true</isradio>\n";
-        }
-        else
-        {
-            xml += "        <isradio>false</isradio>\n";
-        }
-        string name = channel->Name();
-        string shortname = channel->ShortName();
-        string logo = name;
-        transform(logo.begin(), logo.end(), logo.begin(), ::tolower);
-        replace(logo.begin(), logo.end(), '/', '-');
-        logo = urlEncode(logo);
-        xmlEncode(name);
-        xmlEncode(shortname);
-        xmlEncode(logo);
-        xml += "            <name>" + name + "</name>\n";
-        xml += "            <shortname>" + shortname + "</shortname>\n";
-        xml += "            <logo>" + logourl + logo + ".png</logo>\n";
-        xml += "        </channel>\n";
-    }
-    xml += "    </group>\n";
-    xml += "</groups>\n";
-    return xml;
-}
-
 int cRequestHandler::handleRecordings() {
 
     const char *recfile = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "filename");
@@ -1112,8 +968,9 @@ bool cRequestHandler::addTimer(const char* channelid, const char* name,
 }
 
 int cRequestHandler::handleEPG() {
-    struct MHD_Response *response;
-    int ret;
+
+	cResponseHandler response(this->connection, this->auth->Session(), this->daemonParameter);
+
     string xml;
     const char* chid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "chid");
     const char* at = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "at");
@@ -1135,16 +992,10 @@ int cRequestHandler::handleEPG() {
     }
     char *page = (char *)malloc((xml.length()+1) * sizeof(char));
     strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header (response, "Content-Type", "text/xml");
-    MHD_add_response_header (response, "Cache-Control", "no-cache");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
+    return response.create(strlen (page), (void *) page, MHD_RESPMEM_MUST_FREE)
+		->header("Content-Type", "text/xml")
+		->cors()
+		->flush();
 }
 
 string cRequestHandler::eventsToXml(const char* chid, const char *at) {
@@ -1593,25 +1444,6 @@ void cRequestHandler::initRemoteKeys() {
     this->remoteKeys.insert(pair<string, eKeys>("none", kNone)); 
 }
 
-bool cRequestHandler::authenticated() {
-    if(!this->config.GetUsers().empty()) {
-        char *user = NULL;
-        char *pass = NULL;
-        bool fail;
-        user = MHD_basic_auth_get_username_password (connection, &pass);
-        fail = ( (user == NULL) || !this->config.GetUsers().MatchUser(user, pass));
-        if(fail) {
-           if (user != NULL) free (user);
-           if (pass != NULL) free (pass);
-           return false; 
-        }
-        this->user = this->config.GetUsers().GetUser(user);
-        if (user != NULL) free (user);
-        if (pass != NULL) free (pass); 
-    }
-    return true;
-}
-
 int cRequestHandler::handleNotAuthenticated() {
     struct MHD_Response *response;
     int ret;
@@ -1619,125 +1451,6 @@ int cRequestHandler::handleNotAuthenticated() {
     response = MHD_create_response_from_buffer (strlen (page), (void *) page,
                                                MHD_RESPMEM_PERSISTENT);
     ret = MHD_queue_basic_auth_fail_response (this->connection, "XMLAPI", response);
-    MHD_destroy_response (response);
-    return ret;
-}
-
-int cRequestHandler::handleSessions() {
-    struct MHD_Response *response;
-    int ret;
-    bool setCookie = false;
-    cSession session(1);
-    const char* createAction = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "create");
-    const char* deleteAction = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "delete");
-    if(createAction != NULL && deleteAction != NULL) {
-        dsyslog("xmlapi: sessions.xml: create and delete parameters are not allowed together.");
-        return this->handle404Error();
-    }
-    if(createAction != NULL) {
-        long lifetime = atol(createAction);
-         session = SessionControl->AddSession(this->user, lifetime);
-         setCookie = true;
-    }
-    if(deleteAction != NULL) {
-        string delAction = string(deleteAction);
-        if(delAction == "all") {
-            SessionControl->RemoveSessionsByUser(this->user);
-        } else {
-            SessionControl->Mutex.Lock();
-            const cUser *tmpUser = SessionControl->GetUserBySessionId(delAction);
-            if(tmpUser != NULL && *tmpUser == this->user) {
-                SessionControl->Mutex.Unlock();
-                SessionControl->RemoveSessionBySessionId(delAction);
-            } else {
-                SessionControl->Mutex.Unlock();
-            }
-        }
-    }
-    vector<cSession> sessions = SessionControl->GetSessions(this->user);
-    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    xml += "<user name=\"" + this->user.Name() + "\">\n";
-    xml += "    <sessions>\n";
-    for(vector<cSession>::iterator it = sessions.begin(); it != sessions.end(); ++it) {
-        xml += "        <session id=\"" + it->GetSessionId() + "\">\n";
-        xml += "            <lifetime>" + longToString(it->GetLifetime()) + "</lifetime>\n";
-        xml += "            <start>" + timeToString(it->GetStart()) + "</start>\n";
-        xml += "            <expired>" + string(it->IsExpired() ? "true" : "false") + "</expired>\n";
-        xml += "            <expires>" + it->Expires() + "</expires>\n";
-        xml += "        </session>\n";
-    }
-    xml += "    </sessions>\n";
-    xml += "</user>\n";
-    char *page = (char *)malloc((xml.length()+1) * sizeof(char));
-    strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header (response, "Content-Type", "text/xml");
-    MHD_add_response_header (response, "Cache-Control", "no-cache");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    if(setCookie) {
-        if (MHD_NO == MHD_add_response_header (response, MHD_HTTP_HEADER_SET_COOKIE, session.Cookie().c_str())) {
-            dsyslog("xmlapi: Can't set cookie \"%s\".", session.Cookie().c_str());
-        }
-    }
-    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret; 
-}
-
-int cRequestHandler::handleSessionControl() {
-    
-    if(!this->user.Rights().SessionControl()) {
-        dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), "/sessioncontrol.xml");
-        return this->handle403Error();
-    }
-    
-    struct MHD_Response *response;
-    int ret;
-    const char* removeAction_cstr = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "remove");
-    if(removeAction_cstr != NULL) {
-        string removeAction(removeAction_cstr);
-        if(removeAction == "all") {
-            SessionControl->RemoveAllSessions();
-        } else if (removeAction == "expired") {
-            SessionControl->RemoveExpiredSessions();
-        } else if (removeAction == "user") {
-            const char* user_cstr = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "user");
-            if(user_cstr != NULL) {
-                cUser deluser = this->config.GetUsers().GetUser(user_cstr);
-                SessionControl->RemoveSessionsByUser(deluser);
-            } else {
-                dsyslog("xmlapi: /sessioncontrol.xml?remove=user ->  parameter user not specified.");
-                return this->handle404Error();
-            }
-        } else if (removeAction == "sessionid") {
-            const char* sessionid_cstr = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "sessionid");
-            if(sessionid_cstr != NULL) {
-                string sessionid(sessionid_cstr);
-                SessionControl->RemoveSessionBySessionId(sessionid);
-            } else {
-                dsyslog("xmlapi: /sessioncontrol.xml?remove=sessionid ->  parameter sessionid not specified.");
-                return this->handle404Error();
-            }
-        } else {
-            dsyslog("xmlapi: /sessioncontrol.xml?remove=%s ->  unknown remove action.", removeAction.c_str());
-            return this->handle404Error();
-        }  
-    }
-    
-    string xml = SessionControl->GetSessionsXml();
-    char *page = (char *)malloc((xml.length()+1) * sizeof(char));
-    strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header (response, "Content-Type", "text/xml");
-    MHD_add_response_header (response, "Cache-Control", "no-cache");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
 }

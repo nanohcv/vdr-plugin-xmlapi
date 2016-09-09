@@ -111,6 +111,7 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
 		MHD_add_response_header (response, "Allow", "GET");
 		MHD_add_response_header (response, "Access-Control-Allow-Origin", parameter->GetPluginConfig().GetCorsOrigin().c_str());
 		MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+		MHD_add_response_header (response, "Access-Control-Allow-Credentials", "true");
 		ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
 		MHD_destroy_response (response);
 		return ret;

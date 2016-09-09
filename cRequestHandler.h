@@ -25,6 +25,7 @@
 #include "cHlsPresets.h"
 #include "cUser.h"
 #include "cExtensionHeaders.h"
+#include "cAuth.h"
 
 #ifndef CREQUESTHANDLER_H
 #define CREQUESTHANDLER_H
@@ -45,16 +46,13 @@ private:
     cHlsPresets hlsPresets;
     cExtensionHeaders extHeaders;
     map<string, eKeys> remoteKeys;
+    cAuth *auth;
     
-
     int handleStream(const char *url);
     int handleRecStream(const char *url);
     int handleHlsStream(const char *url);
     int handleStreamControl();
     int handleLogos(const char *url);
-    int handlePresets();
-    int handleChannels();
-    string channelsToXml();
     int handleRecordings();
     int handleDeletedRecordings();
     string recordingsToXml(bool deleted = false);
@@ -89,11 +87,7 @@ private:
 
     std::map<std::string, std::string> conInfo;
     
-    bool authenticated();
     int handleNotAuthenticated();
-    
-    int handleSessions();
-    int handleSessionControl();
     
 
 };

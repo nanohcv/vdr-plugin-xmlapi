@@ -3,7 +3,11 @@
 #define CRESPONSEHANDLER_H
 
 #include <string>
+#include <map>
+#include <algorithm>
 #include <microhttpd.h>
+#include <arpa/inet.h>
+#include <vdr/channels.h>
 #include "cDaemonParameter.h"
 #include "cSession.h"
 #include "cUser.h"
@@ -16,10 +20,15 @@ private:
 	struct MHD_Response *response;
 	cUser *user;
 	void destroyResponse();
+	void initConInfo();
+
 protected:
 	struct MHD_Connection *connection;
 	cSession *session;
 	cDaemonParameter *daemonParameter;
+	cPluginConfig config;
+    map<string, string> conInfo;
+
 public:
 	cResponseHandler(struct MHD_Connection *connection, cSession *session, cDaemonParameter *daemonParameter);
     virtual ~cResponseHandler();
@@ -33,7 +42,7 @@ public:
 	int flush();
 	cSession *getSession();
 	cUser *getUser();
-
+	map<string, string> GetConnectionInfo() { return this->conInfo; };
 };
 
 #endif  /* CRESPONSEHANDLER_H */
