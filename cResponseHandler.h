@@ -6,17 +6,18 @@
 #include <microhttpd.h>
 #include "cSession.h"
 #include "cUser.h"
+#include "cAuth.h"
 
 using namespace std;
 
 class cResponseHandler {
 private:
 	struct MHD_Response *response;
-	cSession *session;
 	cUser *user;
 	void destroyResponse();
 protected:
 	struct MHD_Connection *connection;
+	cSession *session;
 public:
 	cResponseHandler();
     virtual ~cResponseHandler();

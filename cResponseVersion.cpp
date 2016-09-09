@@ -1,8 +1,9 @@
 #include "cResponseVersion.h"
 
-cResponseVersion::cResponseVersion(struct MHD_Connection *connection) {
+cResponseVersion::cResponseVersion(struct MHD_Connection *connection, cSession *session) {
 
 	this->connection = connection;
+	this->session = session;
 };
 
 int cResponseVersion::toXml(cPluginConfig config) {

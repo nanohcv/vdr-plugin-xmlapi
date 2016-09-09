@@ -38,6 +38,7 @@
 #include "cResponseHeader.h"
 #include "cResponseVersion.h"
 #include "cSession.h"
+#include "cAuth.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
                                     cDaemonParameter *daemonParameter)
@@ -74,69 +75,64 @@ int cRequestHandler::HandleRequest(const char* url) {
         this->conInfo.insert(pair<string,string>("Host", string(host)));
     }
 
+    cAuth auth(this->connection, this->config);
+
+    if (!auth.authenticated()) return this->handleNotAuthenticated();
+
     if(0 == strcmp(url, "/version.xml"))
     {
-        if (!this->authenticated()) {
-        	return this->handleNotAuthenticated();
-        }
-
-    	cResponseVersion response(this->connection);
+    	cResponseVersion response(this->connection, auth.Session());
     	return response.toXml(this->config);
     }
 
     else if (startswith(url, "/stream"))
     {
-        if (0 == strcmp(url, "/streamcontrol.xml"))
-            return this->authenticated() ? this->handleStreamControl() : this->handleNotAuthenticated();
-        return this->authenticated() ? this->handleStream(url) : this->handleNotAuthenticated();
+    	return (0 == strcmp(url, "/streamcontrol.xml")) ? this->handleStreamControl() : this->handleStream(url);
     }
     else if (startswith(url, "/recstream")) {
-        return this->authenticated() ? this->handleRecStream(url) : this->handleNotAuthenticated();
+        return this->handleRecStream(url);
     }
     else if (startswith(url, "/hls/")) {
-        if(this->config.GetHlsAuthMode() == cPluginConfig::HLS_AUTH_BASIC) {
-            return this->authenticated() ? this->handleHlsStream(url) : this->handleNotAuthenticated();
-        }
         return this->handleHlsStream(url);
     }
     else if (startswith(url, "/logos/") && endswith(url, ".png")) {
-        return this->authenticated() ? this->handleLogos(url) : this->handleNotAuthenticated();
+        return this->handleLogos(url);
     }
     else if (0 == strcmp(url, "/presets.ini")) {
-        return this->authenticated() ? this->handlePresets() : this->handleNotAuthenticated();
+        return this->handlePresets();
     }
     else if (0 == strcmp(url, "/channels.xml")) {
-        return this->authenticated() ? this->handleChannels() : this->handleNotAuthenticated();
+        return this->handleChannels();
     }
     else if (0 == strcmp(url, "/epg.xml")) {
-        return this->authenticated() ? this->handleEPG() : this->handleNotAuthenticated();
+        return this->handleEPG();
     }
     else if (0 == strcmp(url, "/recordings.xml")) {
-        return this->authenticated() ? this->handleRecordings() : this->handleNotAuthenticated();
+        return this->handleRecordings();
     }
     else if (0 == strcmp(url, "/deletedrecordings.xml")) {
-        return this->authenticated() ? this->handleDeletedRecordings() : this->handleNotAuthenticated();
+        return this->handleDeletedRecordings();
     }
     else if (0 == strcmp(url, "/timers.xml")) {
-        return this->authenticated() ? this->handleTimers() : this->handleNotAuthenticated();
+        return this->handleTimers();
     }
     else if (0 == strcmp(url, "/switch.xml")) {
-        return this->authenticated() ? this->handleSwitchToChannel() : this->handleNotAuthenticated();
+        return this->handleSwitchToChannel();
     }
     else if (0 == strcmp(url, "/remote.xml")) {
-        return this->authenticated() ? this->handleRemote() : this->handleNotAuthenticated();
+        return this->handleRemote();
     }
     else if (0 == strcmp(url, "/rights.xml")) {
-        return this->authenticated() ? this->handleRights() : this->handleNotAuthenticated();
+        return this->handleRights();
     }
     else if (startswith(url, "/websrv/")) {
-        return this->authenticated() ? this->handleWebSrv(url) : this->handleNotAuthenticated();
+        return this->handleWebSrv(url);
     }
     else if (0 == strcmp(url, "/sessions.xml")) {
-        return this->authenticated() ? this->handleSessions() : this->handleNotAuthenticated();
+        return this->handleSessions();
     }
     else if (0 == strcmp(url, "/sessioncontrol.xml")) {
-        return this->authenticated() ? this->handleSessionControl() : this->handleNotAuthenticated();
+        return this->handleSessionControl();
     }
     else {
         return this->handle404Error();

@@ -13,6 +13,7 @@ cResponseHandler::~cResponseHandler() {
 	this->session = NULL;
 	this->user = NULL;
 	this->destroyResponse();
+	this->connection = NULL;
 	delete this->session;
 	delete this->user;
 };
@@ -38,6 +39,7 @@ cUser *cResponseHandler::getUser() {
 cResponseHandler *cResponseHandler::create(size_t size, void *buffer, enum MHD_ResponseMemoryMode mode) {
 
 	this->response = MHD_create_response_from_buffer(size, buffer, mode);
+	this->header(MHD_HTTP_HEADER_SET_COOKIE, this->session->Cookie().c_str());
 	return this;
 }
 
