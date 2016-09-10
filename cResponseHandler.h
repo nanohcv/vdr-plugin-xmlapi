@@ -40,6 +40,7 @@ public:
 	cResponseHandler *create(size_t size, int fd);
 	cResponseHandler *header(const char *header, const char *content);
 	cResponseHandler *cors();
+	cResponseHandler *cors(MHD_Response *response);
 	int flush();
 	cSession *getSession();
 	cUser *getUser();

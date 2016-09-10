@@ -39,14 +39,18 @@ cUser *cResponseHandler::getUser() {
 cResponseHandler *cResponseHandler::create(size_t size, void *buffer, enum MHD_ResponseMemoryMode mode) {
 
 	this->response = MHD_create_response_from_buffer(size, buffer, mode);
-	this->header(MHD_HTTP_HEADER_SET_COOKIE, this->session->Cookie().c_str());
+	if (this->session != NULL) {
+		this->header(MHD_HTTP_HEADER_SET_COOKIE, this->session->Cookie().c_str());
+	}
 	return this;
 }
 
 cResponseHandler *cResponseHandler::create(size_t size, int fd) {
 
 	this->response = MHD_create_response_from_fd(size, fd);
-	this->header(MHD_HTTP_HEADER_SET_COOKIE, this->session->Cookie().c_str());
+	if (this->session != NULL) {
+		this->header(MHD_HTTP_HEADER_SET_COOKIE, this->session->Cookie().c_str());
+	}
 	return this;
 }
 
@@ -58,18 +62,16 @@ cResponseHandler *cResponseHandler::header(const char *header, const char *conte
 
 cResponseHandler *cResponseHandler::cors() {
 
-	const char *origin = NULL;
-	string corsConfig = this->config.GetCorsOrigin();
+	this->cors(this->response);
 
-	if ("auto" == corsConfig) {
-		origin = MHD_lookup_connection_value(this->connection, MHD_HEADER_KIND, "Origin");
-	} else {
-		origin = this->config.GetCorsOrigin().c_str();
-	}
+	return this;
+};
 
-	this->header("Access-Control-Allow-Origin", origin)
-		->header("Access-Control-Allow-Headers", "Authorization")
-		->header("Access-Control-Allow-Credentials", "true");
+cResponseHandler *cResponseHandler::cors(MHD_Response *response) {
+
+	MHD_add_response_header (response, "Access-Control-Allow-Origin", this->conInfo["Origin"].c_str());
+	MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+	MHD_add_response_header (response, "Access-Control-Allow-Credentials", "true");
 
 	return this;
 };
@@ -109,5 +111,17 @@ void cResponseHandler::initConInfo() {
     if(host != NULL)
     {
         this->conInfo.insert(pair<string,string>("Host", string(host)));
+    }
+    const char *origin = NULL;
+	string corsConfig = this->config.GetCorsOrigin();
+
+	if ("auto" == corsConfig) {
+		origin = MHD_lookup_connection_value(this->connection, MHD_HEADER_KIND, "Origin");
+	} else {
+		origin = corsConfig.c_str();
+	}
+    if(origin != NULL)
+    {
+        this->conInfo.insert(pair<string,string>("Origin", string(origin)));
     }
 };
