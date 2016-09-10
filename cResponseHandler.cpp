@@ -58,9 +58,16 @@ cResponseHandler *cResponseHandler::header(const char *header, const char *conte
 
 cResponseHandler *cResponseHandler::cors() {
 
-	cPluginConfig config = this->daemonParameter->GetPluginConfig();
+	const char *origin = NULL;
+	string corsConfig = this->config.GetCorsOrigin();
 
-	this->header("Access-Control-Allow-Origin", config.GetCorsOrigin().c_str())
+	if ("auto" == corsConfig) {
+		origin = MHD_lookup_connection_value(this->connection, MHD_HEADER_KIND, "Origin");
+	} else {
+		origin = this->config.GetCorsOrigin().c_str();
+	}
+
+	this->header("Access-Control-Allow-Origin", origin)
 		->header("Access-Control-Allow-Headers", "Authorization")
 		->header("Access-Control-Allow-Credentials", "true");
 

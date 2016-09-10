@@ -104,12 +104,22 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
     cDaemonParameter *parameter = (cDaemonParameter *)cls;
     struct MHD_Response *response;
     int ret;
-    
+
     if (0 == strcmp (method, MHD_HTTP_METHOD_OPTIONS)) {
 		const char *page = "OK";
+
+		const char *origin = NULL;
+		string corsConfig = parameter->GetPluginConfig().GetCorsOrigin();
+
+		if ("auto" == corsConfig) {
+			origin = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "Origin");
+		} else {
+			origin = corsConfig.c_str();
+		}
+
 		response = MHD_create_response_from_buffer (strlen (page), (void *) page, MHD_RESPMEM_PERSISTENT);
 		MHD_add_response_header (response, "Allow", "GET");
-		MHD_add_response_header (response, "Access-Control-Allow-Origin", parameter->GetPluginConfig().GetCorsOrigin().c_str());
+		MHD_add_response_header (response, "Access-Control-Allow-Origin", origin);
 		MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
 		MHD_add_response_header (response, "Access-Control-Allow-Credentials", "true");
 		ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
