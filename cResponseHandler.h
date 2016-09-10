@@ -18,7 +18,7 @@ using namespace std;
 class cResponseHandler {
 private:
 	struct MHD_Response *response;
-	cUser *user;
+	const cUser *user;
 	void destroyResponse();
 	void initConInfo();
 
@@ -43,8 +43,10 @@ public:
 	cResponseHandler *cors(MHD_Response *response);
 	int flush();
 	cSession *getSession();
-	cUser *getUser();
+	const cUser *getUser();
 	map<string, string> GetConnectionInfo() { return this->conInfo; };
+	int handle404Error();
+	int handle403Error();
 };
 
 #endif  /* CRESPONSEHANDLER_H */

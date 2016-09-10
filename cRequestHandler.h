@@ -21,8 +21,6 @@
 #include "cPluginConfig.h"
 #include "cPreset.h"
 #include "cPresets.h"
-#include "cHlsPreset.h"
-#include "cHlsPresets.h"
 #include "cUser.h"
 #include "cExtensionHeaders.h"
 #include "cAuth.h"
@@ -43,14 +41,12 @@ private:
     cPluginConfig config;
     cUser user;
     cPresets presets;
-    cHlsPresets hlsPresets;
     cExtensionHeaders extHeaders;
     map<string, eKeys> remoteKeys;
     cAuth *auth;
     
     int handleStream(const char *url);
     int handleRecStream(const char *url);
-    int handleHlsStream(const char *url);
     int handleStreamControl();
     int handleRecordings();
     int handleDeletedRecordings();

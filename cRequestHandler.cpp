@@ -41,6 +41,7 @@
 #include "cResponsePresets.h"
 #include "cResponseEpg.h"
 #include "cResponseLogo.h"
+#include "cResponseHlsStream.h"
 #include "cSession.h"
 #include "cAuth.h"
 
@@ -49,7 +50,6 @@ cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
     : connection(connection), daemonParameter(daemonParameter),
         config(daemonParameter->GetPluginConfig()),
         presets(daemonParameter->GetPluginConfig().GetPresetsFile()),
-        hlsPresets(daemonParameter->GetPluginConfig().GetHlsPresetsFile()),
         extHeaders(daemonParameter->GetPluginConfig().GetWebSrvHeadersFile()), auth(NULL) {
     this->initRemoteKeys();
 }
@@ -98,7 +98,16 @@ int cRequestHandler::HandleRequest(const char* url) {
         return this->handleRecStream(url);
     }
     else if (startswith(url, "/hls/")) {
-        return this->handleHlsStream(url);
+
+        if(!this->user.Rights().Streaming()) {
+            dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), url);
+            return this->handle403Error();
+        }
+
+        cResponseHlsStream response(this->connection, this->auth->Session(), this->daemonParameter);
+        return response.respond(url);
+
+        //return this->handleHlsStream(url);
     }
     else if (startswith(url, "/logos/") && endswith(url, ".png")) {
 
@@ -305,212 +314,6 @@ void cRequestHandler::clear_stream(void* cls) {
     dsyslog("xmlapi: Stream stopped");
 }
 
-int cRequestHandler::handleHlsStream(const char* url) {
-    cUser tmpUser = this->user;
-    const char *cookie = NULL;
-    if(this->config.GetHlsAuthMode() == cPluginConfig::HLS_AUTH_SESSION && !this->config.GetUsers().empty()) {
-        cookie = MHD_lookup_connection_value (connection,
-					MHD_COOKIE_KIND,
-					"vdr-plugin-xmlapi_sessionid");
-        if(cookie != NULL) {
-            dsyslog("xmlapi: handleHlsStream() -> found cookie vdr-plugin-xmlapi_sessionid=%s.", cookie);
-            string sessionid(cookie);
-            SessionControl->Mutex.Lock();
-            cSession* session = SessionControl->GetSessionBySessionId(sessionid);
-            if(session == NULL) {
-                dsyslog("xmlapi: handleHlsStream() -> No session found for session id \"%s\".", cookie);
-                SessionControl->Mutex.Unlock();
-                return this->handle403Error();
-            } else {
-                if(session->IsExpired()) {
-                    dsyslog("xmlapi: handleHlsStream() -> Session with session id \"%s\" is expired.", cookie);
-                    SessionControl->Mutex.Unlock();
-                    return this->handle403Error();
-                } else {
-                    const cUser *sessionUser = SessionControl->GetUserBySessionId(sessionid);
-                    if(sessionUser == NULL) {
-                        dsyslog("xmlapi: handleHlsStream() -> No user found for session id \"%s\".", cookie);
-                        SessionControl->Mutex.Unlock();
-                        return this->handle403Error();
-                    } else {
-                        tmpUser = *sessionUser;
-                    }
-                }
-            }
-            SessionControl->Mutex.Unlock();
-        } else {
-            dsyslog("xmlapi: handleHlsStream() -> No cookie found!");
-            return this->handle403Error();
-        }
-    }
-    if(!tmpUser.Rights().Streaming()) {
-        dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), url);
-        return this->handle403Error();
-    }
-    struct MHD_Response *response;
-    int ret;
-    if(strlen(url) == 5)
-        return this->handle404Error();
-    string file = string(url).substr(5);
-    if(file == "stream.m3u8") {
-        const char* cstr_preset = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "preset");
-        if(cstr_preset == NULL)
-        {
-            esyslog("xmlapi: hls stream -> No preset given!");
-            return this->handle404Error();
-        }
-        const char* chid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "chid");
-        const char* recfile = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "filename");
-        if(chid == NULL && recfile == NULL)
-        {
-            esyslog("xmlapi: stream -> No chid or filename given!");
-            return this->handle404Error();
-        }
-        if(chid != NULL && recfile != NULL) {
-            esyslog("xmlapi: stream -> Chid and filename given. Only one is allowed!");
-            return this->handle404Error();
-        }
-        string streamName = "";
-        string input = "";
-        int starttime = 0;
-        if(chid) {
-            tChannelID id = tChannelID::FromString(chid);
-            if(!id.Valid()) {
-                esyslog("xmlapi: stream -> invalid chid given");
-                return this->handle404Error();
-            }
-            streamName = string(chid) + string(cstr_preset);
-            input = this->config.GetStreamdevUrl() + string(chid) + ".ts";
-            dsyslog("xmlapi: request %s?chid=%s&preset=%s", url, chid, cstr_preset);
-        }
-        if(recfile) {
-            cRecording *rec = Recordings.GetByName(recfile);
-            if(rec == NULL) {
-                dsyslog("xmlapi: No recording found with file name '%s'", recfile);
-                return this->handle404Error();
-            }
-            streamName = string(recfile) + string(cstr_preset);
-            string recfiles = "'" + string(rec->FileName()) + "/'*.ts";
-            const char* cstr_start = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "start"); 
-            if(cstr_start != NULL) {
-                starttime = atoi(cstr_start);
-            }
-            input = "concat:$(ls -1 " + recfiles + " | perl -0pe 's/\\n/|/g;s/\\|$//g')";
-            dsyslog("xmlapi: request %s?filename=%s&preset=%s", url, recfile, cstr_preset);
-        }
-
-        cHlsStream *stream = StreamControl->GetHlsStream(streamName);
-        if(stream == NULL) {
-            
-            string baseurl = "/hls/";
-            cHlsPreset preset = this->hlsPresets[cstr_preset];
-            string presetName = cstr_preset;
-            stream = new cHlsStream(this->config.GetFFmpeg(), this->config.GetHlsTmpDir(), preset, this->conInfo);
-            stream->SetStreamName(streamName);
-            int streamid = StreamControl->AddStream(stream);
-            stream->SetStreamId(streamid);
-            if(!stream->StartStream(input, starttime)) {
-                StreamControl->RemoveStream(streamid);
-                return this->handle404Error();
-            }
-            
-            int fd;
-            struct stat sbuf;
-            string m3u8File = stream->m3u8File();
-            if ( (-1 == (fd = open (m3u8File.c_str(), O_RDONLY))) ||
-                (0 != fstat (fd, &sbuf)) ) {
-                 if (fd != -1)
-                     close (fd);
-                 StreamControl->RemoveStream(streamid);
-                 return this->handle404Error();
-             }
-            response = MHD_create_response_from_fd(sbuf.st_size, fd);
-            MHD_add_response_header (response, "Content-Type", "application/x-mpegURL");
-            MHD_add_response_header (response, "Cache-Control", "no-cache");
-            MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-            MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-            if(cookie != NULL) {
-                SessionControl->Mutex.Lock();
-                cSession *session = SessionControl->GetSessionBySessionId(string(cookie));
-                if(session != NULL) {
-                    dsyslog("xmlapi: handleHlsStream() -> Update cookie's start time...");
-                    session->UpdateStart();
-                    if (MHD_NO == MHD_add_response_header (response, MHD_HTTP_HEADER_SET_COOKIE, session->Cookie().c_str())) {
-                        dsyslog("xmlapi: Can't set cookie \"%s\".", session->Cookie().c_str());
-                    }
-                }
-                SessionControl->Mutex.Unlock();
-            }
-            ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-            MHD_destroy_response (response);
-            return ret;
-        }
-        else {
-            int fd;
-            struct stat sbuf;
-            if ( (-1 == (fd = open (stream->m3u8File().c_str(), O_RDONLY))) ||
-                (0 != fstat (fd, &sbuf)) ) {
-                 if (fd != -1)
-                     close (fd);
-                 StreamControl->RemoveStream(stream->StreamId());
-                 return this->handle404Error();
-             }
-            response = MHD_create_response_from_fd(sbuf.st_size, fd);
-            MHD_add_response_header (response, "Content-Type", "application/x-mpegURL");
-            MHD_add_response_header (response, "Cache-Control", "no-cache");
-            MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-            MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-            if(cookie != NULL) {
-                SessionControl->Mutex.Lock();
-                cSession *session = SessionControl->GetSessionBySessionId(string(cookie));
-                if(session != NULL) {
-                    dsyslog("xmlapi: handleHlsStream() -> Update cookie's start time...");
-                    session->UpdateStart();
-                    if (MHD_NO == MHD_add_response_header (response, MHD_HTTP_HEADER_SET_COOKIE, session->Cookie().c_str())) {
-                        dsyslog("xmlapi: Can't set cookie \"%s\".", session->Cookie().c_str());
-                    }
-                }
-                SessionControl->Mutex.Unlock();
-            }
-            ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-            MHD_destroy_response (response);
-            return ret;
-        }
-        
-    }
-    else if (endswith(file.c_str(), ".ts")) {
-        vector<string> parts = split(file, '-');
-        if(parts.size() != 2)
-            return this->handle404Error();
-        int streamid = atoi(parts[0].c_str());
-        StreamControl->Mutex.Lock();
-        cHlsStream *stream = (cHlsStream*)StreamControl->GetStream(streamid);
-        StreamControl->Mutex.Unlock();
-        if(stream != NULL) {
-            StreamControl->Mutex.Lock();
-            string tsFile = stream->StreamPath() + file;
-            StreamControl->Mutex.Unlock();
-            int fd;
-            struct stat sbuf;
-            if ( (-1 == (fd = open (tsFile.c_str(), O_RDONLY))) ||
-                (0 != fstat (fd, &sbuf)) ) {
-                 if (fd != -1)
-                     close (fd);
-                 StreamControl->RemoveStream(stream->StreamId());
-                 return this->handle404Error();
-             }
-            response = MHD_create_response_from_fd(sbuf.st_size, fd);
-            MHD_add_response_header (response, "Content-Type", "video/mp2t");
-            MHD_add_response_header (response, "Cache-Control", "no-cache");
-            MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-            MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-            ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-            MHD_destroy_response (response);
-            return ret;
-        } 
-    }
-    return this->handle404Error();
-}
 
 int cRequestHandler::handleStreamControl() {
 
