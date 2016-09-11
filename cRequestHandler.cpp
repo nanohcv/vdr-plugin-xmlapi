@@ -29,7 +29,6 @@
 #include <vdr/tools.h>
 #include <vdr/channels.h>
 #include "cRequestHandler.h"
-#include "cStream.h"
 #include "helpers.h"
 #include "globals.h"
 #include "cResponseHeader.h"
@@ -43,6 +42,7 @@
 #include "cResponseStream.h"
 #include "cResponseRecordings.h"
 #include "cResponseTimer.h"
+#include "cResponseSwitch.h"
 #include "cSession.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
@@ -155,7 +155,8 @@ int cRequestHandler::HandleRequest(const char* url) {
         return response.toXml();
     }
     else if (0 == strcmp(url, "/switch.xml")) {
-        return this->handleSwitchToChannel();
+        cResponseSwitch response(this->connection, this->auth->Session(), this->daemonParameter);
+        return response.toXml();
     }
     else if (0 == strcmp(url, "/remote.xml")) {
         return this->handleRemote();
@@ -179,52 +180,6 @@ cResponseHandler cRequestHandler::GetErrorHandler() {
 	cResponseHandler response(connection, session, this->daemonParameter);
 	return response;
 };
-
-int cRequestHandler::handle404Error() {
-    struct MHD_Response *response;
-    int ret;
-    const char *page = "<html>\n"
-                       "  <head>\n"
-                       "    <title>404 Not Found</title>\n"
-                       "  </head>\n"
-                       "  <body>\n"
-                       "    <h1>Not Found</h1>\n"
-                       "    <p>The requested URL was not found on this server.</p>\n"
-                       "  </body>\n"
-                       "</html>\n";
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_PERSISTENT);
-    MHD_add_response_header (response, "Content-Type", "text/html");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response(this->connection, MHD_HTTP_NOT_FOUND, response);
-    MHD_destroy_response (response);
-    return ret;
-}
-
-int cRequestHandler::handle403Error() {
-    struct MHD_Response *response;
-    int ret;
-    const char *page = "<html>\n"
-                       "  <head>\n"
-                       "    <title>403 permission denied</title>\n"
-                       "  </head>\n"
-                       "  <body>\n"
-                       "    <h1>Permission denied</h1>\n"
-                       "    <p>You don't have the permission to access this site.</p>\n"
-                       "  </body>\n"
-                       "</html>\n";
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_PERSISTENT);
-    MHD_add_response_header (response, "Content-Type", "text/html");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response(this->connection, MHD_HTTP_FORBIDDEN, response);
-    MHD_destroy_response (response);
-    return ret;
-}
 
 int cRequestHandler::handleSwitchToChannel() {
     if(!this->user.Rights().RemoteControl()) {
@@ -453,6 +408,52 @@ int cRequestHandler::handleNotAuthenticated() {
     response = MHD_create_response_from_buffer (strlen (page), (void *) page,
                                                MHD_RESPMEM_PERSISTENT);
     ret = MHD_queue_basic_auth_fail_response (this->connection, "XMLAPI", response);
+    MHD_destroy_response (response);
+    return ret;
+}
+
+int cRequestHandler::handle404Error() {
+    struct MHD_Response *response;
+    int ret;
+    const char *page = "<html>\n"
+                       "  <head>\n"
+                       "    <title>404 Not Found</title>\n"
+                       "  </head>\n"
+                       "  <body>\n"
+                       "    <h1>Not Found</h1>\n"
+                       "    <p>The requested URL was not found on this server.</p>\n"
+                       "  </body>\n"
+                       "</html>\n";
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
+                                               MHD_RESPMEM_PERSISTENT);
+    MHD_add_response_header (response, "Content-Type", "text/html");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+    ret = MHD_queue_response(this->connection, MHD_HTTP_NOT_FOUND, response);
+    MHD_destroy_response (response);
+    return ret;
+}
+
+int cRequestHandler::handle403Error() {
+    struct MHD_Response *response;
+    int ret;
+    const char *page = "<html>\n"
+                       "  <head>\n"
+                       "    <title>403 permission denied</title>\n"
+                       "  </head>\n"
+                       "  <body>\n"
+                       "    <h1>Permission denied</h1>\n"
+                       "    <p>You don't have the permission to access this site.</p>\n"
+                       "  </body>\n"
+                       "</html>\n";
+    response = MHD_create_response_from_buffer (strlen (page),
+                                               (void *) page,
+                                               MHD_RESPMEM_PERSISTENT);
+    MHD_add_response_header (response, "Content-Type", "text/html");
+    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
+    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
+    ret = MHD_queue_response(this->connection, MHD_HTTP_FORBIDDEN, response);
     MHD_destroy_response (response);
     return ret;
 }
