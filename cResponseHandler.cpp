@@ -80,9 +80,9 @@ cResponseHandler *cResponseHandler::cors(MHD_Response *response) {
 	return this;
 };
 
-int cResponseHandler::flush() {
+int cResponseHandler::flush(int status) {
 
-    int ret = MHD_queue_response(this->connection, MHD_HTTP_OK, this->response);
+    int ret = MHD_queue_response(this->connection, status, this->response);
     this->destroyResponse();
     return ret;
 };
@@ -144,7 +144,7 @@ int cResponseHandler::handle404Error() {
     return this->create(strlen (page), (void *) page, MHD_RESPMEM_PERSISTENT)
 		->header("Content-Type", "text/html")
 		->cors()
-		->flush();
+		->flush(MHD_HTTP_NOT_FOUND);
 }
 
 int cResponseHandler::handle403Error() {
@@ -161,5 +161,5 @@ int cResponseHandler::handle403Error() {
     return this->create(strlen (page), (void *) page, MHD_RESPMEM_PERSISTENT)
 		->header("Content-Type", "text/html")
 		->cors()
-		->flush();
+		->flush(MHD_HTTP_FORBIDDEN);
 }

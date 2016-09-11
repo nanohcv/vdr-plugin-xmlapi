@@ -41,7 +41,7 @@ public:
 	cResponseHandler *header(const char *header, const char *content);
 	cResponseHandler *cors();
 	cResponseHandler *cors(MHD_Response *response);
-	int flush();
+	int flush(int status = MHD_HTTP_OK);
 	cSession *getSession();
 	const cUser *getUser();
 	map<string, string> GetConnectionInfo() { return this->conInfo; };

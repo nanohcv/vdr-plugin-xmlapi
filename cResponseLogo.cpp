@@ -18,7 +18,7 @@ int cResponseLogo::toImage(const char* url) {
             (0 != fstat (fd, &sbuf)) ) {
              if (fd != -1)
                  close (fd);
-             return MHD_HTTP_NOT_FOUND;
+             return this->handle404Error();
         }
     }
 
