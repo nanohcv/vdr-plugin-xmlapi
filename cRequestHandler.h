@@ -22,7 +22,6 @@
 #include "cPreset.h"
 #include "cPresets.h"
 #include "cUser.h"
-#include "cExtensionHeaders.h"
 #include "cResponseHandler.h"
 #include "cAuth.h"
 
@@ -41,17 +40,7 @@ private:
     cDaemonParameter *daemonParameter;
     cPluginConfig config;
     cUser user;
-    cExtensionHeaders extHeaders;
     cAuth *auth;
-    
-    int handleRights();
-    
-    int handleWebSrv(const char *url);
-
-    int handle404Error();
-    int handle403Error();
-
-    std::map<std::string, std::string> conInfo;
     
     int handleNotAuthenticated();
     
