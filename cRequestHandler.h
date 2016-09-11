@@ -41,30 +41,12 @@ private:
     cDaemonParameter *daemonParameter;
     cPluginConfig config;
     cUser user;
-    cPresets presets;
     cExtensionHeaders extHeaders;
-    map<string, eKeys> remoteKeys;
     cAuth *auth;
-
-    int handleTimers();
-    string timersToXml();
-    cTimer * GetTimer(const char *tid);
-    const cEvent * GetEvent(tChannelID channelid, tEventID eid);
-    bool deleteTimer(const char *tid);
-    bool onOffTimer(const char *tid);
-    bool addTimer(const char *channelid, const char *eventid);
-    bool addTimer(const char *channelid, const char *name, const char *aux,
-                    const char *cstr_flags, const char *cstr_weekdays,
-                    const char *cstr_day, const char *cstr_start, const char *cstr_stop,
-                    const char *cstr_priority, const char *cstr_lifetime);
     
-    int handleSwitchToChannel();
-    int handleRemote();
     int handleRights();
     
     int handleWebSrv(const char *url);
-    
-    void initRemoteKeys();
 
     int handle404Error();
     int handle403Error();
