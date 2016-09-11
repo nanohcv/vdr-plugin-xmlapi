@@ -28,9 +28,6 @@
 #include <vdr/device.h>
 #include <vdr/tools.h>
 #include <vdr/channels.h>
-#include <vdr/recording.h>
-#include <vdr/epg.h>
-#include <vdr/timers.h>
 #include "cRequestHandler.h"
 #include "cStream.h"
 #include "helpers.h"
@@ -45,6 +42,7 @@
 #include "cResponseStreamControl.h"
 #include "cResponseStream.h"
 #include "cResponseRecordings.h"
+#include "cResponseTimer.h"
 #include "cSession.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
@@ -153,7 +151,8 @@ int cRequestHandler::HandleRequest(const char* url) {
         return response.deletedToXml();
     }
     else if (0 == strcmp(url, "/timers.xml")) {
-        return this->handleTimers();
+        cResponseTimer response(this->connection, this->auth->Session(), this->daemonParameter);
+        return response.toXml();
     }
     else if (0 == strcmp(url, "/switch.xml")) {
         return this->handleSwitchToChannel();
@@ -180,251 +179,6 @@ cResponseHandler cRequestHandler::GetErrorHandler() {
 	cResponseHandler response(connection, session, this->daemonParameter);
 	return response;
 };
-
-int cRequestHandler::handleTimers() {
-    string xml = "";
-    const char *action = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "action");
-    if(action != NULL) {
-        if(!this->user.Rights().Timers()) {
-            dsyslog("xmlapi: The user %s don't have the permission to do any action on /timers.xml", this->user.Name().c_str());
-            return this->handle403Error();
-        }
-        if(0 == strcmp(action, "delete")) {
-            const char *tid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "id");
-            bool deleted = this->deleteTimer(tid);
-            xml += "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-            if(deleted)
-                xml += "<deleted>true</deleted>\n";
-            else
-                xml += "<deleted>false</deleted>\n";
-        }
-        else if(0 == strcmp(action, "onoff")) {
-            const char *tid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "id");
-            bool onOff = this->onOffTimer(tid);
-            xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-            if(onOff) {
-                xml += "<onoff>successful</onoff>\n";
-            }
-            else {
-                xml += "<onoff>failed</onoff>\n";
-            }
-        }
-        else if(0 == strcmp(action, "add")) {
-            const char *eventid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "eventid");
-            const char *channelid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "chid");
-            const char *name = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "name");
-            const char *aux = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "aux");
-            const char *cstr_flags = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "flags");
-            const char *cstr_weekdays = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "weekdays");
-            const char *cstr_day = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "day");
-            const char *cstr_start = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "start");
-            const char *cstr_stop = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "stop");
-            const char *cstr_priority = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "priority");
-            const char *cstr_lifetime = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "lifetime");
-            if(eventid != NULL && channelid != NULL &&
-                    name == NULL && aux == NULL && cstr_flags == NULL &&
-                    cstr_weekdays == NULL && cstr_day == NULL && cstr_start == NULL &&
-                    cstr_stop == NULL && cstr_priority == NULL && cstr_lifetime == NULL) {
-                bool added = this->addTimer(channelid, eventid);
-                xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-                if(added)
-                    xml += "<added>true</added>\n";
-                else
-                    xml += "<added>false</added>\n";
-            }
-            else if(channelid != NULL && name != NULL && aux != NULL &&
-                    cstr_flags != NULL && cstr_weekdays != NULL &&
-                    cstr_day != NULL && cstr_start != NULL && cstr_stop != NULL &&
-                    cstr_priority != NULL && cstr_lifetime != NULL && eventid == NULL) {
-                bool added = this->addTimer(channelid, name, aux, cstr_flags,
-                        cstr_weekdays, cstr_day, cstr_start, cstr_stop,
-                        cstr_priority, cstr_lifetime);
-                xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-                if(added)
-                    xml += "<added>true</added>\n";
-                else
-                    xml += "<added>false</added>\n";
-            }
-            else {
-                xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-                xml += "<error>incorrect parameters</error>\n";
-            }
-        }
-        else {
-            xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-            xml = "<unknownaction>" + string(action) + "</unknownaction>\n";
-        }
-    }
-    else {
-        xml = this->timersToXml();
-    }
-    struct MHD_Response *response;
-    int ret;
-    char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
-    strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header (response, "Content-Type", "text/xml");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
-}
-
-string cRequestHandler::timersToXml() {
-    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    xml +=       "<timers>\n";
-
-    for(int i=0; i<Timers.Count(); i++) {
-        cTimer *timer = Timers.Get(i);
-        ostringstream builder;
-        builder << string(timer->Channel()->GetChannelID().ToString()) << ":" << timer->WeekDays() << ":"
-				<< timer->Day() << ":" << timer->Start() << ":" << timer->Stop();
-        string id = builder.str();
-        string chid = string(timer->Channel()->GetChannelID().ToString());
-        string chname = string(timer->Channel()->Name() ? timer->Channel()->Name() : "");
-        string name = string(timer->File() ? timer->File() : "");
-        string aux = string(timer->Aux() ? timer->Aux() : "");
-        string flags = uint32ToString(timer->Flags());
-        string weekdays = intToString(timer->WeekDays());
-        string day = timeToString(timer->Day());
-        string start = intToString(timer->Start());
-        string stop = intToString(timer->Stop());
-        string priority = intToString(timer->Priority());
-        string lifetime = intToString(timer->Lifetime());
-        xmlEncode(id);
-        xmlEncode(chid);
-        xmlEncode(chname);
-        xmlEncode(name);
-        xmlEncode(aux);
-
-        xml += "    <timer id=\"" + id + "\">\n";
-        xml += "        <channelid>" + chid + "</channelid>\n";
-        xml += "        <channelname>" + chname + "</channelname>\n";
-        xml += "        <name>" + name + "</name>\n";
-        xml += "        <aux>" + aux + "</aux>\n";
-        xml += "        <flags>" + flags + "</flags>\n";
-        xml += "        <weekdays>" + weekdays + "</weekdays>\n";
-        xml += "        <day>" + day + "</day>\n";
-        xml += "        <start>" + start + "</start>\n";
-        xml += "        <stop>" + stop + "</stop>\n";
-        xml += "        <priority>" + priority + "</priority>\n";
-        xml += "        <lifetime>" + lifetime + "</lifetime>\n";
-        xml += "    </timer>\n";
-    }
-
-    xml += "</timers>\n";
-    return xml;
-}
-
-cTimer *cRequestHandler::GetTimer(const char* tid) {
-    if(tid == NULL)
-        return NULL;
-    for(int i=0; i<Timers.Count();i++)
-    {
-        cTimer *timer = Timers.Get(i);
-        string id = string(tid);
-        vector<string> parts = split(id, ':');
-        if(parts.size() != 5) {
-            return NULL;
-        }
-        tChannelID cid = tChannelID::FromString(parts[0].c_str());
-        if(!cid.Valid())
-            return NULL;
-        int wdays = atoi(parts[1].c_str());
-        time_t day = atol(parts[2].c_str());
-        int start = atoi(parts[3].c_str());
-        int stop = atoi(parts[4].c_str());
-        if(timer->Channel()->GetChannelID() == cid &&
-           timer->WeekDays() == wdays &&
-           timer->Day() == day &&
-           timer->Start() == start &&
-           timer->Stop() == stop) {
-            return timer;
-        }
-    }
-    return NULL;
-}
-
-const cEvent * cRequestHandler::GetEvent(tChannelID channelid, tEventID eid) {
-    cSchedulesLock lock;
-    const cSchedules *schedules = cSchedules::Schedules(lock);
-    const cSchedule *schedule = schedules->GetSchedule(channelid);
-    if(schedule == NULL)
-        return NULL;
-    const cEvent *event = schedule->GetEvent(eid);
-    return event;
-}
-
-bool cRequestHandler::deleteTimer(const char* tid) {
-    cTimer *timer = this->GetTimer(tid);
-    if(timer == NULL)
-        return false;
-    Timers.Del(timer);
-    Timers.SetModified();
-    return true;
-}
-bool cRequestHandler::onOffTimer(const char* tid) {
-    cTimer *timer = this->GetTimer(tid);
-    if(timer == NULL)
-        return false;
-    timer->OnOff();
-    return true;
-}
-
-bool cRequestHandler::addTimer(const char *channelid, const char* eventid) {
-    if(eventid == NULL || channelid == NULL)
-        return false;
-    tEventID eid = (tEventID)strtoul(eventid, NULL, 10);
-    tChannelID cid = tChannelID::FromString(channelid);
-    if(!cid.Valid())
-        return false;
-    const cEvent *event = this->GetEvent(cid, eid);
-    if(event == NULL)
-        return false;
-    if(Timers.GetMatch(event) != NULL)
-        return false;
-    cTimer *timer = new cTimer(event);
-    Timers.Add(timer);
-    Timers.SetModified();
-    return true;
-}
-
-bool cRequestHandler::addTimer(const char* channelid, const char* name,
-        const char* aux, const char* cstr_flags, const char* cstr_weekdays,
-        const char* cstr_day, const char* cstr_start, const char* cstr_stop,
-        const char* cstr_priority, const char* cstr_lifetime) {
-    tChannelID cid = tChannelID::FromString(channelid);
-    if(!cid.Valid())
-        return false;
-    cChannel *channel = Channels.GetByChannelID(cid);
-    if(channel == NULL)
-        return false;
-    unsigned int flags = (unsigned int)atoi(cstr_flags);
-    int weekdays = atoi(cstr_weekdays);
-    time_t day = (time_t)atol(cstr_day);
-    int start = atoi(cstr_start);
-    int stop = atoi(cstr_stop);
-    int priority = atoi(cstr_priority);
-    int lifetime = atoi(cstr_lifetime);
-    cTimer *timer = new cTimer(false, false, channel);
-    timer->SetFlags(flags);
-    timer->SetFile(name);
-    timer->SetAux(aux);
-    timer->SetWeekDays(weekdays);
-    timer->SetDay(day);
-    timer->SetStart(start);
-    timer->SetStop(stop);
-    timer->SetPriority(priority);
-    timer->SetLifetime(lifetime);
-    if(Timers.GetTimer(timer) != NULL)
-        return false;
-    Timers.Add(timer);
-    Timers.SetModified();
-    return true;
-}
 
 int cRequestHandler::handle404Error() {
     struct MHD_Response *response;
