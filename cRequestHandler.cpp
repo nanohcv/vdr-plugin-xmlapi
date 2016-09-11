@@ -80,6 +80,11 @@ int cRequestHandler::HandleRequest(const char* url) {
         this->conInfo.insert(pair<string,string>("Host", string(host)));
     }
 
+
+
+    //***************************************************
+
+
     this->auth = new cAuth(this->connection, this->config);
 
     if (!this->auth->authenticated()) return this->handleNotAuthenticated();
@@ -99,15 +104,13 @@ int cRequestHandler::HandleRequest(const char* url) {
     }
     else if (startswith(url, "/hls/")) {
 
-        if(!this->user.Rights().Streaming()) {
-            dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), url);
+        if(!this->auth->User().Rights().Streaming()) {
+            dsyslog("xmlapi: The user %s don't have the permission to access %s", this->auth->User().Name().c_str(), url);
             return this->handle403Error();
         }
 
         cResponseHlsStream response(this->connection, this->auth->Session(), this->daemonParameter);
         return response.respond(url);
-
-        //return this->handleHlsStream(url);
     }
     else if (startswith(url, "/logos/") && endswith(url, ".png")) {
 
@@ -152,7 +155,9 @@ int cRequestHandler::HandleRequest(const char* url) {
         return this->handleWebSrv(url);
     }
     else {
-        return this->handle404Error();
+    	cSession *session = NULL;
+    	cResponseHandler response(connection, session, this->daemonParameter);
+    	return response.handle404Error();
     }
     return MHD_NO;
 }
