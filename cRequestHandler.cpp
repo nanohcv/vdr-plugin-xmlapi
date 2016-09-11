@@ -44,6 +44,7 @@
 #include "cResponseHlsStream.h"
 #include "cResponseStreamControl.h"
 #include "cResponseStream.h"
+#include "cResponseRecordings.h"
 #include "cSession.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
@@ -125,7 +126,6 @@ int cRequestHandler::HandleRequest(const char* url) {
     }
     else if (startswith(url, "/logos/") && endswith(url, ".png")) {
 
-
     	cResponseLogo response(this->connection, this->auth->Session(), this->daemonParameter);
     	int ret = response.toImage(url);
 
@@ -145,10 +145,12 @@ int cRequestHandler::HandleRequest(const char* url) {
     	return response.toXml();
     }
     else if (0 == strcmp(url, "/recordings.xml")) {
-        return this->handleRecordings();
+        cResponseRecordings response(this->connection, this->auth->Session(), this->daemonParameter);
+        return response.toXml();
     }
     else if (0 == strcmp(url, "/deletedrecordings.xml")) {
-        return this->handleDeletedRecordings();
+        cResponseRecordings response(this->connection, this->auth->Session(), this->daemonParameter);
+        return response.deletedToXml();
     }
     else if (0 == strcmp(url, "/timers.xml")) {
         return this->handleTimers();
@@ -178,166 +180,6 @@ cResponseHandler cRequestHandler::GetErrorHandler() {
 	cResponseHandler response(connection, session, this->daemonParameter);
 	return response;
 };
-
-int cRequestHandler::handleRecordings() {
-
-    const char *recfile = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "filename");
-    const char *action = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "action");
-    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-
-    if(recfile != NULL && action != NULL) {
-        if(!this->user.Rights().Recordings()) {
-            dsyslog("xmlapi: The user %s don't have the permission to do any action on /recordings.xml", this->user.Name().c_str());
-            return this->handle403Error();
-        }
-        xml += "<actions>\n";
-        cRecording *rec = Recordings.GetByName(recfile);
-        if(rec == NULL) {
-            return this->handle404Error();
-        }
-        if(0 == strcmp(action, "delete")) {
-            if(rec->Delete())
-            {
-                xml += "    <delete>true</delete>\n";
-            }
-            else {
-                xml += "    <delete>false</delete>\n";
-            }
-        }
-        else {
-            xml += "    <unknown>" + string(action) + "</unknown>\n";
-        }
-        xml += "</actions>\n";
-    }
-    else {
-        xml = this->recordingsToXml();
-    }
-
-    struct MHD_Response *response;
-    int ret;
-    char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
-    strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header (response, "Content-Type", "text/xml");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
-}
-
-int cRequestHandler::handleDeletedRecordings() {
-
-    const char *recfile = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "filename");
-    const char *action = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "action");
-    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-
-    if(recfile != NULL && action != NULL) {
-        if(!this->user.Rights().Recordings()) {
-            dsyslog("xmlapi: The user %s don't have the permission to do any action on /deletedrecordings.xml", this->user.Name().c_str());
-            return this->handle403Error();
-        }
-            
-        xml += "<actions>\n";
-        cRecording *rec = DeletedRecordings.GetByName(recfile);
-        if(rec == NULL) {
-            return this->handle404Error();
-        }
-        if(0 == strcmp(action, "undelete")) {
-            if(rec->Undelete())
-            {
-                xml += "    <undelete>true</undelete>\n";
-            }
-            else {
-                xml += "    <undelete>false</undelete>\n";
-            }
-        }
-        else if(0 == strcmp(action, "remove")) {
-            if(rec->Remove())
-            {
-                xml += "    <remove>true</remove>\n";
-            }
-            else {
-                xml += "    <remove>false</remove>\n";
-            }
-        }
-        else {
-            xml += "    <unknown>" + string(action) + "</unknown>\n";
-        }
-        xml += "</actions>\n";
-    }
-    else {
-        xml = this->recordingsToXml(true);
-    }
-
-    struct MHD_Response *response;
-    int ret;
-    char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
-    strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header (response, "Content-Type", "text/xml");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
-}
-
-string cRequestHandler::recordingsToXml(bool deleted) {
-    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    xml +=       "<recordings>\n";
-    cRecordings *recs = deleted ? &DeletedRecordings : &Recordings;
-    if(recs->Load())
-    {
-        for(int i=0; i<recs->Count(); i++)
-        {
-            cRecording *rec = recs->Get(i);
-            const cRecordingInfo *info = rec->Info();
-            string name = string(rec->Name() ? rec->Name() : "");
-            string filename = string(rec->FileName() ? rec->FileName() : "");
-            string title = string(rec->Title() ? rec->Title() : "");
-            string inuse = rec->IsInUse() > 0 ? "true" : "false";
-            string duration = intToString(rec->LengthInSeconds());
-            string filesize = intToString(rec->FileSizeMB());
-            string deleted = timeToString(rec->Deleted());
-            string ichannelid = string(info->ChannelID().ToString());
-            string ichannelname = string(info->ChannelName() ? info->ChannelName() : "");
-            string ititle = string(info->Title() ? info->Title() : "");
-            string ishorttext = string(info->ShortText() ? info->ShortText() : "");
-            string idescription = string(info->Description() ? info->Description() : "");
-            xmlEncode(name);
-            xmlEncode(filename);
-            xmlEncode(title);
-            xmlEncode(ichannelid);
-            xmlEncode(ichannelname);
-            xmlEncode(ititle);
-            xmlEncode(ishorttext);
-            xmlEncode(idescription);
-            xml += "    <recording>\n";
-            xml += "        <name>" + name + "</name>\n";
-            xml += "        <filename>" + filename + "</filename>\n";
-            xml += "        <title>" + title + "</title>\n";
-            xml += "        <inuse>" + inuse + "</inuse>\n";
-            xml += "        <size>" + filesize + "</size>\n";
-            xml += "        <duration>" + duration + "</duration>\n";
-            xml += "        <deleted>" + deleted + "</deleted>\n";
-            xml += "        <infos>\n";
-            xml += "            <channelid>" + ichannelid + "</channelid>\n";
-            xml += "            <channelname>" + ichannelname + "</channelname>\n";
-            xml += "            <title>" + ititle + "</title>\n";
-            xml += "            <shorttext>" + ishorttext + "</shorttext>\n";
-            xml += "            <description>" + idescription + "</description>\n";
-            xml += "        </infos>\n";
-            xml += "    </recording>\n";
-        }
-    }
-    xml += "</recordings>\n";
-    return xml;
-}
 
 int cRequestHandler::handleTimers() {
     string xml = "";

@@ -46,9 +46,6 @@ private:
     map<string, eKeys> remoteKeys;
     cAuth *auth;
 
-    int handleRecordings();
-    int handleDeletedRecordings();
-    string recordingsToXml(bool deleted = false);
     int handleTimers();
     string timersToXml();
     cTimer * GetTimer(const char *tid);
