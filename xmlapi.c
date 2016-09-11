@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include "cPluginConfig.h"
 #include "cWebServer.h"
+#include "globals.h"
 
 static const char *VERSION        = "1.4.1";
 static const char *DESCRIPTION    = "Enter description for 'xmlapi' plugin";
@@ -38,8 +39,8 @@ public:
 */
     virtual bool Start(void);
     virtual void Stop(void);
-/*
     virtual void Housekeeping(void);
+/*
     virtual void MainThreadHook(void);
 */
     virtual cString Active(void);
@@ -139,12 +140,12 @@ void cPluginXmlapi::Stop(void)
     }
 }
 
-/*
 void cPluginXmlapi::Housekeeping(void)
 {
-    // Perform any cleanup or other regular tasks.
+    SessionControl->RemoveExpiredSessions();
 }
 
+/*
 void cPluginXmlapi::MainThreadHook(void)
 {
     // Perform actions in the context of the main program thread.
