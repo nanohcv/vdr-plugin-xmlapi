@@ -7,6 +7,16 @@ cResponseStream::cResponseStream(struct MHD_Connection *connection, cSession *se
 	this->streamid = new int;
 };
 
+cResponseStream::~cResponseStream() {
+
+	delete this->url;
+	delete this->cstr_preset;
+	delete this->chid;
+	delete this->recfile;
+	delete this->mimeType;
+	delete this->streamid;
+}
+
 int cResponseStream::toStream(const char *url) {
 
     this->url = url;

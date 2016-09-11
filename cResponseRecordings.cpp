@@ -7,6 +7,11 @@ cResponseRecordings::cResponseRecordings(struct MHD_Connection *connection, cSes
 	this->xml = "";
 };
 
+cResponseRecordings::~cResponseRecordings() {
+
+	this->rec = NULL;
+}
+
 int cResponseRecordings::toXml(bool deleted) {
 
     this->recfile = MHD_lookup_connection_value(this->connection, MHD_GET_ARGUMENT_KIND, "filename");

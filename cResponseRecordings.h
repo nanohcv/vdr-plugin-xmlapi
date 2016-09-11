@@ -16,6 +16,7 @@ private:
 	void recordingsToXml(bool deleted = false);
 public:
 	cResponseRecordings(struct MHD_Connection *connection, cSession *session, cDaemonParameter *daemonParameter);
+	virtual ~cResponseRecordings();
 	int toXml(bool deleted = false);
 	int deletedToXml();
 };

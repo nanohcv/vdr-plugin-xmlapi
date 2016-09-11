@@ -32,6 +32,7 @@ private:
 			   MHD_ContentReaderFreeCallback crfc);
 public:
 	cResponseStream(struct MHD_Connection *connection, cSession *session, cDaemonParameter *daemonParameter);
+	virtual ~cResponseStream();
 	int toStream(const char *url);
 };
 
