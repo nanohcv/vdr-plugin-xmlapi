@@ -42,8 +42,8 @@
 #include "cResponseEpg.h"
 #include "cResponseLogo.h"
 #include "cResponseHlsStream.h"
+#include "cResponseStreamControl.h"
 #include "cSession.h"
-#include "cAuth.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
                                     cDaemonParameter *daemonParameter)
@@ -97,16 +97,33 @@ int cRequestHandler::HandleRequest(const char* url) {
 
     else if (startswith(url, "/stream"))
     {
-    	return (0 == strcmp(url, "/streamcontrol.xml")) ? this->handleStreamControl() : this->handleStream(url);
+
+        if(!this->auth->User().Rights().Streaming()) {
+            dsyslog("xmlapi: The user %s don't have the permission to access %s", this->auth->User().Name().c_str(), url);
+        	return this->GetErrorHandler().handle403Error();
+        }
+    	if (0 == strcmp(url, "/streamcontrol.xml")) {
+
+    		cResponseStreamControl response(this->connection, this->auth->Session(), this->daemonParameter);
+    		return response.toXml();
+    	} else {
+    		return this->handleStream(url);
+    	}
     }
+
     else if (startswith(url, "/recstream")) {
+
+        if(!this->auth->User().Rights().Streaming()) {
+            dsyslog("xmlapi: The user %s don't have the permission to access %s", this->auth->User().Name().c_str(), url);
+        	return this->GetErrorHandler().handle403Error();
+        }
         return this->handleRecStream(url);
     }
     else if (startswith(url, "/hls/")) {
 
         if(!this->auth->User().Rights().Streaming()) {
             dsyslog("xmlapi: The user %s don't have the permission to access %s", this->auth->User().Name().c_str(), url);
-            return this->handle403Error();
+        	return this->GetErrorHandler().handle403Error();
         }
 
         cResponseHlsStream response(this->connection, this->auth->Session(), this->daemonParameter);
@@ -155,12 +172,18 @@ int cRequestHandler::HandleRequest(const char* url) {
         return this->handleWebSrv(url);
     }
     else {
-    	cSession *session = NULL;
-    	cResponseHandler response(connection, session, this->daemonParameter);
-    	return response.handle404Error();
+
+    	return this->GetErrorHandler().handle404Error();
     }
     return MHD_NO;
 }
+
+cResponseHandler cRequestHandler::GetErrorHandler() {
+
+	cSession *session = NULL;
+	cResponseHandler response(connection, session, this->daemonParameter);
+	return response;
+};
 
 int cRequestHandler::handleStream(const char *url) {
     if(!this->user.Rights().Streaming()) {

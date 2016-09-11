@@ -23,6 +23,7 @@
 #include "cPresets.h"
 #include "cUser.h"
 #include "cExtensionHeaders.h"
+#include "cResponseHandler.h"
 #include "cAuth.h"
 
 #ifndef CREQUESTHANDLER_H
@@ -81,6 +82,8 @@ private:
     
     int handleNotAuthenticated();
     
+    cResponseHandler GetErrorHandler();
+
 
 };
 
