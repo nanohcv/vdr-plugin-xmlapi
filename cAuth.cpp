@@ -1,9 +1,10 @@
 #include "cAuth.h"
 #include "globals.h"
 
-cAuth::cAuth(struct MHD_Connection *connection, cPluginConfig config)
+cAuth::cAuth(struct MHD_Connection *connection, cDaemonParameter *daemonParameter)
 	: connection(connection),
-	  config(config) {
+	  daemonParameter(daemonParameter),
+	  config(daemonParameter->GetPluginConfig()) {
 
 	this->session = NULL;
 };

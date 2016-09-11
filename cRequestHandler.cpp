@@ -11,26 +11,7 @@
  * Created on 7. Februar 2016, 12:10
  */
 
-#include <cstring>
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <algorithm>
-#include <ctime>
-#include <sys/wait.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <vdr/device.h>
-#include <vdr/tools.h>
-#include <vdr/channels.h>
 #include "cRequestHandler.h"
-#include "helpers.h"
-#include "globals.h"
 #include "cResponseHeader.h"
 #include "cResponseVersion.h"
 #include "cResponseChannels.h"
@@ -50,8 +31,7 @@
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
                                     cDaemonParameter *daemonParameter)
-    : connection(connection), daemonParameter(daemonParameter),
-        config(daemonParameter->GetPluginConfig()), auth(NULL) {};
+    : connection(connection), daemonParameter(daemonParameter), auth(NULL) {};
 
 cRequestHandler::~cRequestHandler() {
 	delete this->auth;
@@ -59,7 +39,7 @@ cRequestHandler::~cRequestHandler() {
 
 int cRequestHandler::HandleRequest(const char* url) {
 
-    this->auth = new cAuth(this->connection, this->config);
+    this->auth = new cAuth(this->connection, this->daemonParameter);
 
     if (!this->auth->authenticated()) return this->handleNotAuthenticated();
 

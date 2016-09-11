@@ -22,9 +22,6 @@
 #include <vdr/tools.h>
 #include <microhttpd.h>
 #include "cRequestHandler.h"
-#include "cUser.h"
-#include "cHlsPresets.h"
-#include "cPresets.h"
 #include "cResponsePreflight.h"
 
 #define EXTERN

@@ -11,16 +11,7 @@
  * Created on 7. Februar 2016, 12:10
  */
 #include <microhttpd.h>
-#include <unistd.h>
-#include <map>
-#include <string>
-#include <vdr/timers.h>
-#include <vdr/keys.h>
-#include <vdr/remote.h>
 #include "cDaemonParameter.h"
-#include "cPluginConfig.h"
-#include "cPreset.h"
-#include "cPresets.h"
 #include "cUser.h"
 #include "cResponseHandler.h"
 #include "cAuth.h"
@@ -38,15 +29,11 @@ public:
 private:
     struct MHD_Connection *connection;
     cDaemonParameter *daemonParameter;
-    cPluginConfig config;
     cUser user;
     cAuth *auth;
     
     int handleNotAuthenticated();
-    
     cResponseHandler GetErrorHandler();
-
-
 };
 
 #endif /* CREQUESTHANDLER_H */
