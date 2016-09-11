@@ -19,9 +19,8 @@ int cResponseRecordings::toXml(bool deleted) {
 
     if(recfile != NULL && action != NULL) {
 
-    	const cUser *user = SessionControl->GetUserBySessionId(this->session->GetSessionId());
-        if(!user->Rights().Recordings()) {
-            dsyslog("xmlapi: The user %s doesn't have the permission to do any action on /recordings.xml", user->Name().c_str());
+        if(!this->user->Rights().Recordings()) {
+            dsyslog("xmlapi: The user %s doesn't have the permission to do any action on /recordings.xml", this->user->Name().c_str());
             return this->handle403Error();
         }
     	cRecordings *recs = deleted ? &DeletedRecordings : &Recordings;

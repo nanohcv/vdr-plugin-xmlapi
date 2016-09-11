@@ -12,11 +12,9 @@ int cResponseTimer::toXml() {
 
     if(this->action != NULL) {
 
-    	const cUser *user = SessionControl->GetUserBySessionId(this->session->GetSessionId());
-
         this->xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-        if(!user->Rights().Timers()) {
-            dsyslog("xmlapi: The user %s don't have the permission to do any action on /timers.xml", user->Name().c_str());
+        if(!this->user->Rights().Timers()) {
+            dsyslog("xmlapi: The user %s don't have the permission to do any action on /timers.xml", this->user->Name().c_str());
             return this->handle403Error();
         }
         if(0 == strcmp(action, "delete")) {

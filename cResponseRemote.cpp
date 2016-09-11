@@ -9,10 +9,8 @@ cResponseRemote::cResponseRemote(struct MHD_Connection *connection, cSession *se
 
 int cResponseRemote::toXml() {
 
-	const cUser *user = SessionControl->GetUserBySessionId(this->session->GetSessionId());
-
-    if(!user->Rights().RemoteControl()) {
-        dsyslog("xmlapi: The user %s don't have the permission to send a remote command", user->Name().c_str());
+    if(!this->user->Rights().RemoteControl()) {
+        dsyslog("xmlapi: The user %s don't have the permission to send a remote command", this->user->Name().c_str());
         return this->handle403Error();
     }
 
