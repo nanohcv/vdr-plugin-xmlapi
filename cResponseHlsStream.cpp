@@ -10,10 +10,10 @@ cResponseHlsStream::cResponseHlsStream(struct MHD_Connection *connection, cSessi
 
 cResponseHlsStream::~cResponseHlsStream() {
 
-	delete this->url;
-	delete this->cstr_preset;
-	delete this->chid;
-	delete this->recfile;
+	this->url = NULL;
+	this->cstr_preset = NULL;
+	this->chid = NULL;
+	this->recfile = NULL;
 };
 
 int cResponseHlsStream::respond(const char *url) {
