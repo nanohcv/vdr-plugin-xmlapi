@@ -43,6 +43,7 @@
 #include "cResponseLogo.h"
 #include "cResponseHlsStream.h"
 #include "cResponseStreamControl.h"
+#include "cResponseStream.h"
 #include "cSession.h"
 
 cRequestHandler::cRequestHandler(struct MHD_Connection *connection,
@@ -95,7 +96,7 @@ int cRequestHandler::HandleRequest(const char* url) {
     	return response.toXml();
     }
 
-    else if (startswith(url, "/stream"))
+    else if (startswith(url, "/stream") || startswith(url, "/recstream"))
     {
 
         if(!this->auth->User().Rights().Streaming()) {
@@ -107,17 +108,10 @@ int cRequestHandler::HandleRequest(const char* url) {
     		cResponseStreamControl response(this->connection, this->auth->Session(), this->daemonParameter);
     		return response.toXml();
     	} else {
-    		return this->handleStream(url);
+
+    		cResponseStream response(this->connection, this->auth->Session(), this->daemonParameter);
+    		return response.toStream(url);
     	}
-    }
-
-    else if (startswith(url, "/recstream")) {
-
-        if(!this->auth->User().Rights().Streaming()) {
-            dsyslog("xmlapi: The user %s don't have the permission to access %s", this->auth->User().Name().c_str(), url);
-        	return this->GetErrorHandler().handle403Error();
-        }
-        return this->handleRecStream(url);
     }
     else if (startswith(url, "/hls/")) {
 
@@ -184,194 +178,6 @@ cResponseHandler cRequestHandler::GetErrorHandler() {
 	cResponseHandler response(connection, session, this->daemonParameter);
 	return response;
 };
-
-int cRequestHandler::handleStream(const char *url) {
-    if(!this->user.Rights().Streaming()) {
-        dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), url);
-        return this->handle403Error();
-    }
-        
-    struct MHD_Response *response;
-    int ret;
-    const char* cstr_preset = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "preset");
-    if(cstr_preset == NULL)
-    {
-        esyslog("xmlapi: stream -> No preset given!");
-        return this->handle404Error();
-    }
-    string ps(cstr_preset);
-    cPreset preset = this->presets[ps];
-    string expectedUrl = "/stream" + preset.Extension();
-    if(0 != strcmp(url, expectedUrl.c_str())) {
-        esyslog("xmlapi: Url %s doen't ends with stream%s", url, expectedUrl.c_str());
-        return this->handle404Error();
-    }
-    const char* chid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "chid");
-    if(chid == NULL)
-    {
-        esyslog("xmlapi: stream -> No chid given!");
-        return this->handle404Error();
-    }
-    dsyslog("xmlapi: request %s?chid=%s&preset=%s", url, chid, cstr_preset);
-    tChannelID id = tChannelID::FromString(chid);
-    if(!id.Valid()) {
-        esyslog("xmlapi: stream -> invalid chid given");
-        return this->handle404Error();
-    }
-    cStream *stream = new cStream(this->config.GetFFmpeg(), preset, this->conInfo);
-    if(this->config.GetWaitForFFmpeg()) {
-        StreamControl->WaitingForStreamsByUserAgentAndIP(this->conInfo["ClientIP"], this->conInfo["User-Agent"]);
-        sleep(1);
-    }
-    int *streamid = new int;
-
-    *streamid = StreamControl->AddStream(stream);
-    string channelId(chid);
-    string input = this->config.GetStreamdevUrl() + channelId + ".ts";
-    if(!stream->StartFFmpeg(input))
-    {
-        StreamControl->RemoveStream(*streamid);
-        delete streamid;
-        return this->handle404Error();
-    }
-    dsyslog("xmlapi: Stream started");
-    response = MHD_create_response_from_callback (MHD_SIZE_UNKNOWN,
-                                                8*1024,
-                                                &cRequestHandler::stream_reader,
-                                                streamid,
-                                                &cRequestHandler::clear_stream);
-    MHD_add_response_header (response, "Content-Type", preset.MimeType().c_str());
-    MHD_add_response_header (response, "Cache-Control", "no-cache");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
-}
-
-int cRequestHandler::handleRecStream(const char* url) {
-    if(!this->user.Rights().Streaming()) {
-        dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), url);
-        return this->handle403Error();
-    }
-    const char* cstr_preset = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "preset");
-    if(cstr_preset == NULL)
-    {
-        esyslog("xmlapi: stream -> No preset given!");
-        return this->handle404Error();
-    }
-    string ps(cstr_preset);
-    cPreset preset = this->presets[ps];
-    string expectedUrl = "/recstream" + preset.Extension();
-    if(0 != strcmp(url, expectedUrl.c_str())) {
-        esyslog("xmlapi: Url %s doen't ends with recstream%s", url, expectedUrl.c_str());
-        return this->handle404Error();
-    }
-    const char* recfile = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "filename");
-    if(recfile == NULL)
-    {
-        esyslog("xmlapi: stream -> No file name given!");
-        return this->handle404Error();
-    }
-    dsyslog("xmlapi: request %s?filename=%s&preset=%s", url, recfile, cstr_preset);
-    cRecording *rec = Recordings.GetByName(recfile);
-    if(rec == NULL) {
-        dsyslog("xmlapi: No recording found with file name '%s'", recfile);
-        return this->handle404Error();
-    }
-    const char* cstr_start = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "start");
-    int starttime = 0;
-    if(cstr_start != NULL) {
-        starttime = atoi(cstr_start);
-    }
-    string recfiles = "'" + string(rec->FileName()) + "/'*.ts";
-    string input = "concat:$(ls -1 " + recfiles + " | perl -0pe 's/\\n/|/g;s/\\|$//g')";
-
-    struct MHD_Response *response;
-    int ret;
-    cStream *stream = new cStream(this->config.GetFFmpeg(), preset, this->conInfo);
-    if(this->config.GetWaitForFFmpeg()) {
-        StreamControl->WaitingForStreamsByUserAgentAndIP(this->conInfo["ClientIP"], this->conInfo["User-Agent"]);
-        sleep(1);
-    }
-    int *streamid = new int;
-
-    *streamid = StreamControl->AddStream(stream);
-    if(!stream->StartFFmpeg(input, starttime))
-    {
-        StreamControl->RemoveStream(*streamid);
-        delete streamid;
-        return MHD_NO;
-    }
-    dsyslog("xmlapi: Stream started");
-    response = MHD_create_response_from_callback (MHD_SIZE_UNKNOWN,
-                                                8*1024,
-                                                &cRequestHandler::stream_reader,
-                                                streamid,
-                                                &cRequestHandler::clear_stream);
-    MHD_add_response_header (response, "Content-Type", preset.MimeType().c_str());
-    MHD_add_response_header (response, "Cache-Control", "no-cache");
-    MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-    MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-    ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
-
-}
-
-ssize_t cRequestHandler::stream_reader(void* cls, uint64_t pos, char* buf, size_t max) {
-    int *streamid = (int *)cls;
-    StreamControl->Mutex.Lock();
-    cStream *stream = (cStream*)StreamControl->GetStream(*streamid);
-    ssize_t size = stream->Read(buf, max);
-    StreamControl->Mutex.Unlock();
-    return size;
-}
-
-void cRequestHandler::clear_stream(void* cls) {
-    int *streamid = (int *)cls;
-    StreamControl->Mutex.Lock();
-    cStream *stream = (cStream*)StreamControl->GetStream(*streamid);
-    if(stream != NULL)
-    {
-        stream->StopFFmpeg();
-        StreamControl->RemoveStream(*streamid);
-    }
-    StreamControl->Mutex.Unlock();
-    delete streamid;
-    dsyslog("xmlapi: Stream stopped");
-}
-
-
-int cRequestHandler::handleStreamControl() {
-
-    if(!this->user.Rights().StreamControl()) {
-        dsyslog("xmlapi: The user %s don't have the permission to access %s", this->user.Name().c_str(), "/streamcontrol.xml");
-        return this->handle403Error();
-    }
-    
-    const char* removeid = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "remove");
-    if(removeid != NULL)
-    {
-        int streamid = atoi(removeid);
-        StreamControl->RemoveStream(streamid);
-    }
-    string xml = StreamControl->GetStreamsXML();
-    struct MHD_Response *response;
-    int ret;
-    char *page = (char *)malloc((xml.length() + 1) *sizeof(char));
-    strcpy(page, xml.c_str());
-    response = MHD_create_response_from_buffer (strlen (page),
-                                               (void *) page,
-                                               MHD_RESPMEM_MUST_FREE);
-    MHD_add_response_header (response, "Content-Type", "text/xml");
-    MHD_add_response_header (response, "Cache-Control", "no-cache");
-    ret = MHD_queue_response(this->connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
-    return ret;
-
-
-}
 
 int cRequestHandler::handleRecordings() {
 

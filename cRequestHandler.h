@@ -45,10 +45,7 @@ private:
     cExtensionHeaders extHeaders;
     map<string, eKeys> remoteKeys;
     cAuth *auth;
-    
-    int handleStream(const char *url);
-    int handleRecStream(const char *url);
-    int handleStreamControl();
+
     int handleRecordings();
     int handleDeletedRecordings();
     string recordingsToXml(bool deleted = false);
@@ -74,9 +71,6 @@ private:
 
     int handle404Error();
     int handle403Error();
-
-    static ssize_t stream_reader (void *cls, uint64_t pos, char *buf, size_t max);
-    static void clear_stream(void *cls);
 
     std::map<std::string, std::string> conInfo;
     
