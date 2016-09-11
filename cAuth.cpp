@@ -50,6 +50,8 @@ bool cAuth::authSession() {
 bool cAuth::authBasic() {
 
 	bool validUser = true;
+	const char* createAction = "1200";
+    long lifetime = atol(createAction);
 
     if(!this->config.GetUsers().empty()) {
         char *user = NULL;
@@ -58,21 +60,21 @@ bool cAuth::authBasic() {
         validUser = user != NULL && this->config.GetUsers().MatchUser(user, pass);
         if (validUser) {
         	this->user = this->config.GetUsers().GetUser(user);
-        	const char* createAction = "1200";
-            long lifetime = atol(createAction);
         	cSession session = SessionControl->AddSession(this->user, lifetime);
         	this->session = SessionControl->GetSessionBySessionId(session.GetSessionId());
 			dsyslog("xmlapi: authBasic() -> authenticated user %s", this->user.Name().c_str());
         }
         if (user != NULL) free (user);
         if (pass != NULL) free (pass);
+    } else {
+    	cSession session = SessionControl->AddSession(this->user, lifetime);
+    	this->user = this->config.GetUsers().GetUser("Anonymous");
+    	this->session = SessionControl->GetSessionBySessionId(session.GetSessionId());
     }
     return validUser;
 };
 
 bool cAuth::authenticated() {
 
-	if (this->authSession()) return true;
-	if (this->authBasic()) return true;
-	return false;
+	return this->authSession() || this->authBasic();
 };
