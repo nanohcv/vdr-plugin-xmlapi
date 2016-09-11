@@ -9,12 +9,12 @@ cResponseStream::cResponseStream(struct MHD_Connection *connection, cSession *se
 
 cResponseStream::~cResponseStream() {
 
-	delete this->url;
-	delete this->cstr_preset;
-	delete this->chid;
-	delete this->recfile;
-	delete this->mimeType;
-	delete this->streamid;
+	this->url = NULL;
+	this->cstr_preset = NULL;
+	this->chid = NULL;
+	this->recfile = NULL;
+	this->mimeType = NULL;
+	this->streamid = NULL;
 }
 
 int cResponseStream::toStream(const char *url) {
