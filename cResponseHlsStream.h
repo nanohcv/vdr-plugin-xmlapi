@@ -23,6 +23,7 @@ private:
 
 public:
 	cResponseHlsStream(struct MHD_Connection *connection, cSession *session, cDaemonParameter *daemonParameter);
+	virtual ~cResponseHlsStream();
 	int respond(const char *url);
 	int toM3u8();
 	int toStream(const char *url);

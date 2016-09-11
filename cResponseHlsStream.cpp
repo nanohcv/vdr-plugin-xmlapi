@@ -8,6 +8,14 @@ cResponseHlsStream::cResponseHlsStream(struct MHD_Connection *connection, cSessi
     this->starttime = 0;
 };
 
+cResponseHlsStream::~cResponseHlsStream() {
+
+	delete this->url;
+	delete this->cstr_preset;
+	delete this->chid;
+	delete this->recfile;
+};
+
 int cResponseHlsStream::respond(const char *url) {
 
     if(strlen(url) == 5)
