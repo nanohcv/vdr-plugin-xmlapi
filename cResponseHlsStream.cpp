@@ -16,7 +16,12 @@ cResponseHlsStream::~cResponseHlsStream() {
 	this->recfile = NULL;
 };
 
-int cResponseHlsStream::respond(const char *url) {
+int cResponseHlsStream::toStream(const char *url) {
+
+    if(!this->user->Rights().Streaming()) {
+        dsyslog("xmlapi: The user %s doesn't have the permission to access hls streams", this->user->Name().c_str());
+        return this->handle403Error();
+    }
 
     if(strlen(url) == 5)
         return this->handle404Error();

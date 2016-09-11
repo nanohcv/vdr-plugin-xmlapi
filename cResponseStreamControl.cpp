@@ -6,6 +6,11 @@ cResponseStreamControl::cResponseStreamControl(struct MHD_Connection *connection
 
 int cResponseStreamControl::toXml() {
 
+    if(!this->user->Rights().Streaming()) {
+        dsyslog("xmlapi: The user %s doesn't have the permission to do any action on /streamcontrol.xml", this->user->Name().c_str());
+        return this->handle403Error();
+    }
+
     const char* removeid = MHD_lookup_connection_value(this->connection, MHD_GET_ARGUMENT_KIND, "remove");
     if(removeid != NULL)
     {

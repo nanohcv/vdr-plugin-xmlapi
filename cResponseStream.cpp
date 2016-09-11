@@ -19,6 +19,11 @@ cResponseStream::~cResponseStream() {
 
 int cResponseStream::toStream(const char *url) {
 
+    if(!this->user->Rights().Streaming()) {
+        dsyslog("xmlapi: The user %s doesn't have the permission to access streams", this->user->Name().c_str());
+        return this->handle403Error();
+    }
+
     this->url = url;
 
     if (this->initStream() == 0) {

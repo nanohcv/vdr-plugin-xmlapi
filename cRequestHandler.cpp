@@ -51,11 +51,6 @@ int cRequestHandler::HandleRequest(const char* url) {
 
     else if (startswith(url, "/stream") || startswith(url, "/recstream"))
     {
-
-        if(!this->auth->User().Rights().Streaming()) {
-            dsyslog("xmlapi: The user %s don't have the permission to access %s", this->auth->User().Name().c_str(), url);
-        	return this->GetErrorHandler().handle403Error();
-        }
     	if (0 == strcmp(url, "/streamcontrol.xml")) {
 
     		cResponseStreamControl response(this->connection, this->auth->Session(), this->daemonParameter);
@@ -68,13 +63,8 @@ int cRequestHandler::HandleRequest(const char* url) {
     }
     else if (startswith(url, "/hls/")) {
 
-        if(!this->auth->User().Rights().Streaming()) {
-            dsyslog("xmlapi: The user %s don't have the permission to access %s", this->auth->User().Name().c_str(), url);
-        	return this->GetErrorHandler().handle403Error();
-        }
-
         cResponseHlsStream response(this->connection, this->auth->Session(), this->daemonParameter);
-        return response.respond(url);
+        return response.toStream(url);
     }
     else if (startswith(url, "/logos/") && endswith(url, ".png")) {
 

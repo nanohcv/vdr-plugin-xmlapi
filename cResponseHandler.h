@@ -17,11 +17,11 @@ using namespace std;
 
 class cResponseHandler {
 private:
-	const cUser *user;
 	void destroyResponse();
 	void initConInfo();
 
 protected:
+	const cUser *user;
 	struct MHD_Response *response;
 	struct MHD_Connection *connection;
 	cSession *session;
