@@ -724,7 +724,6 @@ bool cPluginConfig::createDefaultUserFile(string usersFile) {
                        ";  recordings  (The user can delete, undelte or remove recordings.)\n"
                        ";  remotecontrol  (The user can use the switch to channel api and the remote control api.)\n"
                        ";  streamcontrol  (The user can see and remove active streams via stream control api.)\n"
-                       ";  sessioncontrol (The user can see and remove active sessions via session control api.)\n"
                        ";\n"
                        "; Example:\n"
                        "; You want to give the user \"guest1\" the rights \"streaming\" and \"timers\"\n"

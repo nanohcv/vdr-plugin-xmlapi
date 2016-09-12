@@ -44,8 +44,6 @@ public:
     
     void RemoveExpiredSessions();
     
-    string GetSessionsXml();
-    
     cMutex Mutex;
     
     

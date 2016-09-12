@@ -133,30 +133,3 @@ void cSessionControl::RemoveExpiredSessions() {
     }
     this->Mutex.Unlock();
 }
-
-string cSessionControl::GetSessionsXml() {
-    string xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
-    xml += "<users>\n";
-    this->Mutex.Lock();
-    for(map<cUser, vector<cSession> >::iterator it = this->begin(); it != this->end(); ++it) {
-        if(it->second.empty()) {
-            xml += "    <user name=\"" + it->first.Name() + "\" />\n";
-        } else {
-            xml += "    <user name=\"" + it->first.Name() + "\">\n";
-            xml += "        <sessions>\n";
-            for(vector<cSession>::iterator itv = it->second.begin(); itv != it->second.end(); ++itv) {
-                xml += "            <session id=\"" + itv->GetSessionId() + "\">\n";
-                xml += "                <lifetime>" + longToString(itv->GetLifetime()) + "</lifetime>\n";
-                xml += "                <start>" + timeToString(itv->GetStart()) + "</start>\n";
-                xml += "                <expired>" + string(itv->IsExpired() ? "true" : "false") + "</expired>\n";
-                xml += "                <expires>" + itv->Expires() + "</expires>\n";
-                xml += "            </session>\n";
-            }
-            xml += "        </sessions>\n";
-            xml += "    </user>\n";
-        }
-    }
-    this->Mutex.Unlock();
-    xml += "</users>\n";
-    return xml;
-}

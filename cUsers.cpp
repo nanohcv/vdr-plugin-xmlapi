@@ -64,8 +64,6 @@ void cUsers::ReadFromINI(string userIniFile) {
                             rights.SetRemoteControl(true);
                         if(*rit == "streamcontrol")
                             rights.SetStreamControl(true);
-                        if(*rit == "sessioncontrol")
-                            rights.SetSessionControl(true);
                     }
                     cUser user(ur[0], it->second, rights);
                     this->push_back(user);

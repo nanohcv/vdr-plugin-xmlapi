@@ -15,7 +15,6 @@ int cResponseRights::toXml() {
     xml += "    <recordings>" + string(user->Rights().Recordings() ? "true" : "false") + "</recordings>\n";
     xml += "    <remotecontrol>" + string(user->Rights().RemoteControl() ? "true" : "false") + "</remotecontrol>\n";
     xml += "    <streamcontrol>" + string(user->Rights().StreamControl() ? "true" : "false") + "</streamcontrol>\n";
-    xml += "    <sessioncontrol>" + string(user->Rights().SessionControl() ? "true" : "false") + "</sessioncontrol>\n";
     xml += "</rights>\n";
 
     char *page = (char *)malloc((xml.length() + 1) *sizeof(char));

@@ -18,7 +18,7 @@ class cRights {
 public:
     cRights();
     cRights(bool admin);
-    cRights(bool streaming, bool timers, bool recordings, bool remotecontrol, bool streamcontrol, bool sessioncontrol);
+    cRights(bool streaming, bool timers, bool recordings, bool remotecontrol, bool streamcontrol);
     
     cRights(const cRights& src);
     virtual ~cRights();
@@ -30,14 +30,12 @@ public:
     bool Recordings() const;
     bool RemoteControl() const;
     bool StreamControl() const;
-    bool SessionControl() const;
     
     void SetStreaming(bool streaming);
     void SetTimers(bool timers);
     void SetRecordings(bool recordings);
     void SetRemoteControl(bool remotecontrol);
     void SetStreamControl(bool streamcontrol);
-    void SetSessionControl(bool sessioncontrol);
     
 private:
     bool streaming;
@@ -45,7 +43,6 @@ private:
     bool recordings;
     bool remotecontrol;
     bool streamcontrol;
-    bool sessioncontrol;
 };
 
 bool operator == (cRights const& lhs, cRights const& rhs);
