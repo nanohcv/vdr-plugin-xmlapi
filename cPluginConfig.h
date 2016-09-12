@@ -22,7 +22,6 @@ using namespace std;
 
 class cPluginConfig {
 public:
-    enum HlsAuthMode { HLS_AUTH_BASIC, HLS_AUTH_SESSION };
     
     cPluginConfig(const char *configDir, const char *cacheDir, const char *pluginName, const char *version);
     cPluginConfig(const cPluginConfig& src);
@@ -48,7 +47,6 @@ public:
     string GetPresetsFile();
     string GetHlsPresetsFile();
     string GetHlsTmpDir();
-    HlsAuthMode GetHlsAuthMode();
     string GetStreamdevUrl();
     string GetWebSrvRoot();
     string GetWebSrvHeadersFile();
@@ -76,7 +74,6 @@ private:
     string presetsFile;
     string hlsPresetsFile;
     string hlsTmpDir;
-    HlsAuthMode hlsAuthMode;
     string streamdevUrl;
     string websrvroot;
     string websrvheaders;

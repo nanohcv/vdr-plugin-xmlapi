@@ -4,8 +4,6 @@
     <df root="." name="0">
       <in>cBaseStream.cpp</in>
       <in>cDaemonParameter.cpp</in>
-      <in>cExtensionHeaders.cpp</in>
-      <in>cExtensionHeaders.h</in>
       <in>cHlsPreset.cpp</in>
       <in>cHlsPresets.cpp</in>
       <in>cHlsStream.cpp</in>
@@ -14,14 +12,6 @@
       <in>cPreset.cpp</in>
       <in>cPresets.cpp</in>
       <in>cRequestHandler.cpp</in>
-      <in>cResponseHeader.cpp</in>
-      <in>cResponseHeader.h</in>
-      <in>cRights.cpp</in>
-      <in>cRights.h</in>
-      <in>cSession.cpp</in>
-      <in>cSession.h</in>
-      <in>cSessionControl.cpp</in>
-      <in>cSessionControl.h</in>
       <in>cStream.cpp</in>
       <in>cStreamControl.cpp</in>
       <in>cUser.cpp</in>
@@ -63,6 +53,9 @@
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>../../../../../bin/vdr</executablePath>
           <ccTool>
+            <incDir>
+              <pElem>../../../../../../include/x86_64-linux-gnu</pElem>
+            </incDir>
             <preprocessorList>
               <Elem>PLUGIN_NAME_I18N="xmlapi"</Elem>
               <Elem>_FILE_OFFSET_BITS=64</Elem>
@@ -84,10 +77,6 @@
       <item path="cDaemonParameter.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
         </ccTool>
-      </item>
-      <item path="cExtensionHeaders.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cExtensionHeaders.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="cHlsPreset.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
@@ -120,22 +109,6 @@
       <item path="cRequestHandler.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
         </ccTool>
-      </item>
-      <item path="cResponseHeader.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cResponseHeader.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="cRights.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cRights.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="cSession.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cSession.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="cSessionControl.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="cSessionControl.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="cStream.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
