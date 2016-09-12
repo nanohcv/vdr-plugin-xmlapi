@@ -73,7 +73,7 @@
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile install</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath>../../../../../bin/vdr</executablePath>
+          <executablePath>/usr/local/bin/vdr</executablePath>
           <ccTool>
             <preprocessorList>
               <Elem>PLUGIN_NAME_I18N="xmlapi"</Elem>

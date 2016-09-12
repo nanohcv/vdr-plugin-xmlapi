@@ -131,15 +131,6 @@ It will be automatically cleaned.
     HlsTmpDir=/var/cache/vdr/plugins/xmlapi/streams
 
 
-By default basic auth (if enabled) is used for hls streams.  
-You can use a cookie with session id for authentication.  
-For more information about sessions, see section 4.12.    
-To change the authentication mode, use the following parameter.  
-(Possible values are "basic" for basic authentication and "session" for session based authentication.)
-
-    HlsAuthMode=session
-
-
 If the streamdev-server plugin doesnt run on port 3000 change the following
 parameter. Make sure that the url ends with a slash.
 
@@ -160,6 +151,13 @@ For more information about this file, read section 3.4.
 The path and name of the file can be configured with the following parameter:
 
     WebSrvHeaders=/var/lib/vdr/plugins/xmlapi/websrv_file_extensions.ini
+
+
+For "Cross-domain" AJAX requests, you can use the following parameter  
+to specify the value for the "Access-Control-Allow-Origin" header.  
+Possible values: auto|*|<you.domain.tld>
+
+    CorsOrigin=*
 
 
 By default the channel list api use relative paths for the channel logos.  
@@ -195,8 +193,6 @@ Possible user rights are:
 - timers  (The user can add or remove timers.)
 - recordings  (The user can delete, undelte or remove recordings.)
 - remotecontrol  (The user can use the switch to channel api and the remote control api.)
-- streamcontrol  (The user can see and remove active streams via stream control api.)
-- sessioncontrol (The user can see and remove active sessions via session control api.)
 
 Example:
 You want to give the user "guest1" the rights "streaming" and "timers"
@@ -556,72 +552,4 @@ The plugin can act as simple web server.
 To access the files stored in the configured WebSrvRoot use this url:
 
     http(s)://<server-ip>:<port>/websrv/
-
-
-#### 4.12 Sessions
-
-You can use session based authentication for HLS-Streams.
-There are two APIs for session control.  
-
-
-##### 4.12.1 User sessions
-
-To get the active sessions for the currently authenticated user, use the following API:
-
-    http(s)://<server-ip>:<port>/sessions.xml
-
-
-There are two possible parameters:
-
-- create -> Creates a new session for the currently authenticated user. The value must be the lifetime in seconds for the session.
-- delete -> Delete sessions for the currently authenticated user.  
-  Possible values are:
-    - all -> Delete all sessions from the currently authenticated user.
-    - sessionid -> Delete a specific session from the currently authenticated user.
-
-Examples:  
-Create a session with the lifetime of 10 minutes:
-
-    http(s)://<server-ip>:<port>/sessions.xml?create=600
-
-Delete all user sessions:
-
-    http(s)://<server-ip>:<port>/sessions.xml?delete=all
-
-Delete the session with id "1234567890":
-
-    http(s)://<server-ip>:<port>/sessions.xml?delete=1234567890
-
-
-##### 4.12.2 Session Control
-
-You can get all active sessions from every user by calling the following API.
-Expired sessions will be cleaned every 5 minutes.
-
-    http(s)://<server-ip>:<port>/sessioncontrol.xml
-
-For removing sessions you can use the parameter "remove".
-Possible values for the parameter remove are:
-
-- all -> Removes all sessions from every user.
-- expired -> Removes all expired sessions.
-- user -> Removes all sessions by the specified "user" parameter.
-- sessionid -> Removes the session by the specified "sessionid" parameter.
-
-Examples:  
-Delete all sessions from every user:
-
-    http(s)://<server-ip>:<port>/sessioncontrol.xml?remove=all
-
-Delete all expired sessions:
-
-    http(s)://<server-ip>:<port>/sessioncontrol.xml?remove=expired
-
-Delete all sessions from user "xmlapi":
-
-    http(s)://<server-ip>:<port>/sessioncontrol.xml?remove=user&user=xmlapi
-
-Delete the session with id "1234567890":
-
-    http(s)://<server-ip>:<port>/sessioncontrol.xml?remove=sessionid&sessionid=1234567890
 
