@@ -13,7 +13,6 @@ cAuth::~cAuth() {
 
 	this->connection = NULL;
 	this->session = NULL;
-	delete this->session;
 };
 
 bool cAuth::authSession() {
