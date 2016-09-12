@@ -67,7 +67,6 @@ bool cAuth::authBasic() {
         if (pass != NULL) free (pass);
     } else {
     	cSession session = SessionControl->AddSession(this->user, lifetime);
-    	this->user = this->config.GetUsers().GetUser("Anonymous");
     	this->session = SessionControl->GetSessionBySessionId(session.GetSessionId());
     }
     return validUser;
