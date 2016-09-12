@@ -2,8 +2,10 @@
 <configurationDescriptor version="97">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="." name="0">
+      <in>cAuth.cpp</in>
       <in>cBaseStream.cpp</in>
       <in>cDaemonParameter.cpp</in>
+      <in>cExtensionHeaders.cpp</in>
       <in>cHlsPreset.cpp</in>
       <in>cHlsPresets.cpp</in>
       <in>cHlsStream.cpp</in>
@@ -12,6 +14,26 @@
       <in>cPreset.cpp</in>
       <in>cPresets.cpp</in>
       <in>cRequestHandler.cpp</in>
+      <in>cResponseChannels.cpp</in>
+      <in>cResponseEpg.cpp</in>
+      <in>cResponseHandler.cpp</in>
+      <in>cResponseHeader.cpp</in>
+      <in>cResponseHlsStream.cpp</in>
+      <in>cResponseLogo.cpp</in>
+      <in>cResponsePreflight.cpp</in>
+      <in>cResponsePresets.cpp</in>
+      <in>cResponseRecordings.cpp</in>
+      <in>cResponseRemote.cpp</in>
+      <in>cResponseRights.cpp</in>
+      <in>cResponseStream.cpp</in>
+      <in>cResponseStreamControl.cpp</in>
+      <in>cResponseSwitch.cpp</in>
+      <in>cResponseTimer.cpp</in>
+      <in>cResponseVersion.cpp</in>
+      <in>cResponseWebSrv.cpp</in>
+      <in>cRights.cpp</in>
+      <in>cSession.cpp</in>
+      <in>cSessionControl.cpp</in>
       <in>cStream.cpp</in>
       <in>cStreamControl.cpp</in>
       <in>cUser.cpp</in>
@@ -53,9 +75,6 @@
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>../../../../../bin/vdr</executablePath>
           <ccTool>
-            <incDir>
-              <pElem>../../../../../../include/x86_64-linux-gnu</pElem>
-            </incDir>
             <preprocessorList>
               <Elem>PLUGIN_NAME_I18N="xmlapi"</Elem>
               <Elem>_FILE_OFFSET_BITS=64</Elem>
@@ -70,11 +89,19 @@
           <preBuildCommand></preBuildCommand>
         </preBuild>
       </makefileType>
+      <item path="cAuth.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
       <item path="cBaseStream.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
         </ccTool>
       </item>
       <item path="cDaemonParameter.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cExtensionHeaders.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
         </ccTool>
       </item>
@@ -107,6 +134,86 @@
         </ccTool>
       </item>
       <item path="cRequestHandler.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseChannels.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseEpg.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseHandler.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseHeader.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseHlsStream.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseLogo.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponsePreflight.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponsePresets.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseRecordings.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseRemote.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseRights.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseStream.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseStreamControl.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseSwitch.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseTimer.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseVersion.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cResponseWebSrv.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cRights.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cSession.cpp" ex="false" tool="1" flavor2="0">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="cSessionControl.cpp" ex="false" tool="1" flavor2="0">
         <ccTool flags="0">
         </ccTool>
       </item>

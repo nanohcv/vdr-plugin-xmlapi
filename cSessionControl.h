@@ -25,7 +25,7 @@
 
 using namespace std;
 
-class cSessionControl : protected map<cUser, vector<cSession> >, protected cThread {
+class cSessionControl : protected map<cUser, vector<cSession> > {
 public:
     cSessionControl();
     cSessionControl(const cSessionControl& src);
@@ -51,7 +51,6 @@ public:
     
     
 private:
-    void Action();
     
 
 };

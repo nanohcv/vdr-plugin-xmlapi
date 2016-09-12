@@ -16,16 +16,12 @@
 #include "helpers.h"
 
 cSessionControl::cSessionControl() {
-    this->Start();
 }
 
-cSessionControl::cSessionControl(const cSessionControl& src) : map<cUser, vector<cSession> >(src), cThread(src) {
+cSessionControl::cSessionControl(const cSessionControl& src) : map<cUser, vector<cSession> >(src) {
 }
 
 cSessionControl::~cSessionControl() {
-    if(this->Active()) {
-        this->Cancel(0);
-    }
 }
 
 vector<cSession> cSessionControl::GetSessions(cUser user) {
@@ -163,12 +159,4 @@ string cSessionControl::GetSessionsXml() {
     this->Mutex.Unlock();
     xml += "</users>\n";
     return xml;
-}
-
-void cSessionControl::Action() {
-    while(this->Running()) {
-        sleep(60*5);
-        if(this->Running())
-            this->RemoveExpiredSessions();
-    }
 }
