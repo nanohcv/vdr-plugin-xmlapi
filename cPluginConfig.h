@@ -52,6 +52,7 @@ public:
     string GetStreamdevUrl();
     string GetWebSrvRoot();
     string GetWebSrvHeadersFile();
+    string GetCorsOrigin();
     bool RelativeLogoUrl();
 
 private:
@@ -79,6 +80,7 @@ private:
     string streamdevUrl;
     string websrvroot;
     string websrvheaders;
+    string corsOrigin;
     bool realtiveLogoUrl;
 
     string generatePassword(unsigned int length);

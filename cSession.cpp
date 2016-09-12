@@ -63,7 +63,7 @@ string cSession::Expires() const {
 }
 
 string cSession::Cookie() const {
-    string cookie = "vdr-plugin-xmlapi_sessionid=" + this->sessionId + ";expires=" + this->Expires() + ";path=/hls/";
+    string cookie = "vdr-plugin-xmlapi_sessionid=" + this->sessionId + ";expires=" + this->Expires();
     return cookie;
 }
 

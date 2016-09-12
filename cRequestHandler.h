@@ -11,20 +11,10 @@
  * Created on 7. Februar 2016, 12:10
  */
 #include <microhttpd.h>
-#include <unistd.h>
-#include <map>
-#include <string>
-#include <vdr/timers.h>
-#include <vdr/keys.h>
-#include <vdr/remote.h>
 #include "cDaemonParameter.h"
-#include "cPluginConfig.h"
-#include "cPreset.h"
-#include "cPresets.h"
-#include "cHlsPreset.h"
-#include "cHlsPresets.h"
 #include "cUser.h"
-#include "cExtensionHeaders.h"
+#include "cResponseHandler.h"
+#include "cAuth.h"
 
 #ifndef CREQUESTHANDLER_H
 #define CREQUESTHANDLER_H
@@ -39,64 +29,11 @@ public:
 private:
     struct MHD_Connection *connection;
     cDaemonParameter *daemonParameter;
-    cPluginConfig config;
     cUser user;
-    cPresets presets;
-    cHlsPresets hlsPresets;
-    cExtensionHeaders extHeaders;
-    map<string, eKeys> remoteKeys;
+    cAuth *auth;
     
-
-    int handleVersion();
-    int handleStream(const char *url);
-    int handleRecStream(const char *url);
-    int handleHlsStream(const char *url);
-    int handleStreamControl();
-    int handleLogos(const char *url);
-    int handlePresets();
-    int handleChannels();
-    string channelsToXml();
-    int handleRecordings();
-    int handleDeletedRecordings();
-    string recordingsToXml(bool deleted = false);
-    int handleTimers();
-    string timersToXml();
-    cTimer * GetTimer(const char *tid);
-    const cEvent * GetEvent(tChannelID channelid, tEventID eid);
-    bool deleteTimer(const char *tid);
-    bool onOffTimer(const char *tid);
-    bool addTimer(const char *channelid, const char *eventid);
-    bool addTimer(const char *channelid, const char *name, const char *aux,
-                    const char *cstr_flags, const char *cstr_weekdays,
-                    const char *cstr_day, const char *cstr_start, const char *cstr_stop,
-                    const char *cstr_priority, const char *cstr_lifetime);
-    int handleEPG();
-    string eventsToXml(const char *chid, const char *at);
-    string searchEventsToXml(const char* chid, string search, string options);
-    
-    int handleSwitchToChannel();
-    int handleRemote();
-    int handleRights();
-    
-    int handleWebSrv(const char *url);
-    
-    void initRemoteKeys();
-
-    int handle404Error();
-    int handle403Error();
-
-    static ssize_t stream_reader (void *cls, uint64_t pos, char *buf, size_t max);
-    static void clear_stream(void *cls);
-
-    std::map<std::string, std::string> conInfo;
-    
-    bool authenticated();
     int handleNotAuthenticated();
-    
-    int handleSessions();
-    int handleSessionControl();
-    
-
+    cResponseHandler GetErrorHandler();
 };
 
 #endif /* CREQUESTHANDLER_H */

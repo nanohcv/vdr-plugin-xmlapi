@@ -46,6 +46,7 @@ cPluginConfig::cPluginConfig(const char *configDir, const char *cacheDir, const 
     this->streamdevUrl = "http://127.0.0.1:3000/";
     this->websrvroot = string(configDir) + "/websrv";
     this->websrvheaders = string(configDir) + "/websrv_file_extensions.ini";
+    this->corsOrigin = string("*");
     this->realtiveLogoUrl = true;
     this->readFromConfFile(configFile);
     this->createDefaultUserFile(this->usersFile);
@@ -90,6 +91,7 @@ cPluginConfig::cPluginConfig(const cPluginConfig& src) {
     this->streamdevUrl = src.streamdevUrl;
     this->websrvroot = src.websrvroot;
     this->websrvheaders = src.websrvheaders;
+    this->corsOrigin = src.corsOrigin;
     this->realtiveLogoUrl = src.realtiveLogoUrl;
 
 }
@@ -122,6 +124,7 @@ cPluginConfig& cPluginConfig::operator = (const cPluginConfig& src) {
         this->streamdevUrl = src.streamdevUrl;
         this->websrvroot = src.websrvroot;
         this->websrvheaders = src.websrvheaders;
+        this->corsOrigin = src.corsOrigin;
         this->realtiveLogoUrl = src.realtiveLogoUrl;
         if(src.sslKey != NULL) {
             delete[] this->sslKey;
@@ -235,6 +238,10 @@ string cPluginConfig::GetWebSrvHeadersFile() {
     return this->websrvheaders;
 }
 
+string cPluginConfig::GetCorsOrigin() {
+    return this->corsOrigin;
+}
+
 bool cPluginConfig::RelativeLogoUrl() {
     return this->realtiveLogoUrl;
 }
@@ -284,6 +291,7 @@ bool cPluginConfig::readFromConfFile(string configFile) {
             "StreamdevUrl="<<this->streamdevUrl<<endl<<
             "WebSrvRoot="<<this->websrvroot<<endl<<
             "WebSrvHeaders="<<this->websrvheaders<<endl<<
+            "CorsOrigin="<<this->corsOrigin<<endl<<
             "RelativeLogoUrl="<<this->realtiveLogoUrl<<endl;
         fc.close();
         this->createDefaultPresetFile(this->presetsFile);
@@ -388,6 +396,11 @@ bool cPluginConfig::readFromConfFile(string configFile) {
         else if (left == "WebSrvHeaders") {
             if(right != "") {
                 this->websrvheaders = right;
+            }
+        }
+        else if (left == "CorsOrigin") {
+            if(right != "") {
+                this->corsOrigin = right;
             }
         }
         else if (left == "RelativeLogoUrl") {

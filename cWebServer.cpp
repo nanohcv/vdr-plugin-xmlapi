@@ -22,9 +22,7 @@
 #include <vdr/tools.h>
 #include <microhttpd.h>
 #include "cRequestHandler.h"
-#include "cUser.h"
-#include "cHlsPresets.h"
-#include "cPresets.h"
+#include "cResponsePreflight.h"
 
 #define EXTERN
 #include "globals.h"
@@ -102,18 +100,11 @@ int cWebServer::handle_connection (void *cls, struct MHD_Connection *connection,
           size_t *upload_data_size, void **con_cls) {
 
     cDaemonParameter *parameter = (cDaemonParameter *)cls;
-    struct MHD_Response *response;
-    int ret;
-    
+
     if (0 == strcmp (method, MHD_HTTP_METHOD_OPTIONS)) {
-		const char *page = "OK";
-		response = MHD_create_response_from_buffer (strlen (page), (void *) page, MHD_RESPMEM_PERSISTENT);
-		MHD_add_response_header (response, "Allow", "GET");
-		MHD_add_response_header (response, "Access-Control-Allow-Origin", "*");
-		MHD_add_response_header (response, "Access-Control-Allow-Headers", "Authorization");
-		ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-		MHD_destroy_response (response);
-		return ret;
+    	cSession *session = NULL;
+    	cResponsePreflight response(connection, session, parameter);
+    	return response.toText();
     }
 
     if (0 != strcmp (method, MHD_HTTP_METHOD_GET)) {
