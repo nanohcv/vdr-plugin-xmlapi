@@ -8,7 +8,7 @@
 class cResponseRecordings : public cResponseHandler {
 private:
 	string xml;
-	cRecording *rec = NULL;
+    cRecording *rec = NULL;
 	const char *action = NULL;
 	const char *recfile = NULL;
 	void recordingsAction();

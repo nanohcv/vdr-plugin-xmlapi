@@ -54,14 +54,22 @@ string cResponseEpg::eventsToXml(const char* chid, const char *at) {
                     attime = true;
                 }
             }
-
+#if VDRVERSNUM >= 20301
+            LOCK_SCHEDULES_READ;
+            const cSchedules *schedules = Schedules;
+#else
             cSchedulesLock lock;
             const cSchedules *schedules = cSchedules::Schedules(lock);
+#endif
             const cSchedule *schedule = schedules->GetSchedule(cid);
             if(schedule != NULL) {
                 const cList<cEvent> *events = schedule->Events();
                 for(int i=0; i<events->Count(); i++) {
+#if VDRVERSNUM >= 20301
+                    const cEvent *event = NULL;
+#else
                     cEvent *event = NULL;
+#endif
                     if(now) {
                         event = const_cast<cEvent *>(schedule->GetPresentEvent());
                         i = events->Count();
@@ -124,8 +132,13 @@ string cResponseEpg::searchEventsToXml(const char* chid, string search, string o
         if(!cid.Valid())
             chid = NULL;
     }
+#if VDRVERSNUM >= 20301
+    LOCK_SCHEDULES_READ;
+    const cSchedules *schedules = Schedules;
+#else
     cSchedulesLock lock;
     const cSchedules *schedules = cSchedules::Schedules(lock);
+#endif
     for(int i=0; i<schedules->Count(); i++) {
         const cSchedule *schedule;
         if(chid != NULL)
@@ -142,7 +155,11 @@ string cResponseEpg::searchEventsToXml(const char* chid, string search, string o
         if(schedule != NULL) {
             const cList<cEvent> *events = schedule->Events();
             for(int j=0; j<events->Count(); j++) {
+#if VDRVERSNUM >= 20301                
+                const cEvent *event = events->Get(j);
+#else
                 cEvent *event = events->Get(j);
+#endif
                 if(event == NULL) {
                     continue;
                 }

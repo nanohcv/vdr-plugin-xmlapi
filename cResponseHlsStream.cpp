@@ -71,7 +71,12 @@ int cResponseHlsStream::initM3u8() {
         dsyslog("xmlapi: request %s?chid=%s&preset=%s", this->url, this->chid, this->cstr_preset);
     }
     if(this->recfile) {
+#if VDRVERSNUM >= 20301
+        LOCK_RECORDINGS_READ;
+        const cRecording *rec = Recordings->GetByName(this->recfile);
+#else
         cRecording *rec = Recordings.GetByName(this->recfile);
+#endif
         if(rec == NULL) {
             dsyslog("xmlapi: No recording found with file name '%s'", this->recfile);
             return this->handle404Error();

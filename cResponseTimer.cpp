@@ -47,9 +47,14 @@ void cResponseTimer::timersToXml() {
 
     this->xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     this->xml += "<timers>\n";
-
+#if VDRVERSNUM >= 20301
+    LOCK_TIMERS_READ;
+    for(int i=0; i<Timers->Count(); i++) {
+        const cTimer *timer = Timers->Get(i);
+#else
     for(int i=0; i<Timers.Count(); i++) {
         cTimer *timer = Timers.Get(i);
+#endif
         ostringstream builder;
         builder << string(timer->Channel()->GetChannelID().ToString()) << ":" << timer->WeekDays() << ":"
 				<< timer->Day() << ":" << timer->Start() << ":" << timer->Stop();
@@ -93,9 +98,16 @@ void cResponseTimer::timersToXml() {
 cTimer *cResponseTimer::GetTimer(const char* tid) {
     if(tid == NULL)
         return NULL;
+#if VDRVERSNUM >= 20301
+    LOCK_TIMERS_WRITE;
+    for(int i=0; i<Timers->Count();i++)
+    {
+        cTimer *timer = Timers->Get(i);  
+#else
     for(int i=0; i<Timers.Count();i++)
     {
         cTimer *timer = Timers.Get(i);
+#endif
         string id = string(tid);
         vector<string> parts = split(id, ':');
         if(parts.size() != 5) {
@@ -120,8 +132,13 @@ cTimer *cResponseTimer::GetTimer(const char* tid) {
 }
 
 const cEvent * cResponseTimer::GetEvent(tChannelID channelid, tEventID eid) {
+#if VDRVERSNUM >= 20301
+    LOCK_SCHEDULES_READ;
+    const cSchedules *schedules = Schedules;
+#else
     cSchedulesLock lock;
     const cSchedules *schedules = cSchedules::Schedules(lock);
+#endif
     const cSchedule *schedule = schedules->GetSchedule(channelid);
     if(schedule == NULL)
         return NULL;
@@ -143,8 +160,14 @@ bool cResponseTimer::deleteTimer(const char* tid) {
     cTimer *timer = this->GetTimer(tid);
     if(timer == NULL)
         return false;
+#if VDRVERSNUM >= 20301
+    LOCK_TIMERS_WRITE;
+    Timers->Del(timer);
+    Timers->SetModified();
+#else
     Timers.Del(timer);
     Timers.SetModified();
+#endif
     return true;
 }
 
@@ -217,11 +240,20 @@ bool cResponseTimer::addTimer(const char *channelid, const char* eventid) {
     const cEvent *event = this->GetEvent(cid, eid);
     if(event == NULL)
         return false;
+#if VDRVERSNUM >= 20301
+    LOCK_TIMERS_WRITE;
+    if(Timers->GetMatch(event) != NULL)
+        return false;
+    cTimer *timer = new cTimer(event);
+    Timers->Add(timer);
+    Timers->SetModified();
+#else
     if(Timers.GetMatch(event) != NULL)
         return false;
     cTimer *timer = new cTimer(event);
     Timers.Add(timer);
     Timers.SetModified();
+#endif
     return true;
 }
 
@@ -232,7 +264,13 @@ bool cResponseTimer::addTimer(const char* channelid, const char* name,
     tChannelID cid = tChannelID::FromString(channelid);
     if(!cid.Valid())
         return false;
+
+#if VDRVERSNUM >= 20301
+    LOCK_CHANNELS_READ;
+    const cChannel *channel = Channels->GetByChannelID(cid);
+#else
     cChannel *channel = Channels.GetByChannelID(cid);
+#endif
     if(channel == NULL)
         return false;
     unsigned int flags = (unsigned int)atoi(cstr_flags);
@@ -252,9 +290,17 @@ bool cResponseTimer::addTimer(const char* channelid, const char* name,
     timer->SetStop(stop);
     timer->SetPriority(priority);
     timer->SetLifetime(lifetime);
+#if VDRVERSNUM >= 20301
+    LOCK_TIMERS_WRITE;
+    if(Timers->GetTimer(timer) != NULL)
+        return false;
+    Timers->Add(timer);
+    Timers->SetModified();
+#else
     if(Timers.GetTimer(timer) != NULL)
         return false;
     Timers.Add(timer);
     Timers.SetModified();
+#endif
     return true;
 }

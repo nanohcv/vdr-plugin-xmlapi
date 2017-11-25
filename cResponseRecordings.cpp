@@ -23,7 +23,13 @@ int cResponseRecordings::toXml(bool deleted) {
             dsyslog("xmlapi: The user %s doesn't have the permission to do any action on /recordings.xml", this->user->Name().c_str());
             return this->handle403Error();
         }
+#if VDRVERSNUM >= 20301
+        LOCK_RECORDINGS_WRITE;
+        LOCK_DELETEDRECORDINGS_WRITE;
+        cRecordings *recs = deleted ? DeletedRecordings : Recordings;
+#else
     	cRecordings *recs = deleted ? &DeletedRecordings : &Recordings;
+#endif
         this->rec = recs->GetByName(this->recfile);
         if(this->rec == NULL) {
             return this->handle404Error();
@@ -60,10 +66,19 @@ void cResponseRecordings::recordingsAction() {
 	this->xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
 	this->xml += "<actions>\n";
 	if(0 == strcmp(this->action, "delete")) {
+#if VDRVERSNUM >= 20301
+        LOCK_RECORDINGS_WRITE;
+        LOCK_DELETEDRECORDINGS_WRITE;
+#endif
 		if(this->rec->Delete())
 		{
+#if VDRVERSNUM >= 20301
+            Recordings->Update();
+            DeletedRecordings->Update();
+#else
         	Recordings.Update();
         	DeletedRecordings.Update();
+#endif
 			this->xml += "    <delete>true</delete>\n";
 		}
 		else {
@@ -81,10 +96,19 @@ void cResponseRecordings::deletedRecordingsAction() {
 	this->xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
 	this->xml += "<actions>\n";
     if(0 == strcmp(this->action, "undelete")) {
+#if VDRVERSNUM >= 20301
+        LOCK_RECORDINGS_WRITE;
+        LOCK_DELETEDRECORDINGS_WRITE;
+#endif
         if(this->rec->Undelete())
         {
+#if VDRVERSNUM >= 20301
+            Recordings->Update();
+            DeletedRecordings->Update();
+#else
         	Recordings.Update();
         	DeletedRecordings.Update();
+#endif
         	this->xml += "    <undelete>true</undelete>\n";
         }
         else {
@@ -92,9 +116,17 @@ void cResponseRecordings::deletedRecordingsAction() {
         }
     }
     else if(0 == strcmp(this->action, "remove")) {
+#if VDRVERSNUM >= 20301
+        LOCK_RECORDINGS_WRITE;
+        LOCK_DELETEDRECORDINGS_WRITE;
+#endif
         if(this->rec->Remove())
         {
+#if VDRVERSNUM >= 20301
+            DeletedRecordings->Update();
+#else
         	DeletedRecordings.Update();
+#endif
         	this->xml += "    <remove>true</remove>\n";
         }
         else {
@@ -111,10 +143,20 @@ void cResponseRecordings::recordingsToXml(bool deleted) {
 
 	this->xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
 	this->xml += "<recordings>\n";
+#if VDRVERSNUM >= 20301
+    LOCK_RECORDINGS_READ;
+    LOCK_DELETEDRECORDINGS_READ;
+    const cRecordings *recs = deleted ? DeletedRecordings : Recordings;
+#else
     cRecordings *recs = deleted ? &DeletedRecordings : &Recordings;
+#endif
 	for(int i=0; i<recs->Count(); i++)
 	{
-		cRecording *rec = recs->Get(i);
+#if VDRVERSNUM >= 20301
+		const cRecording *rec = recs->Get(i);
+#else
+        cRecording *rec = recs->Get(i);
+#endif
 		const cRecordingInfo *info = rec->Info();
 		string name = string(rec->Name() ? rec->Name() : "");
 		string filename = string(rec->FileName() ? rec->FileName() : "");

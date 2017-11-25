@@ -110,7 +110,12 @@ int cResponseStream::initInput() {
     if (this->recfile != NULL) {
 
         dsyslog("xmlapi: request %s?filename=%s&preset=%s", url, this->recfile, this->cstr_preset);
+#if VDRVERSNUM >= 20301
+        LOCK_RECORDINGS_READ;
+        const cRecording *rec = Recordings->GetByName(recfile);
+#else
         cRecording *rec = Recordings.GetByName(recfile);
+#endif
         if(rec == NULL) {
             dsyslog("xmlapi: No recording found with file name '%s'", recfile);
             return this->handle404Error();

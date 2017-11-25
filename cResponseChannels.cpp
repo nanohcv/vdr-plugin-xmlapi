@@ -40,8 +40,14 @@ string cResponseChannels::channelsToXml() {
     xml +=       "<groups>\n";
     string group = "Unsorted";
     bool firstgroup = true;
+#if VDRVERSNUM >= 20301
+    LOCK_CHANNELS_READ;
+    for(int i=0; i<Channels->Count(); i++) {
+        const cChannel *channel = Channels->Get(i);   
+#else
     for(int i=0; i<Channels.Count(); i++) {
         cChannel *channel = Channels.Get(i);
+#endif
         if(channel->GroupSep() && firstgroup) {
             group = channel->Name();
             xml += "    <group name=\"" + group + "\">\n";

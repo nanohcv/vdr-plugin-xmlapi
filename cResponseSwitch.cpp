@@ -22,7 +22,13 @@ int cResponseSwitch::toXml() {
     if(!cid.Valid()) {
         return this->handle404Error();
     }
+    
+#if VDRVERSNUM >= 20301
+    LOCK_CHANNELS_READ;
+    const cChannel *channel = Channels->GetByChannelID(cid);
+#else
     cChannel *channel = Channels.GetByChannelID(cid);
+#endif
     if(channel == NULL) {
         xml += "<status>\n";
         xml += "    <channel>" + string(chid) + "</channel>\n";
